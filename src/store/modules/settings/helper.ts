@@ -10,7 +10,7 @@ export interface SettingsState {
 
 export function defaultSetting(): SettingsState {
   return {
-    systemMessage: 'You are ChatGLM, a large language model trained by OpenAI. Follow the user\'s instructions carefully. Respond using markdown.',
+    systemMessage: '用中文回答问题，有些内容尽可能使用markdown格式',
     temperature: 0.8,
     top_p: 1,
   }
