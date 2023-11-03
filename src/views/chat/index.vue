@@ -65,100 +65,101 @@ function triggerFileInput() {
 
 	
 async function handleUploadAudio(files: FileList | null) {
- if (!files || files.length === 0) {
-    ms.error('未选择文件');
-    return;
-  }
-  const file = files[0];
+	if (!files || files.length === 0) {
+		ms.error('未选择文件');
+		return;
+	}
+	const file = files[0];
 
-  const formData = new FormData();
-  formData.append('file', file);
+	const formData = new FormData();
+	formData.append('file', file);
 
-  // 添加初始聊天消息以显示文件正在上传
-  const chatIndex = dataSources.value.length;
-  addChat(
-    +uuid,
-    {
-      dateTime: new Date().toLocaleString(),
-	    text: `转写音频文件：${file.name}成文字`,
-	    inversion: true,
-	    error: false,
-	    conversationOptions: null,
-	    requestOptions: { prompt: '', options: null },  // 使用空字符串和null作为默认值
-    },
-  );
+	// 添加初始聊天消息以显示文件正在上传
+	const chatIndex = dataSources.value.length;
+	addChat(
+		+uuid,
+		{
+			dateTime: new Date().toLocaleString(),
+			text: `转写音频文件：${file.name}成文字`,
+			inversion: true,
+			error: false,
+			conversationOptions: null,
+			requestOptions: { prompt: '', options: null },  // 使用空字符串和null作为默认值
+		},
+	);
 	scrollToBottom();
 	addChat(
-    +uuid,
-    {
-      dateTime: new Date().toLocaleString(),
-      text: '转换中',
-      loading: true,
-      inversion: false,
-      error: false,
-      conversationOptions: null,
-      requestOptions: { prompt: '', options: null },
-    },
+		+uuid,
+		{
+			dateTime: new Date().toLocaleString(),
+			text: '转换中',
+			loading: true,
+			inversion: false,
+			error: false,
+			conversationOptions: null,
+			requestOptions: { prompt: '', options: null },
+		},
 	);
-  scrollToBottom();
+	scrollToBottom();
 
-  try {
-    // 移除 console.log，或者替换为其他日志记录方式
-    const response = await fetch('http://172.16.1.118:7001/transcribe/', {
-      method: 'POST',
-      body: formData,
-      signal: controller.signal
-    });
+	try {
+		// 移除 console.log，或者替换为其他日志记录方式
+		const response = await fetch('http://172.16.1.118:7001/transcribe/', {
+			method: 'POST',
+			body: formData,
+			signal: controller.signal
+		});
 
-    if (!response.ok) {
-      throw new Error(`服务器响应错误：${response.status}`);
-    }
+		if (!response.ok) {
+			throw new Error(`服务器响应错误：${response.status}`);
+		}
 
 		// 使用 .json() 方法解析 JSON 响应
-    const result = await response.json();
+		const result = await response.json();
 
-    // 使用 result.text 来获取转录文本
-    const transcription = result.text;
-    // 移除 console.log，或者替换为其他日志记录方式
+		// 使用 result.text 来获取转录文本
+		const transcription = result.text;
+		// 移除 console.log，或者替换为其他日志记录方式
 
-    // 更新聊天消息以显示转写文本
-    updateChat(
-      +uuid,
-      dataSources.value.length - 1,
-      {
-        dateTime: new Date().toLocaleString(),
-        text: transcription,
-        inversion: false,
-        error: false,
-        loading: true,
-        conversationOptions: null,
-        requestOptions: {
-          prompt: ``,
-          options: null
-        },
-      },
-    );
-    // 移除 console.log，或者替换为其他日志记录方式
-  } catch (error) {
-    ms.error(error instanceof Error ? error.message : '上传文件失败');
-    // 移除 console.log，或者替换为其他日志记录方式
-    
-    // 更新聊天消息以显示错误信息
-    updateChatSome(
-      +uuid,
-      chatIndex,
-      {
-        text: `错误：${error instanceof Error ? error.message : '上传文件失败'}`,
-        error: true,
-        loading: false,
-      },
-    );
-    // 移除 console.log，或者替换为其他日志记录方式
-  } finally {
-    loading.value = false;
-    // 移除 console.log，或者替换为其他日志记录方式
-  }
+		// 更新聊天消息以显示转写文本
+		updateChat(
+			+uuid,
+			dataSources.value.length - 1,
+			{
+				dateTime: new Date().toLocaleString(),
+				text: transcription,
+				inversion: false,
+				error: false,
+				loading: true,
+				conversationOptions: null,
+				requestOptions: {
+					prompt: ``,
+					options: null
+				},
+			},
+		);
+		// 移除 console.log，或者替换为其他日志记录方式
+	} catch (error) {
+		ms.error(error instanceof Error ? error.message : '上传文件失败');
+		// 移除 console.log，或者替换为其他日志记录方式
+
+		// 更新聊天消息以显示错误信息
+		updateChatSome(
+			+uuid,
+			dataSources.value.length - 1,
+			{
+				text: `错误：${error instanceof Error ? error.message : '上传文件失败'}`,
+				error: true,
+				loading: false,
+			},
+		);
+		// 移除 console.log，或者替换为其他日志记录方式
+	} finally {
+		loading.value = false;
+		// 移除 console.log，或者替换为其他日志记录方式
+	}
 }
+
 
 
 
