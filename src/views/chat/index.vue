@@ -75,7 +75,7 @@ async function handleUploadAudio(files: FileList | null) {
 	formData.append('file', file);
 
 	// 添加初始聊天消息以显示文件正在上传
-	const chatIndex = dataSources.value.length;
+	//const chatIndex = dataSources.value.length;
 	addChat(
 		+uuid,
 		{
