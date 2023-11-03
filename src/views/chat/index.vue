@@ -632,17 +632,17 @@ onUnmounted(() => {
               <SvgIcon icon="fe:file-audio" />
             </span>
           </HoverButton>
-					<HoverButton v-if="!isMobile" @click="handleClear">
+					<HoverButton v-if="!isMobile" @click="handleClear" title="清空当前会话">
             <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="ri:delete-bin-line" />
             </span>
           </HoverButton>
-          <HoverButton v-if="!isMobile" @click="handleExport">
+          <HoverButton v-if="!isMobile" @click="handleExport" title="保存会话到图片">
             <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="ri:download-2-line" />
             </span>
           </HoverButton>
-          <HoverButton @click="toggleUsingContext">
+          <HoverButton @click="toggleUsingContext" title="不携带历史记录">
             <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
               <SvgIcon icon="ri:chat-history-line" />
             </span>
