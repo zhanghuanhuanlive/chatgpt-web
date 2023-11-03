@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import type { Ref } from 'vue'
-import { computed, onMounted, onUnmounted, ref, Ref  } from 'vue'
+import { computed, onMounted, onUnmounted, ref  } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { NAutoComplete, NButton, NInput, useDialog, useMessage } from 'naive-ui'
@@ -54,7 +54,6 @@ dataSources.value.forEach((item, index) => {
 
 
 const fileInput = ref<HTMLInputElement | null>(null);
-const fileInputElement = fileInput.value; 
 // 增加 Event 类型声明，修复 TS7006 错误
 async function handleUploadAudio(event: Event) {
   // 断言 event.target 为 HTMLInputElement，以获取 files 属性
