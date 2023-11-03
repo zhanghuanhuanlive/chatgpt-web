@@ -132,10 +132,10 @@ async function handleUploadAudio(files: FileList | null) {
 				text: transcription,
 				inversion: false,
 				error: false,
-				loading: true,
+				loading: false,
 				conversationOptions: null,
 				requestOptions: {
-					prompt: ``,
+					prompt: `这是语音转写的结果，需要你帮我检查是否有问题，并返回完善后的内容给我：` + transcription,
 					options: null
 				},
 			},
