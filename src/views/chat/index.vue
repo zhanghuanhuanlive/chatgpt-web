@@ -52,20 +52,24 @@ dataSources.value.forEach((item, index) => {
     updateChatSome(+uuid, index, { loading: false })
 })
 
-// 定义一个接口来描述 fileInput 的结构
-interface FileInputRef {
-  files: FileList | null;
+function triggerFileInput() {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.onchange = (event) => {
+    if (event.target instanceof HTMLInputElement) {
+      handleUploadAudio(event.target.files);
+    }
+  };
+  fileInput.click();
 }
-// 使用 Ref 类型并提供 FileInputRef 接口作为泛型参数
-const fileInput = ref<HTMLInputElement | null>(null);
-// 增加 Event 类型声明，修复 TS7006 错误
-async function handleUploadAudio(event: Event) {
-  if (!fileInput.value?.files || fileInput.value.files.length === 0) {
+
+	
+async function handleUploadAudio(files: FileList | null) {
+ if (!files || files.length === 0) {
     ms.error('未选择文件');
     return;
   }
-  const file = fileInput.value.files[0];
-  // 移除 console.log，或者替换为其他日志记录方式
+  const file = files[0];
 
   const formData = new FormData();
   formData.append('file', file);
@@ -605,7 +609,7 @@ onUnmounted(() => {
     <footer :class="footerClass">
       <div class="w-full max-w-screen-xl m-auto">
         <div class="flex items-center justify-between space-x-2">
-          <HoverButton @click="$refs.fileInput.click()" title="音频转写文字" v-if="!isMobile">
+          <HoverButton @click="triggerFileInput" title="音频转写文字" v-if="!isMobile">
             <input type="file" ref="fileInput" @change="handleUploadAudio" style="display: none;" />
 						<span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="fe:file-audio" />
