@@ -80,7 +80,7 @@ async function handleUploadAudio(files: FileList | null) {
     +uuid,
     {
       dateTime: new Date().toLocaleString(),
-    text: `上传音频文件：${file.name}...`,
+    text: `转写音频文件：${file.name}成文字`,
     inversion: true,
     error: false,
     loading: true,
@@ -103,7 +103,11 @@ async function handleUploadAudio(files: FileList | null) {
       throw new Error(`服务器响应错误：${response.status}`);
     }
 
-    const result = await response.text();
+		// 使用 .json() 方法解析 JSON 响应
+    const result = await response.json();
+
+    // 使用 result.text 来获取转录文本
+    const transcription = result.text;
     // 移除 console.log，或者替换为其他日志记录方式
 
     // 更新聊天消息以显示转写文本
@@ -112,13 +116,13 @@ async function handleUploadAudio(files: FileList | null) {
       chatIndex,
       {
         dateTime: new Date().toLocaleString(),
-        text: result,
+        text: transcription,
         inversion: false,
         error: false,
         loading: false,
         conversationOptions: null,
         requestOptions: {
-          prompt: `上传的音频文件：${file.name}`,
+          prompt: `转写音频文件：${file.name}成文字`,
           options: null
         },
       },
