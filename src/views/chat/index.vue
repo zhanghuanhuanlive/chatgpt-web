@@ -53,14 +53,19 @@ dataSources.value.forEach((item, index) => {
     updateChatSome(+uuid, index, { loading: false })
 })
 
-async function handleUploadAudio(event) {
-  const files = event.target.files;
+// 增加 Event 类型声明，修复 TS7006 错误
+async function handleUploadAudio(event: Event) {
+  // 断言 event.target 为 HTMLInputElement，以获取 files 属性
+  const input = event.target as HTMLInputElement;
+  const files = input.files;
   if (!files || files.length === 0) {
-    ms.error('No file selected');
+    ms.error('未选择文件');
+    // 移除 console.log，或者替换为其他日志记录方式
     return;
   }
 
   const file = files[0];
+  // 移除 console.log，或者替换为其他日志记录方式
 
   const formData = new FormData();
   formData.append('file', file);
@@ -71,7 +76,7 @@ async function handleUploadAudio(event) {
     +uuid,
     {
       dateTime: new Date().toLocaleString(),
-      text: `Uploading audio file: ${file.name}...`,
+      text: `上传音频文件：${file.name}...`,
       inversion: true,
       error: false,
       loading: true,
@@ -79,9 +84,11 @@ async function handleUploadAudio(event) {
       requestOptions: null,
     },
   );
+  // 移除 console.log，或者替换为其他日志记录方式
   scrollToBottom();
 
   try {
+    // 移除 console.log，或者替换为其他日志记录方式
     const response = await fetch('http://172.16.1.118:7001/transcribe/', {
       method: 'POST',
       body: formData,
@@ -89,10 +96,11 @@ async function handleUploadAudio(event) {
     });
 
     if (!response.ok) {
-      throw new Error(`Server responded with an error: ${response.status}`);
+      throw new Error(`服务器响应错误：${response.status}`);
     }
 
     const result = await response.text();
+    // 移除 console.log，或者替换为其他日志记录方式
 
     // 更新聊天消息以显示转写文本
     updateChat(
@@ -106,28 +114,33 @@ async function handleUploadAudio(event) {
         loading: false,
         conversationOptions: null,
         requestOptions: {
-          prompt: `Uploaded audio file: ${file.name}`,
+          prompt: `上传的音频文件：${file.name}`,
           options: null
         },
       },
     );
+    // 移除 console.log，或者替换为其他日志记录方式
   } catch (error) {
-    ms.error(error.message || 'Failed to upload file');
+    ms.error(error instanceof Error ? error.message : '上传文件失败');
+    // 移除 console.log，或者替换为其他日志记录方式
     
     // 更新聊天消息以显示错误信息
     updateChatSome(
       +uuid,
       chatIndex,
       {
-        text: `Error: ${error.message || 'Failed to upload file'}`,
+        text: `错误：${error instanceof Error ? error.message : '上传文件失败'}`,
         error: true,
         loading: false,
       },
     );
+    // 移除 console.log，或者替换为其他日志记录方式
   } finally {
     loading.value = false;
+    // 移除 console.log，或者替换为其他日志记录方式
   }
 }
+
 
 
 
