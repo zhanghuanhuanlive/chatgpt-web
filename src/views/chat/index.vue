@@ -87,7 +87,7 @@ async function handleUploadAudio(files: FileList | null) {
 	    requestOptions: { prompt: '', options: null },  // 使用空字符串和null作为默认值
     },
   );
-
+	scrollToBottom();
 	addChat(
     +uuid,
     {
@@ -99,7 +99,7 @@ async function handleUploadAudio(files: FileList | null) {
       conversationOptions: null,
       requestOptions: { prompt: '', options: null },
     },
-	
+	);
   scrollToBottom();
 
   try {
