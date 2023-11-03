@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 <script setup lang='ts'>
 import type { Ref } from 'vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
