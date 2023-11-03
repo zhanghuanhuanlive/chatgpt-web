@@ -80,15 +80,26 @@ async function handleUploadAudio(files: FileList | null) {
     +uuid,
     {
       dateTime: new Date().toLocaleString(),
-    text: `转写音频文件：${file.name}成文字`,
-    inversion: true,
-    error: false,
-    loading: true,
-    conversationOptions: null,
-    requestOptions: { prompt: '', options: null },  // 使用空字符串和null作为默认值
+	    text: `转写音频文件：${file.name}成文字`,
+	    inversion: true,
+	    error: false,
+	    conversationOptions: null,
+	    requestOptions: { prompt: '', options: null },  // 使用空字符串和null作为默认值
     },
   );
-  // 移除 console.log，或者替换为其他日志记录方式
+
+	addChat(
+    +uuid,
+    {
+      dateTime: new Date().toLocaleString(),
+      text: '转换中',
+      loading: true,
+      inversion: false,
+      error: false,
+      conversationOptions: null,
+      requestOptions: { prompt: '', options: null },
+    },
+	
   scrollToBottom();
 
   try {
@@ -113,16 +124,16 @@ async function handleUploadAudio(files: FileList | null) {
     // 更新聊天消息以显示转写文本
     updateChat(
       +uuid,
-      chatIndex,
+      dataSources.value.length - 1,
       {
         dateTime: new Date().toLocaleString(),
         text: transcription,
         inversion: false,
         error: false,
-        loading: false,
+        loading: true,
         conversationOptions: null,
         requestOptions: {
-          prompt: `转写音频文件：${file.name}成文字`,
+          prompt: ``,
           options: null
         },
       },
