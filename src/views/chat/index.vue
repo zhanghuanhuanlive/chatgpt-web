@@ -57,19 +57,14 @@ interface FileInputRef {
   files: FileList | null;
 }
 // 使用 Ref 类型并提供 FileInputRef 接口作为泛型参数
-const fileInput = ref<Ref<FileInputRef> | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 // 增加 Event 类型声明，修复 TS7006 错误
 async function handleUploadAudio(event: Event) {
-  // 断言 event.target 为 HTMLInputElement，以获取 files 属性
-	const input = event.target as HTMLInputElement;
-  const files = input.files;
-  if (!files || files.length === 0) {
+  if (!fileInput.value?.files || fileInput.value.files.length === 0) {
     ms.error('未选择文件');
-    // 移除 console.log，或者替换为其他日志记录方式
     return;
   }
-
-  const file = files[0];
+  const file = fileInput.value.files[0];
   // 移除 console.log，或者替换为其他日志记录方式
 
   const formData = new FormData();
