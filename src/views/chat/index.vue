@@ -88,6 +88,8 @@ async function handleUploadAudio(files: FileList | null) {
 		},
 	);
 	scrollToBottom();
+	loading.value = true
+  prompt.value = ''
 	addChat(
 		+uuid,
 		{
@@ -138,7 +140,7 @@ async function handleUploadAudio(files: FileList | null) {
 				},
 			},
 		);
-		// 移除 console.log，或者替换为其他日志记录方式
+		scrollToBottomIfAtBottom()
 	} catch (error) {
 		ms.error(error instanceof Error ? error.message : '上传文件失败');
 		// 移除 console.log，或者替换为其他日志记录方式
