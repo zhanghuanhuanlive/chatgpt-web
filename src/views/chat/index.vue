@@ -610,7 +610,6 @@ onUnmounted(() => {
       <div class="w-full max-w-screen-xl m-auto">
         <div class="flex items-center justify-between space-x-2">
           <HoverButton @click="triggerFileInput" title="音频转写文字" v-if="!isMobile">
-            <input type="file" ref="fileInput" @change="handleUploadAudio" style="display: none;" />
 						<span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="fe:file-audio" />
             </span>
