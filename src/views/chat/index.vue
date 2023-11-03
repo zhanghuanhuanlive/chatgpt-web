@@ -52,6 +52,89 @@ dataSources.value.forEach((item, index) => {
     updateChatSome(+uuid, index, { loading: false })
 })
 
+async function handleUploadAudio(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) {
+    ms.error('No file selected');
+    return;
+  }
+
+  const file = files[0];
+  
+  // 添加初始聊天消息以显示文件正在上传
+  const chatIndex = addChat(
+    +uuid,
+    {
+      dateTime: new Date().toLocaleString(),
+      text: `Uploading audio file: ${file.name}...`,
+      inversion: true, // 假设上传消息是用户发出的
+      error: false,
+      loading: true, // 显示加载指示器
+      conversationOptions: null,
+      requestOptions: null,
+    },
+  );
+  scrollToBottom();
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('http://172.16.1.118:7001/transcribe/', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error('Server responded with an error');
+    }
+
+    const result = await response.text();
+
+    // 更新聊天消息以显示转写文本
+    updateChat(
+      +uuid,
+      chatIndex,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: result,
+        inversion: false, // 假设转写消息是系统回复的
+        error: false,
+        loading: false,
+        conversationOptions: null,
+        requestOptions: {
+          prompt: `Uploaded audio file: ${file.name}`,
+          options: null
+        },
+      },
+    );
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      ms.error('Upload cancelled');
+    } else {
+      ms.error(error.message || 'Failed to upload file');
+    }
+    // 更新聊天消息以显示错误
+    updateChat(
+      +uuid,
+      chatIndex,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: `Error: ${error.message || 'Failed to upload file'}`,
+        inversion: false,
+        error: true,
+        loading: false,
+        conversationOptions: null,
+        requestOptions: null,
+      },
+    );
+  } finally {
+    loading.value = false;
+  }
+}
+
+
 function handleSubmit() {
   onConversation()
 }
@@ -513,7 +596,13 @@ onUnmounted(() => {
     <footer :class="footerClass">
       <div class="w-full max-w-screen-xl m-auto">
         <div class="flex items-center justify-between space-x-2">
-          <HoverButton v-if="!isMobile" @click="handleClear">
+          <HoverButton @click="$refs.fileInput.click()" title="音频转写文字" v-if="!isMobile">
+            <input type="file" ref="fileInput" @change="handleUploadAudio" style="display: none;" />
+						<span class="text-xl text-[#4f555e] dark:text-white">
+              <SvgIcon icon="fe:file-audio" />
+            </span>
+          </HoverButton>
+					<HoverButton v-if="!isMobile" @click="handleClear">
             <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="ri:delete-bin-line" />
             </span>
