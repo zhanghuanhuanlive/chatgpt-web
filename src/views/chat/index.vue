@@ -57,12 +57,10 @@ async function handleUploadAudio(event) {
   const files = event.target.files;
   if (!files || files.length === 0) {
     ms.error('No file selected');
-    console.log('No file selected for upload.');
     return;
   }
 
   const file = files[0];
-  console.log('File selected for upload:', file.name);
 
   const formData = new FormData();
   formData.append('file', file);
@@ -81,11 +79,9 @@ async function handleUploadAudio(event) {
       requestOptions: null,
     },
   );
-  console.log('Added chat item for uploading file:', file.name);
   scrollToBottom();
 
   try {
-    console.log('Sending POST request to server for file transcription.');
     const response = await fetch('http://172.16.1.118:7001/transcribe/', {
       method: 'POST',
       body: formData,
@@ -97,7 +93,6 @@ async function handleUploadAudio(event) {
     }
 
     const result = await response.text();
-    console.log('Transcription result received:', result);
 
     // 更新聊天消息以显示转写文本
     updateChat(
@@ -116,10 +111,8 @@ async function handleUploadAudio(event) {
         },
       },
     );
-    console.log('Updated chat item with transcription result.');
   } catch (error) {
     ms.error(error.message || 'Failed to upload file');
-    console.error('Error during file upload/transcription:', error);
     
     // 更新聊天消息以显示错误信息
     updateChatSome(
@@ -131,10 +124,8 @@ async function handleUploadAudio(event) {
         loading: false,
       },
     );
-    console.log('Updated chat item with error message.');
   } finally {
     loading.value = false;
-    console.log('File upload/transcription process completed.');
   }
 }
 
