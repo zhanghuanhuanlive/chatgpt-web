@@ -56,30 +56,35 @@ async function handleUploadAudio(event) {
   const files = event.target.files;
   if (!files || files.length === 0) {
     ms.error('No file selected');
+    console.log('No file selected for upload.');
     return;
   }
 
   const file = files[0];
-  
-  // 添加初始聊天消息以显示文件正在上传
-  const chatIndex = addChat(
-    +uuid,
-    {
-      dateTime: new Date().toLocaleString(),
-      text: `Uploading audio file: ${file.name}...`,
-      inversion: true, // 假设上传消息是用户发出的
-      error: false,
-      loading: true, // 显示加载指示器
-      conversationOptions: null,
-      requestOptions: null,
-    },
-  );
-  scrollToBottom();
+  console.log('File selected for upload:', file.name);
 
   const formData = new FormData();
   formData.append('file', file);
 
+  // 添加初始聊天消息以显示文件正在上传
+  const chatIndex = dataSources.value.length;
+  addChat(
+    +uuid,
+    {
+      dateTime: new Date().toLocaleString(),
+      text: `Uploading audio file: ${file.name}...`,
+      inversion: true,
+      error: false,
+      loading: true,
+      conversationOptions: null,
+      requestOptions: null,
+    },
+  );
+  console.log('Added chat item for uploading file:', file.name);
+  scrollToBottom();
+
   try {
+    console.log('Sending POST request to server for file transcription.');
     const response = await fetch('http://172.16.1.118:7001/transcribe/', {
       method: 'POST',
       body: formData,
@@ -87,10 +92,11 @@ async function handleUploadAudio(event) {
     });
 
     if (!response.ok) {
-      throw new Error('Server responded with an error');
+      throw new Error(`Server responded with an error: ${response.status}`);
     }
 
     const result = await response.text();
+    console.log('Transcription result received:', result);
 
     // 更新聊天消息以显示转写文本
     updateChat(
@@ -99,7 +105,7 @@ async function handleUploadAudio(event) {
       {
         dateTime: new Date().toLocaleString(),
         text: result,
-        inversion: false, // 假设转写消息是系统回复的
+        inversion: false,
         error: false,
         loading: false,
         conversationOptions: null,
@@ -109,30 +115,28 @@ async function handleUploadAudio(event) {
         },
       },
     );
+    console.log('Updated chat item with transcription result.');
   } catch (error) {
-    if (error.name === 'AbortError') {
-      ms.error('Upload cancelled');
-    } else {
-      ms.error(error.message || 'Failed to upload file');
-    }
-    // 更新聊天消息以显示错误
-    updateChat(
+    ms.error(error.message || 'Failed to upload file');
+    console.error('Error during file upload/transcription:', error);
+    
+    // 更新聊天消息以显示错误信息
+    updateChatSome(
       +uuid,
       chatIndex,
       {
-        dateTime: new Date().toLocaleString(),
         text: `Error: ${error.message || 'Failed to upload file'}`,
-        inversion: false,
         error: true,
         loading: false,
-        conversationOptions: null,
-        requestOptions: null,
       },
     );
+    console.log('Updated chat item with error message.');
   } finally {
     loading.value = false;
+    console.log('File upload/transcription process completed.');
   }
 }
+
 
 
 function handleSubmit() {
