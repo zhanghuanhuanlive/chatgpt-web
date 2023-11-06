@@ -3,7 +3,11 @@ import { defaultState, getLocalState, setLocalState } from './helper'
 import { router } from '@/router'
 
 export const useChatStore = defineStore('chat-store', {
-  state: (): Chat.ChatState => getLocalState(),
+  // state: (): Chat.ChatState => getLocalState(),
+  state: (): Chat.ChatState => ({
+    ...getLocalState(),
+    businessType: '0', // 添加一个新的属性businessType
+  }),
 
   getters: {
     getChatHistoryByCurrentActive(state: Chat.ChatState) {
@@ -20,17 +24,27 @@ export const useChatStore = defineStore('chat-store', {
         return state.chat.find(item => item.uuid === state.active)?.data ?? []
       }
     },
+    getBusinessType(state: Chat.ChatState): string | null {
+      return state.businessType
+    },
   },
 
   actions: {
+    setBusinessType(type: string | null) {
+      this.businessType = type
+      this.recordState() // 保存状态
+    },
+
     setUsingContext(context: boolean) {
       this.usingContext = context
       this.recordState()
     },
 
     addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {
+      console.log(history)
+      // 加到数组的开头
       this.history.unshift(history)
-      this.chat.unshift({ uuid: history.uuid, data: chatData })
+      this.chat.unshift({ uuid: history.uuid, data: chatData, businessType: history.businessType })
       this.active = history.uuid
       this.reloadRoute(history.uuid)
     },

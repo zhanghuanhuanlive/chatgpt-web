@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import type { Ref } from 'vue'
-import { computed, onMounted, onUnmounted, ref  } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { NAutoComplete, NButton, NInput, useDialog, useMessage } from 'naive-ui'
@@ -46,6 +46,20 @@ const promptStore = usePromptStore()
 // 使用storeToRefs，保证store修改后，联想部分能够重新渲染
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
+// 当前的应用场景类型
+const currentBusinessType = computed(() => {
+  const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
+  const businessType = currentHistory.businessType
+  // console.log(businessType)
+  if (businessType === 1)
+    return '政策事项查询'
+  else if (businessType === 2)
+    return '会议纪要查询'
+  else
+    return 'ChatGLM'
+  // return currentHistory ? currentHistory.businessType : 'None'
+})
+
 // 未知原因刷新页面，loading 状态不会重置，手动重置
 dataSources.value.forEach((item, index) => {
   if (item.loading)
@@ -53,118 +67,113 @@ dataSources.value.forEach((item, index) => {
 })
 
 function triggerFileInput() {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
   fileInput.onchange = (event) => {
-    if (event.target instanceof HTMLInputElement) {
-      handleUploadAudio(event.target.files);
-    }
-  };
-  fileInput.click();
+    if (event.target instanceof HTMLInputElement)
+      handleUploadAudio(event.target.files)
+  }
+  fileInput.click()
 }
 
-	
 async function handleUploadAudio(files: FileList | null) {
-	if (!files || files.length === 0) {
-		ms.error('未选择文件');
-		return;
-	}
-	const file = files[0];
+  if (!files || files.length === 0) {
+    ms.error('未选择文件')
+    return
+  }
+  const file = files[0]
 
-	const formData = new FormData();
-	formData.append('file', file);
+  const formData = new FormData()
+  formData.append('file', file)
 
-	// 添加初始聊天消息以显示文件正在上传
-	//const chatIndex = dataSources.value.length;
-	addChat(
-		+uuid,
-		{
-			dateTime: new Date().toLocaleString(),
-			text: `转写音频文件：${file.name}成文字`,
-			inversion: true,
-			error: false,
-			conversationOptions: null,
-			requestOptions: { prompt: '', options: null },  // 使用空字符串和null作为默认值
-		},
-	);
-	scrollToBottom();
-	loading.value = true
+  // 添加初始聊天消息以显示文件正在上传
+  // const chatIndex = dataSources.value.length;
+  addChat(
+    +uuid,
+    {
+      dateTime: new Date().toLocaleString(),
+      text: `转写音频文件：${file.name}成文字`,
+      inversion: true,
+      error: false,
+      conversationOptions: null,
+      requestOptions: { prompt: '', options: null }, // 使用空字符串和null作为默认值
+    },
+  )
+  scrollToBottom()
+  loading.value = true
   prompt.value = ''
-	addChat(
-		+uuid,
-		{
-			dateTime: new Date().toLocaleString(),
-			text: '转换中',
-			loading: true,
-			inversion: false,
-			error: false,
-			conversationOptions: null,
-			requestOptions: { prompt: '', options: null },
-		},
-	);
-	scrollToBottom();
+  addChat(
+    +uuid,
+    {
+      dateTime: new Date().toLocaleString(),
+      text: '转换中',
+      loading: true,
+      inversion: false,
+      error: false,
+      conversationOptions: null,
+      requestOptions: { prompt: '', options: null },
+    },
+  )
+  scrollToBottom()
 
-	try {
-		// 移除 console.log，或者替换为其他日志记录方式
-		const response = await fetch('http://172.16.1.118:7001/transcribe/', {
-			method: 'POST',
-			body: formData,
-			signal: controller.signal
-		});
+  try {
+    // 移除 console.log，或者替换为其他日志记录方式
+    const response = await fetch('http://172.16.1.118:7001/transcribe/', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    })
 
-		if (!response.ok) {
-			throw new Error(`服务器响应错误：${response.status}`);
-		}
+    if (!response.ok)
+      throw new Error(`服务器响应错误：${response.status}`)
 
-		// 使用 .json() 方法解析 JSON 响应
-		const result = await response.json();
+    // 使用 .json() 方法解析 JSON 响应
+    const result = await response.json()
 
-		// 使用 result.text 来获取转录文本
-		const transcription = result.text;
-		// 移除 console.log，或者替换为其他日志记录方式
+    // 使用 result.text 来获取转录文本
+    const transcription = result.text
+    // 移除 console.log，或者替换为其他日志记录方式
 
-		// 更新聊天消息以显示转写文本
-		updateChat(
-			+uuid,
-			dataSources.value.length - 1,
-			{
-				dateTime: new Date().toLocaleString(),
-				text: transcription,
-				inversion: false,
-				error: false,
-				loading: false,
-				conversationOptions: null,
-				requestOptions: {
-					prompt: `这是语音转写的结果，需要你帮我检查是否有问题，并返回完善后的内容给我：` + transcription,
-					options: null
-				},
-			},
-		);
-		scrollToBottomIfAtBottom()
-	} catch (error) {
-		ms.error(error instanceof Error ? error.message : '上传文件失败');
-		// 移除 console.log，或者替换为其他日志记录方式
+    // 更新聊天消息以显示转写文本
+    updateChat(
+      +uuid,
+      dataSources.value.length - 1,
+      {
+        dateTime: new Date().toLocaleString(),
+        text: transcription,
+        inversion: false,
+        error: false,
+        loading: false,
+        conversationOptions: null,
+        requestOptions: {
+          prompt: `这是语音转写的结果，需要你帮我检查是否有问题，并返回完善后的内容给我：${transcription}`,
+          options: null,
+        },
+      },
+    )
+    scrollToBottomIfAtBottom()
+  }
+  catch (error) {
+    ms.error(error instanceof Error ? error.message : '上传文件失败')
+    // 移除 console.log，或者替换为其他日志记录方式
 
-		// 更新聊天消息以显示错误信息
-		updateChatSome(
-			+uuid,
-			dataSources.value.length - 1,
-			{
-				text: `错误：${error instanceof Error ? error.message : '上传文件失败'}`,
-				error: true,
-				loading: false,
-			},
-		);
-		// 移除 console.log，或者替换为其他日志记录方式
-	} finally {
-		loading.value = false;
-		// 移除 console.log，或者替换为其他日志记录方式
-	}
+    // 更新聊天消息以显示错误信息
+    updateChatSome(
+      +uuid,
+      dataSources.value.length - 1,
+      {
+        text: `错误：${error instanceof Error ? error.message : '上传文件失败'}`,
+        error: true,
+        loading: false,
+      },
+    )
+    // 移除 console.log，或者替换为其他日志记录方式
+  }
+  finally {
+    loading.value = false
+    // 移除 console.log，或者替换为其他日志记录方式
+  }
 }
-
-
-
-
 
 function handleSubmit() {
   onConversation()
@@ -220,10 +229,15 @@ async function onConversation() {
   try {
     let lastText = ''
     const fetchChatAPIOnce = async () => {
+      console.log(message)
+      // console.log(options)
+      const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
+      const businessType = currentHistory.businessType
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: message,
         options,
         signal: controller.signal,
+        businessType,
         onDownloadProgress: ({ event }) => {
           const xhr = event.target
           const { responseText } = xhr
@@ -592,57 +606,63 @@ onUnmounted(() => {
           class="w-full max-w-screen-xl m-auto dark:bg-[#101014]"
           :class="[isMobile ? 'p-2' : 'p-4']"
         >
-          <template v-if="!dataSources.length">
+          <!-- <template v-if="!dataSources.length">
             <div class="flex items-center justify-center mt-4 text-center text-neutral-300">
               <SvgIcon icon="ri:bubble-chart-fill" class="mr-2 text-3xl" />
               <span>Aha~</span>
+              <span>{{ currentBusinessType }}</span>
             </div>
           </template>
-          <template v-else>
-            <div>
-              <Message
-                v-for="(item, index) of dataSources"
-                :key="index"
-                :date-time="item.dateTime"
-                :text="item.text"
-                :inversion="item.inversion"
-                :error="item.error"
-                :loading="item.loading"
-                @regenerate="onRegenerate(index)"
-                @delete="handleDelete(index)"
-              />
-              <div class="sticky bottom-0 left-0 flex justify-center">
-                <NButton v-if="loading" type="warning" @click="handleStop">
-                  <template #icon>
-                    <SvgIcon icon="ri:stop-circle-line" />
-                  </template>
-                  {{ t('common.stopResponding') }}
-                </NButton>
-              </div>
+          <template v-else> -->
+          <!-- <template> -->
+          <div class="flex items-center justify-center mt-4 text-center text-neutral-300">
+            <SvgIcon icon="fluent:brain-circuit-24-filled" class="mr-2 text-3xl" />
+            <span>{{ currentBusinessType }}</span>
+          </div>
+          <div>
+            <Message
+              v-for="(item, index) of dataSources"
+              :key="index"
+              :date-time="item.dateTime"
+              :text="item.text"
+              :inversion="item.inversion"
+              :error="item.error"
+              :loading="item.loading"
+              @regenerate="onRegenerate(index)"
+              @delete="handleDelete(index)"
+            />
+            <div class="sticky bottom-0 left-0 flex justify-center">
+              <NButton v-if="loading" type="warning" @click="handleStop">
+                <template #icon>
+                  <SvgIcon icon="ri:stop-circle-line" />
+                </template>
+                {{ t('common.stopResponding') }}
+              </NButton>
             </div>
-          </template>
+          </div>
+          <!-- </template> -->
         </div>
       </div>
     </main>
     <footer :class="footerClass">
       <div class="w-full max-w-screen-xl m-auto">
         <div class="flex items-center justify-between space-x-2">
-          <HoverButton @click="triggerFileInput" title="音频转写文字" v-if="!isMobile">
-						<span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
+          <HoverButton v-if="!isMobile" title="音频转写文字" @click="triggerFileInput">
+            <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
               <SvgIcon icon="fe:file-audio" />
             </span>
           </HoverButton>
-					<HoverButton v-if="!isMobile" @click="handleClear" title="清空当前会话">
+          <HoverButton v-if="!isMobile" title="清空当前会话" @click="handleClear">
             <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="ri:delete-bin-line" />
             </span>
           </HoverButton>
-          <HoverButton v-if="!isMobile" @click="handleExport" title="保存会话到图片">
+          <HoverButton v-if="!isMobile" title="保存会话到图片" @click="handleExport">
             <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="ri:download-2-line" />
             </span>
           </HoverButton>
-          <HoverButton @click="toggleUsingContext" title="不携带历史记录">
+          <HoverButton title="不携带历史记录" @click="toggleUsingContext">
             <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
               <SvgIcon icon="ri:chat-history-line" />
             </span>

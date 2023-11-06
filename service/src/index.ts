@@ -21,15 +21,23 @@ app.all('*', (_, res, next) => {
 
 router.post('/chat-process', [auth, limiter], async (req, res) => {
   res.setHeader('Content-type', 'application/octet-stream')
-
+  // console.log('111111111111111111')
+  // console.log(req.body)
+  // console.log(businessType)
+  // let businessType = req.body.businessType;
   try {
     const { prompt, options = {}, systemMessage, temperature, top_p } = req.body as RequestProps
     let firstChunk = true
+    options.businessType = req.body.businessType
+    // console.log(options)
+    // console.log('111111111111111111')
+    // 接下来调用/services/chatgpt/index.ts的chatReplyProcess
     await chatReplyProcess({
       message: prompt,
       lastContext: options,
       process: (chat: ChatMessage) => {
         res.write(firstChunk ? JSON.stringify(chat) : `\n${JSON.stringify(chat)}`)
+        // console.log(chat)
         firstChunk = false
       },
       systemMessage,

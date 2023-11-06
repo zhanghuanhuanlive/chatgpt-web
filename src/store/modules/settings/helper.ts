@@ -10,8 +10,9 @@ export interface SettingsState {
 
 export function defaultSetting(): SettingsState {
   return {
-    systemMessage: '用中文回答问题，有些内容尽可能使用markdown格式',
-    temperature: 0.8,
+    // ，有些内容尽可能使用markdown格式
+    systemMessage: '用简体中文回答问题，请确保你回答的内容是正确的，对于不确定的问题请回复我不清楚这个问题',
+    temperature: 0.0,
     top_p: 1,
   }
 }

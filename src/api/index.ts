@@ -7,6 +7,8 @@ export function fetchChatAPI<T = any>(
   options?: { conversationId?: string; parentMessageId?: string },
   signal?: GenericAbortSignal,
 ) {
+  // console.log(prompt)
+  console.log('-----------------------')
   return post<T>({
     url: '/chat',
     data: { prompt, options },
@@ -25,6 +27,7 @@ export function fetchChatAPIProcess<T = any>(
     prompt: string
     options?: { conversationId?: string; parentMessageId?: string }
     signal?: GenericAbortSignal
+    businessType: string
     onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void },
 ) {
   const settingStore = useSettingStore()
@@ -33,6 +36,7 @@ export function fetchChatAPIProcess<T = any>(
   let data: Record<string, any> = {
     prompt: params.prompt,
     options: params.options,
+    businessType: params.businessType,
   }
 
   if (authStore.isChatGPTAPI) {
@@ -44,6 +48,7 @@ export function fetchChatAPIProcess<T = any>(
     }
   }
 
+  console.log(data)
   return post<T>({
     url: '/chat-process',
     data,

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import type { CSSProperties } from 'vue'
-import { computed, ref, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { NButton, NLayoutSider, useDialog } from 'naive-ui'
 import List from './List.vue'
 import Footer from './Footer.vue'
@@ -20,7 +20,30 @@ const show = ref(false)
 const collapsed = computed(() => appStore.siderCollapsed)
 
 function handleAdd() {
-  chatStore.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false })
+  const dialogObj = dialog.info({
+    title: t('请选择使用场景'),
+    content: () => {
+      return [
+        h(NButton, {
+          onClick: () => {
+            proceedToAddHistory(0)
+            dialogObj.destroy()
+          },
+        }, t('纯聊天')),
+        h(NButton, {
+          onClick: () => {
+            proceedToAddHistory(1)
+            dialogObj.destroy()
+          },
+        }, t('政策事项查询')),
+      ]
+    },
+    // ...其他配置项
+  })
+}
+
+function proceedToAddHistory(businessType) {
+  chatStore.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false, businessType })
   if (isMobile.value)
     appStore.setSiderCollapsed(true)
 }

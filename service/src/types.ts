@@ -11,6 +11,7 @@ export interface RequestProps {
 export interface ChatContext {
   conversationId?: string
   parentMessageId?: string
+  businessType: string
 }
 
 export interface ChatGPTUnofficialProxyAPIOptions {
