@@ -6,7 +6,7 @@ export const useChatStore = defineStore('chat-store', {
   // state: (): Chat.ChatState => getLocalState(),
   state: (): Chat.ChatState => ({
     ...getLocalState(),
-    businessType: '0', // 添加一个新的属性businessType
+    // businessType: '0', // 添加一个新的属性businessType
   }),
 
   getters: {
@@ -24,9 +24,9 @@ export const useChatStore = defineStore('chat-store', {
         return state.chat.find(item => item.uuid === state.active)?.data ?? []
       }
     },
-    getBusinessType(state: Chat.ChatState): string | null {
-      return state.businessType
-    },
+    // getBusinessType(state: Chat.ChatState): string | null {
+    //   return state.businessType
+    // },
   },
 
   actions: {

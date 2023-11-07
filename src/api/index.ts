@@ -8,7 +8,7 @@ export function fetchChatAPI<T = any>(
   signal?: GenericAbortSignal,
 ) {
   // console.log(prompt)
-  console.log('-----------------------')
+  // console.log('-----------------------')
   return post<T>({
     url: '/chat',
     data: { prompt, options },
@@ -27,7 +27,7 @@ export function fetchChatAPIProcess<T = any>(
     prompt: string
     options?: { conversationId?: string; parentMessageId?: string }
     signal?: GenericAbortSignal
-    businessType: string
+    businessType: number
     onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void },
 ) {
   const settingStore = useSettingStore()

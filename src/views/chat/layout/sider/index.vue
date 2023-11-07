@@ -42,7 +42,7 @@ function handleAdd() {
   })
 }
 
-function proceedToAddHistory(businessType) {
+function proceedToAddHistory(businessType: number) {
   chatStore.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false, businessType })
   if (isMobile.value)
     appStore.setSiderCollapsed(true)

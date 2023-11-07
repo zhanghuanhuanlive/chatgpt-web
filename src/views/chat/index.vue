@@ -49,7 +49,9 @@ const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 // 当前的应用场景类型
 const currentBusinessType = computed(() => {
   const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-  const businessType = currentHistory.businessType
+  let businessType = 0
+  if (undefined !== currentHistory)
+    businessType = currentHistory.businessType
   // console.log(businessType)
   if (businessType === 1)
     return '政策事项查询'
@@ -232,7 +234,9 @@ async function onConversation() {
       console.log(message)
       // console.log(options)
       const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-      const businessType = currentHistory.businessType
+      let businessType = 0
+      if (undefined !== currentHistory)
+        businessType = currentHistory.businessType
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: message,
         options,
@@ -365,10 +369,15 @@ async function onRegenerate(index: number) {
   try {
     let lastText = ''
     const fetchChatAPIOnce = async () => {
+      const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
+      let businessType = 0
+      if (undefined !== currentHistory)
+        businessType = currentHistory.businessType
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: message,
         options,
         signal: controller.signal,
+        businessType,
         onDownloadProgress: ({ event }) => {
           const xhr = event.target
           const { responseText } = xhr

@@ -3,11 +3,12 @@ import type fetch from 'node-fetch'
 
 export interface RequestOptions {
   message: string
-  lastContext?: { conversationId?: string; parentMessageId?: string }
+  lastContext?: { conversationId?: string; parentMessageId?: string; businessType?: number }
   process?: (chat: ChatMessage) => void
   systemMessage?: string
   temperature?: number
   top_p?: number
+
 }
 
 export interface SetProxyOptions {

@@ -23,7 +23,7 @@ const ErrorCodeMessage: Record<string, string> = {
   500: '[OpenAI] 服务器繁忙，请稍后再试 | Internal Server Error',
 }
 
-const timeoutMs: number = !isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 100 * 1000
+const timeoutMs: number = !isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000
 const disableDebug: boolean = process.env.OPENAI_API_DISABLE_DEBUG === 'true'
 
 let apiModel: ApiModel
@@ -105,6 +105,26 @@ async function chatReplyProcess(options: RequestOptions) {
       else
         options = { ...lastContext }
     }
+
+    const businessType = lastContext.businessType
+    // console.log('----------------1')
+    // console.log(businessType)
+    // let api_options = api.apiKey;
+    // console.log(api)
+    // console.log(api_options)
+    // console.log(options)
+    // console.log(api)
+    if (businessType === 1) {
+      options.completionParams.model = 'guidance'
+    }
+    else if (businessType === 2) {
+      options.completionParams.model = 'chatglm36b'
+    }
+    else { // 纯聊天
+      options.completionParams.model = 'chatglm36b'
+    }
+    // options.maxModelTokens = 8192
+    // api = new ChatGPTAPI({ ...api_options })
 
     const response = await api.sendMessage(message, {
       ...options,
