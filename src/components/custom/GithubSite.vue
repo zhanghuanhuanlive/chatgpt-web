@@ -1,5 +1,3 @@
 <template>
-  <div class="text-neutral-400">
-    
-  </div>
+  <div class="text-neutral-400" />
 </template>

@@ -55,10 +55,10 @@ const currentBusinessType = computed(() => {
   // console.log(businessType)
   if (businessType === 1)
     return '政策事项查询'
-  else if (businessType === 2)
-    return '会议纪要查询'
+  else if (businessType === 10)
+    return '百度文心一言模型'
   else
-    return 'ChatGLM'
+    return 'ChatGLM3'
   // return currentHistory ? currentHistory.businessType : 'None'
 })
 

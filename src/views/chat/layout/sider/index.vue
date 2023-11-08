@@ -29,13 +29,19 @@ function handleAdd() {
             proceedToAddHistory(0)
             dialogObj.destroy()
           },
-        }, t('纯聊天')),
+        }, t('本地ChatGLM3模型')),
         h(NButton, {
           onClick: () => {
             proceedToAddHistory(1)
             dialogObj.destroy()
           },
         }, t('政策事项查询')),
+        h(NButton, {
+          onClick: () => {
+            proceedToAddHistory(10)
+            dialogObj.destroy()
+          },
+        }, t('百度文心一言模型')),
       ]
     },
     // ...其他配置项
