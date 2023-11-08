@@ -8,7 +8,7 @@ import fetch from 'node-fetch'
 import { sendResponse } from '../utils'
 import { isNotEmptyString } from '../utils/is'
 import type { ApiModel, ChatContext, ChatGPTUnofficialProxyAPIOptions, ModelConfig } from '../types'
-import type { RequestOptions, SetProxyOptions, UsageResponse } from './types'
+import type { RequestOptions, SetProxyOptions } from './types'
 
 const { HttpsProxyAgent } = httpsProxyAgent
 
@@ -117,13 +117,16 @@ async function chatReplyProcess(options: RequestOptions) {
     if (businessType === 1) {
       options.completionParams.model = 'guidance'
     }
-    else if (businessType === 2) {
-      options.completionParams.model = 'chatglm36b'
+    else if (businessType === 10) {
+      options.completionParams.model = 'ERNIE-Bot-turbo'
     }
     else { // 纯聊天
-      options.completionParams.model = 'chatglm36b'
+      options.completionParams.model = 'chatglm3-6b'
     }
-    // options.maxModelTokens = 8192
+    // options.completionParams.maxModelTokens = 32768
+    // options.maxResponseTokens = 8192
+    options.completionParams.max_tokens = 2000
+    // options.ma
     // api = new ChatGPTAPI({ ...api_options })
 
     const response = await api.sendMessage(message, {
@@ -158,7 +161,7 @@ async function fetchUsage() {
   const [startDate, endDate] = formatDate()
 
   // 每月使用量
-  const urlUsage = `${API_BASE_URL}/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`
+  // const urlUsage = `${API_BASE_URL}/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`
 
   const headers = {
     'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -169,19 +172,19 @@ async function fetchUsage() {
 
   setupProxy(options)
 
-  try {
-    // 获取已使用量
-    const useResponse = await options.fetch(urlUsage, { headers })
-    if (!useResponse.ok)
-      throw new Error('获取使用量失败')
-    const usageData = await useResponse.json() as UsageResponse
-    const usage = Math.round(usageData.total_usage) / 100
-    return Promise.resolve(usage ? `$${usage}` : '-')
-  }
-  catch (error) {
-    global.console.log(error)
-    return Promise.resolve('-')
-  }
+  // try {
+  //   // 获取已使用量
+  //   const useResponse = await options.fetch(urlUsage, { headers })
+  //   if (!useResponse.ok)
+  //     throw new Error('获取使用量失败')
+  //   const usageData = await useResponse.json() as UsageResponse
+  //   const usage = Math.round(usageData.total_usage) / 100
+  //   return Promise.resolve(usage ? `$${usage}` : '-')
+  // }
+  // catch (error) {
+  //   global.console.log(error)
+  //   return Promise.resolve('-')
+  // }
 }
 
 function formatDate(): string[] {
