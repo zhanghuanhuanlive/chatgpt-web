@@ -44,6 +44,18 @@ function handleAdd() {
         }, t('百度文心一言模型')),
         h(NButton, {
           onClick: () => {
+            proceedToAddHistory(20)
+            dialogObj.destroy()
+          },
+        }, t('科大讯飞星火认知V3.0')),
+        h(NButton, {
+          onClick: () => {
+            proceedToAddHistory(30)
+            dialogObj.destroy()
+          },
+        }, t('阿里通义千问')),
+        h(NButton, {
+          onClick: () => {
             proceedToAddHistory(90)
             dialogObj.destroy()
           },

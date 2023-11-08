@@ -120,8 +120,14 @@ async function chatReplyProcess(options: RequestOptions) {
     else if (businessType === 10) {
       options.completionParams.model = 'ERNIE-Bot-turbo'
     }
+    else if (businessType === 20) {
+      options.completionParams.model = 'SparkDesk'
+    }
+    else if (businessType === 30) {
+      options.completionParams.model = 'qwen-turbo'
+    }
     else if (businessType === 90) {
-      options.completionParams.model = 'gpt-3.5-turbo'
+      options.completionParams.model = 'gpt-3.5-turbo-0613'
     }
     else { // 纯聊天
       options.completionParams.model = 'chatglm3-6b'
