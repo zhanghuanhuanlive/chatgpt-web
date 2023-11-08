@@ -57,6 +57,8 @@ const currentBusinessType = computed(() => {
     return '政策事项查询'
   else if (businessType === 10)
     return '百度文心一言模型'
+  else if (businessType === 90)
+    return 'GPT3.5'
   else
     return 'ChatGLM3'
   // return currentHistory ? currentHistory.businessType : 'None'

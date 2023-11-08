@@ -120,6 +120,9 @@ async function chatReplyProcess(options: RequestOptions) {
     else if (businessType === 10) {
       options.completionParams.model = 'ERNIE-Bot-turbo'
     }
+    else if (businessType === 90) {
+      options.completionParams.model = 'gpt-3.5-turbo'
+    }
     else { // 纯聊天
       options.completionParams.model = 'chatglm3-6b'
     }

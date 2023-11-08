@@ -42,6 +42,12 @@ function handleAdd() {
             dialogObj.destroy()
           },
         }, t('百度文心一言模型')),
+        h(NButton, {
+          onClick: () => {
+            proceedToAddHistory(90)
+            dialogObj.destroy()
+          },
+        }, t('GPT3.5')),
       ]
     },
     // ...其他配置项
