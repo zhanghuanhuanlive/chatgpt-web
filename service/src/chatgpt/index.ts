@@ -114,7 +114,7 @@ async function chatReplyProcess(options: RequestOptions) {
     // console.log(api_options)
     // console.log(options)
     // console.log(api)
-    if (businessType === 1) {
+    if (businessType === 100) {
       options.completionParams.model = 'guidance'
     }
     else if (businessType === 10) {

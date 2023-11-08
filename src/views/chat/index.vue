@@ -53,7 +53,7 @@ const currentBusinessType = computed(() => {
   if (undefined !== currentHistory)
     businessType = currentHistory.businessType
   // console.log(businessType)
-  if (businessType === 1)
+  if (businessType === 100)
     return '政策事项查询'
   else if (businessType === 10)
     return '百度文心一言模型'

@@ -32,12 +32,6 @@ function handleAdd() {
         }, t('本地ChatGLM3模型')),
         h(NButton, {
           onClick: () => {
-            proceedToAddHistory(1)
-            dialogObj.destroy()
-          },
-        }, t('政策事项查询')),
-        h(NButton, {
-          onClick: () => {
             proceedToAddHistory(10)
             dialogObj.destroy()
           },
@@ -53,13 +47,19 @@ function handleAdd() {
             proceedToAddHistory(30)
             dialogObj.destroy()
           },
-        }, t('阿里通义千问')),
+        }, t('')),
         h(NButton, {
           onClick: () => {
             proceedToAddHistory(90)
             dialogObj.destroy()
           },
         }, t('GPT3.5')),
+        h(NButton, {
+          onClick: () => {
+            proceedToAddHistory(100)
+            dialogObj.destroy()
+          },
+        }, t('政策事项查询')),
       ]
     },
     // ...其他配置项
