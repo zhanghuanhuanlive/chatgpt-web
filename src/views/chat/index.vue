@@ -57,8 +57,10 @@ const currentBusinessType = computed(() => {
     return '政策事项查询'
   else if (businessType === 10)
     return '百度文心一言模型'
-  else if (businessType === 10)
+  else if (businessType === 20)
     return '科大讯飞星火认知V3.0'
+  else if (businessType === 30)
+    return '阿里通义千问'
   else if (businessType === 90)
     return 'GPT3.5'
   else
