@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import type { CSSProperties } from 'vue'
-import { computed, h, ref, watch } from 'vue'
-import { NButton, NLayoutSider, useDialog } from 'naive-ui'
+import { computed, ref, watch } from 'vue'
+import { NButton, NDropdown, NLayoutSider, useDialog } from 'naive-ui'
 import List from './List.vue'
 import Footer from './Footer.vue'
 import { useAppStore, useChatStore } from '@/store'
@@ -19,52 +19,103 @@ const show = ref(false)
 
 const collapsed = computed(() => appStore.siderCollapsed)
 
-function handleAdd() {
-  const dialogObj = dialog.info({
-    title: t('请选择使用场景'),
-    content: () => {
-      return [
-        h(NButton, {
-          onClick: () => {
-            proceedToAddHistory(0)
-            dialogObj.destroy()
-          },
-        }, t('本地ChatGLM3模型')),
-        h(NButton, {
-          onClick: () => {
-            proceedToAddHistory(10)
-            dialogObj.destroy()
-          },
-        }, t('百度文心一言模型')),
-        h(NButton, {
-          onClick: () => {
-            proceedToAddHistory(20)
-            dialogObj.destroy()
-          },
-        }, t('科大讯飞星火认知V3.0')),
-        h(NButton, {
-          onClick: () => {
-            proceedToAddHistory(30)
-            dialogObj.destroy()
-          },
-        }, t('')),
-        h(NButton, {
-          onClick: () => {
-            proceedToAddHistory(90)
-            dialogObj.destroy()
-          },
-        }, t('GPT3.5')),
-        h(NButton, {
-          onClick: () => {
-            proceedToAddHistory(100)
-            dialogObj.destroy()
-          },
-        }, t('政策事项查询')),
-      ]
-    },
-    // ...其他配置项
-  })
+const options = [
+  {
+    label: '选择模型',
+    key: '1000',
+    disabled: true,
+  },
+  {
+    label: '本地ChatGLM3',
+    key: '0',
+  },
+  {
+    label: '百度文心一言',
+    key: '10',
+  },
+  {
+    label: '科大讯飞星火认知V3.0',
+    key: '20',
+  },
+  {
+    label: '阿里通义千问',
+    key: '30',
+  },
+  {
+    label: 'GPT3.5',
+    key: '90',
+  },
+  {
+    type: 'divider',
+    key: 'd1',
+  },
+  {
+    label: '选择应用',
+    key: '10000',
+    disabled: true,
+  },
+  {
+    label: '政策事项查询',
+    key: '100',
+  },
+]
+
+// const message = useMessage()
+// const showDropdownRef = ref(false)
+// showDropdown = showDropdownRef,
+
+function handleSelectModal(key: string) {
+  proceedToAddHistory(parseInt(key))
+  // message.info(String(key))
 }
+// const labelPlacement = ref('top')
+
+// function handleAdd() {
+//   const dialogObj = dialog.info({
+//     title: t('请选择使用场景'),
+//     content: () => {
+//       return [
+//         h(NButton, {
+//           onClick: () => {
+//             proceedToAddHistory(0)
+//             dialogObj.destroy()
+//           },
+//         }, t('本地ChatGLM3模型')),
+//         h(NButton, {
+//           onClick: () => {
+//             proceedToAddHistory(10)
+//             dialogObj.destroy()
+//           },
+//         }, t('百度文心一言模型')),
+//         h(NButton, {
+//           onClick: () => {
+//             proceedToAddHistory(20)
+//             dialogObj.destroy()
+//           },
+//         }, t('科大讯飞星火认知V3.0')),
+//         h(NButton, {
+//           onClick: () => {
+//             proceedToAddHistory(30)
+//             dialogObj.destroy()
+//           },
+//         }, t('')),
+//         h(NButton, {
+//           onClick: () => {
+//             proceedToAddHistory(90)
+//             dialogObj.destroy()
+//           },
+//         }, t('GPT3.5')),
+//         h(NButton, {
+//           onClick: () => {
+//             proceedToAddHistory(100)
+//             dialogObj.destroy()
+//           },
+//         }, t('政策事项查询')),
+//       ]
+//     },
+//     // ...其他配置项
+//   })
+// }
 
 function proceedToAddHistory(businessType: number) {
   chatStore.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false, businessType })
@@ -136,9 +187,14 @@ watch(
     <div class="flex flex-col h-full" :style="mobileSafeArea">
       <main class="flex flex-col flex-1 min-h-0">
         <div class="p-4">
-          <NButton dashed block @click="handleAdd">
+          <NDropdown trigger="hover" size="huge" :options="options" :show-arrow="true" @select="handleSelectModal">
+            <NButton type="primary" dashed block strong>
+              +    {{ $t('chat.newChatButton') }}
+            </NButton>
+          </NDropdown>
+          <!-- <NButton dashed block @click="openChooseModel">
             {{ $t('chat.newChatButton') }}
-          </NButton>
+          </NButton> -->
         </div>
         <div class="flex-1 min-h-0 pb-4 overflow-hidden">
           <List />

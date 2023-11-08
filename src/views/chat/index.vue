@@ -50,22 +50,20 @@ const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 const currentBusinessType = computed(() => {
   const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
   let businessType = 0
+  let currentBusinessTypeName = 'ChatGLM3'
   if (undefined !== currentHistory)
     businessType = currentHistory.businessType
-  // console.log(businessType)
-  if (businessType === 100)
-    return '政策事项查询'
-  else if (businessType === 10)
-    return '百度文心一言模型'
+  if (businessType === 10)
+    currentBusinessTypeName = '百度文心一言模型'
   else if (businessType === 20)
-    return '科大讯飞星火认知V3.0'
+    currentBusinessTypeName = '科大讯飞星火认知V3.0'
   else if (businessType === 30)
-    return '阿里通义千问'
+    currentBusinessTypeName = '阿里通义千问'
   else if (businessType === 90)
-    return 'GPT3.5'
-  else
-    return 'ChatGLM3'
-  // return currentHistory ? currentHistory.businessType : 'None'
+    currentBusinessTypeName = 'GPT3.5'
+  else if (businessType === 100)
+    currentBusinessTypeName = '政策事项查询'
+  return currentBusinessTypeName
 })
 
 // 未知原因刷新页面，loading 状态不会重置，手动重置
