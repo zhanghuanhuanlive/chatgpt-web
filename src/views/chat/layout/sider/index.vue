@@ -50,13 +50,28 @@ const options = [
     key: 'd1',
   },
   {
-    label: '选择应用',
+    label: '选择知识库',
     key: '10000',
     disabled: true,
   },
   {
     label: '政策事项查询',
     key: '100',
+  },
+  {
+    label: '法律法规',
+    key: 'others1',
+    children: [
+      {
+        label: '民法典',
+        key: '101',
+      },
+      {
+        label: '矛盾调解',
+        key: '101',
+        disabled: true,
+      },
+    ],
   },
 ]
 

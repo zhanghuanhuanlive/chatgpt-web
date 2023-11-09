@@ -114,10 +114,8 @@ async function chatReplyProcess(options: RequestOptions) {
     // console.log(api_options)
     // console.log(options)
     // console.log(api)
-    if (businessType === 100) {
-      options.completionParams.model = 'guidance'
-    }
-    else if (businessType === 10) {
+
+    if (businessType === 10) {
       options.completionParams.model = 'ERNIE-Bot-turbo'
     }
     else if (businessType === 20) {
@@ -128,6 +126,12 @@ async function chatReplyProcess(options: RequestOptions) {
     }
     else if (businessType === 90) {
       options.completionParams.model = 'gpt-3.5-turbo-0613'
+    }
+    else if (businessType === 100) {
+      options.completionParams.model = 'guidance'// 政务事项
+    }
+    else if (businessType === 101) {
+      options.completionParams.model = 'law'// 民法典
     }
     else { // 纯聊天
       options.completionParams.model = 'chatglm3-6b'
