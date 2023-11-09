@@ -78,7 +78,7 @@ function triggerFileInput() {
   const fileInput = document.createElement('input')
   fileInput.type = 'file'
   // fileInput.accept = 'audio/*'
-  fileInput.accept = '.mp3,.wav,.MP3,.WAV'
+  fileInput.accept = '.mp3,.wav'
   fileInput.onchange = (event) => {
     if (event.target instanceof HTMLInputElement)
       handleUploadAudio(event.target.files)
