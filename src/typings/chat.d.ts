@@ -16,7 +16,7 @@ declare namespace Chat {
 		isEdit: boolean
 		uuid: number
 		businessType: number
-		businessName:? string//非必填
+		businessName?: string//非必填
 	}
 
 	interface ChatState {
