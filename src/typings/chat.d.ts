@@ -16,6 +16,7 @@ declare namespace Chat {
 		isEdit: boolean
 		uuid: number
 		businessType: number
+		businessName: string
 	}
 
 	interface ChatState {

@@ -11,7 +11,28 @@ const { isMobile } = useBasicLayout()
 const appStore = useAppStore()
 const chatStore = useChatStore()
 
-const dataSources = computed(() => chatStore.history)
+const dataSources = computed(() => {
+  // console.log(chatStore)
+  // console.log(chatStore.history)
+  chatStore.history.forEach((history) => {
+    const businessType = history.businessType
+    if (businessType === 10)
+      history.businessName = '百度文心一言'
+    else if (businessType === 20)
+      history.businessName = '科大讯飞星火认知V3.0'
+    else if (businessType === 30)
+      history.businessName = '阿里通义千问'
+    else if (businessType === 90)
+      history.businessName = 'GPT3.5'
+    else if (businessType === 100)
+      history.businessName = '政策事项查询'
+    else if (businessType === 101)
+      history.businessName = '民法典'
+    else
+      history.businessName = 'ChatGLM3'
+  })
+  return chatStore.history
+})
 
 async function handleSelect({ uuid }: Chat.History) {
   // console.log(uuid)
@@ -63,7 +84,7 @@ function isActive(uuid: number) {
       <template v-else>
         <div v-for="(item, index) of dataSources" :key="index">
           <a
-            class="relative flex items-center gap-3 px-3 py-3 break-all border rounded-md cursor-pointer hover:bg-neutral-100 group dark:border-neutral-800 dark:hover:bg-[#24272e]"
+            class="relative flex items-center gap-3 px-3 py-1 break-all border rounded-md cursor-pointer hover:bg-neutral-100 group dark:border-neutral-800 dark:hover:bg-[#24272e]"
             :class="isActive(item.uuid) && ['border-[#4b9e5f]', 'bg-neutral-100', 'text-[#4b9e5f]', 'dark:bg-[#24272e]', 'dark:border-[#4b9e5f]', 'pr-14']"
             @click="handleSelect(item)"
           >
@@ -76,7 +97,11 @@ function isActive(uuid: number) {
                 v-model:value="item.title" size="tiny"
                 @keypress="handleEnter(item, false, $event)"
               />
-              <span v-else>{{ item.title }}</span>
+              <!-- <span v-else>{{ item.title }}{{ item.businessName }}</span> -->
+              <template v-else>
+                <div>{{ item.title }}</div>
+                <div :style="{ color: '#bbb', fontSize: '70%' }">{{ item.businessName }}</div>
+              </template>
             </div>
             <div v-if="isActive(item.uuid)" class="absolute z-10 flex visible right-1">
               <template v-if="item.isEdit">

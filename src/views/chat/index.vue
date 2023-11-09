@@ -54,7 +54,7 @@ const currentBusinessType = computed(() => {
   if (undefined !== currentHistory)
     businessType = currentHistory.businessType
   if (businessType === 10)
-    currentBusinessTypeName = '百度文心一言模型'
+    currentBusinessTypeName = '百度文心一言'
   else if (businessType === 20)
     currentBusinessTypeName = '科大讯飞星火认知V3.0'
   else if (businessType === 30)
