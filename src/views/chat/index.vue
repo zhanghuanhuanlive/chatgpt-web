@@ -77,12 +77,20 @@ dataSources.value.forEach((item, index) => {
 function triggerFileInput() {
   const fileInput = document.createElement('input')
   fileInput.type = 'file'
+  // fileInput.accept = 'audio/*'
+  fileInput.accept = '.mp3,.wav,.MP3,.WAV'
   fileInput.onchange = (event) => {
     if (event.target instanceof HTMLInputElement)
       handleUploadAudio(event.target.files)
   }
   fileInput.click()
 }
+
+// function handleFileChange(event) {
+//   const file = event.target.files[0]
+//   // 在这里处理上传的文件
+//   console.log('上传的文件:', file)
+// }
 
 async function handleUploadAudio(files: FileList | null) {
   if (!files || files.length === 0) {
@@ -662,10 +670,11 @@ onUnmounted(() => {
     <footer :class="footerClass">
       <div class="w-full max-w-screen-xl m-auto">
         <div class="flex items-center justify-between space-x-2">
-          <HoverButton v-if="!isMobile" title="音频转写文字" @click="triggerFileInput">
+          <HoverButton v-if="!isMobile" title="音频转写文字" accept="image/png, image/jpeg" @click="triggerFileInput">
             <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
               <SvgIcon icon="fe:file-audio" />
             </span>
+            <!-- <input type="file" ref="fileInput" style="display: none" accept="audio/*" @change="handleFileChange" /> -->
           </HoverButton>
           <HoverButton v-if="!isMobile" title="清空当前会话" @click="handleClear">
             <span class="text-xl text-[#4f555e] dark:text-white">
