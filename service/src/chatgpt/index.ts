@@ -133,6 +133,9 @@ async function chatReplyProcess(options: RequestOptions) {
     else if (businessType === 101) {
       options.completionParams.model = 'law'// 民法典
     }
+    else if (businessType === 108) {
+      options.completionParams.model = 'investment'// 民法典
+    }
     else { // 纯聊天
       options.completionParams.model = 'chatglm3-6b'
     }

@@ -62,7 +62,9 @@ const currentBusinessType = computed(() => {
   else if (businessType === 90)
     currentBusinessTypeName = 'GPT3.5'
   else if (businessType === 100)
-    currentBusinessTypeName = '政策事项查询'
+    currentBusinessTypeName = '政策事项知识库'
+  else if (businessType === 108)
+    currentBusinessTypeName = '招商政策知识库'
   else if (businessType === 101)
     currentBusinessTypeName = '民法典'
   return currentBusinessTypeName

@@ -55,8 +55,12 @@ const options = [
     disabled: true,
   },
   {
-    label: '政策事项查询',
+    label: '办事事项知识库',
     key: '100',
+  },
+  {
+    label: '招商政策知识库',
+    key: '108',
   },
   {
     label: '法律法规',

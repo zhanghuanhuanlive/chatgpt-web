@@ -25,7 +25,9 @@ const dataSources = computed(() => {
     else if (businessType === 90)
       history.businessName = 'GPT3.5'
     else if (businessType === 100)
-      history.businessName = '政策事项查询'
+      history.businessName = '政策事项知识库'
+    else if (businessType === 108)
+      history.businessName = '招商政策知识库'
     else if (businessType === 101)
       history.businessName = '民法典'
     else
