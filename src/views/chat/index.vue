@@ -95,8 +95,10 @@ async function handleAudioInput(audioBlob: Blob) {
   // loadingBar.start() // 开始显示加载条
   // console.log(formData)
   // console.log(audioBlob)
-  try { // http://localhost:7001/transcribe/
-    const response = await fetch('http://fastgpt.learnoh.cn/transcribe/', {
+  try {
+    // http://localhost:7001/transcribe/
+    // http://fastgpt.learnoh.cn/transcribe
+    const response = await fetch('http://localhost:7001/transcribe/', {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -190,7 +192,8 @@ async function handleUploadAudio(files: FileList | null) {
   try {
     // 移除 console.log，或者替换为其他日志记录方式
     // http://localhost:7001/transcribe/
-    const response = await fetch('http://fastgpt.learnoh.cn/transcribe/', {
+    // http://fastgpt.learnoh.cn/transcribe
+    const response = await fetch(' http://localhost:7001/transcribe/', {
       method: 'POST',
       body: formData,
       signal: controller.signal,
