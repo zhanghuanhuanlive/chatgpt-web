@@ -5,7 +5,7 @@
     "target": "ESNext",
     "lib": ["DOM", "ESNext"],
     "strict": false,
-		"noImplicitAny": false, 
+    "noImplicitAny": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "jsx": "preserve",
@@ -15,6 +15,7 @@
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    "allowJs": true,
     "paths": {
       "@/*": ["./src/*"]
     },
