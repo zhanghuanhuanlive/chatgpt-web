@@ -125,7 +125,7 @@ async function chatReplyProcess(options: RequestOptions) {
       options.completionParams.model = 'qwen-turbo'
     }
     else if (businessType === 90) {
-      options.completionParams.model = 'gpt-3.5-turbo-0613'
+      options.completionParams.model = 'gpt-3.5-turbo-1106'
     }
     else if (businessType === 100) {
       options.completionParams.model = 'guidance'// 政务事项
@@ -134,7 +134,8 @@ async function chatReplyProcess(options: RequestOptions) {
       options.completionParams.model = 'law'// 民法典
     }
     else if (businessType === 108) {
-      options.completionParams.model = 'investment'// 民法典
+      options.completionParams.model = 'investment'// 招商政策
+      options.systemMessage = ''
     }
     else { // 纯聊天
       options.completionParams.model = 'chatglm3-6b'
@@ -145,6 +146,10 @@ async function chatReplyProcess(options: RequestOptions) {
     // options.ma
     // api = new ChatGPTAPI({ ...api_options })
 
+    // eslint-disable-next-line no-console
+    console.log(options)
+    // eslint-disable-next-line no-console
+    console.log(message)
     const response = await api.sendMessage(message, {
       ...options,
       onProgress: (partialResponse) => {

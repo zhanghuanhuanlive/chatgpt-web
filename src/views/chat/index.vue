@@ -3,13 +3,14 @@ import type { Ref } from 'vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { NAutoComplete, NButton, NInput, useDialog, useMessage } from 'naive-ui'
+import { NAutoComplete, NButton, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
 import { useChat } from './hooks/useChat'
 import { useUsingContext } from './hooks/useUsingContext'
 import HeaderComponent from './components/Header/index.vue'
+import AudioEnter from './AudioEnter.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore } from '@/store'
@@ -46,6 +47,12 @@ const promptStore = usePromptStore()
 // 使用storeToRefs，保证store修改后，联想部分能够重新渲染
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
+const showAudioInputBtn = ref(false)
+
+const isSpinning = ref(false)
+
+// const loadingBar = useLoadingBar()
+
 // 当前的应用场景类型
 const currentBusinessType = computed(() => {
   const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
@@ -69,6 +76,52 @@ const currentBusinessType = computed(() => {
     currentBusinessTypeName = '民法典'
   return currentBusinessTypeName
 })
+
+function closeAudio(audioBlob: Blob) {
+  console.log('closeAudioInput')
+  showAudioInputBtn.value = false
+  if (audioBlob === null)
+    return
+  handleAudioInput(audioBlob)
+}
+
+async function handleAudioInput(audioBlob: Blob) {
+  isSpinning.value = true // 开始加载，显示全局加载状态
+  console.log('start handleAudioInput')
+  // console.log('--------------')
+  // 创建一个 FormData 对象
+  const formData = new FormData()
+  formData.append('file', audioBlob, 'audio.wav')
+  // loadingBar.start() // 开始显示加载条
+  // console.log(formData)
+  // console.log(audioBlob)
+  try { // http://localhost:7001/transcribe/
+    const response = await fetch('http://fastgpt.learnoh.cn/transcribe/', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    })
+
+    if (!response.ok)
+      throw new Error(`服务器响应错误：${response.status}`)
+
+    const result = await response.json()
+    console.log(result)
+    prompt.value = result.text // 更新 prompt 的值
+    // loadingBar.finish() // 完成后隐藏加载条
+  }
+  catch (error) {
+    console.error('转录失败:', error)
+  }
+  finally {
+    isSpinning.value = false // 加载结束，隐藏全局加载状态
+  }
+}
+
+function showAudioInput() {
+  showAudioInputBtn.value = true
+  // console.log(showAudioInputBtn)
+}
 
 // 未知原因刷新页面，loading 状态不会重置，手动重置
 dataSources.value.forEach((item, index) => {
@@ -136,7 +189,8 @@ async function handleUploadAudio(files: FileList | null) {
 
   try {
     // 移除 console.log，或者替换为其他日志记录方式
-    const response = await fetch('http://172.16.1.118:7001/transcribe/', {
+    // http://localhost:7001/transcribe/
+    const response = await fetch('http://fastgpt.learnoh.cn/transcribe/', {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -618,6 +672,13 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col w-full h-full">
+    <template v-if="isSpinning">
+      <NSpin :show="isSpinning" class="global-spin">
+        <template #description>
+          语音转换中，请稍后
+        </template>
+      </NSpin>
+    </template>
     <HeaderComponent
       v-if="isMobile"
       :using-context="usingContext"
@@ -673,7 +734,7 @@ onUnmounted(() => {
       <div class="w-full max-w-screen-xl m-auto">
         <div class="flex items-center justify-between space-x-2">
           <HoverButton v-if="!isMobile" title="音频转写文字" accept="image/png, image/jpeg" @click="triggerFileInput">
-            <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
+            <span class="text-xl text-[#4f555e] dark:text-white">
               <SvgIcon icon="fe:file-audio" />
             </span>
             <!-- <input type="file" ref="fileInput" style="display: none" accept="audio/*" @change="handleFileChange" /> -->
@@ -693,8 +754,18 @@ onUnmounted(() => {
               <SvgIcon icon="ri:chat-history-line" />
             </span>
           </HoverButton>
+          <HoverButton title="语音输入" @click="showAudioInput">
+            <span class="text-xl text-[#4f555e] dark:text-white">
+              <SvgIcon icon="lets-icons:sound-max-duotone" />
+            </span>
+          </HoverButton>
+          <!-- <AudioEnter /> -->
+          <!-- <HoverButton title="语音"> -->
+          <AudioEnter :is-show="showAudioInputBtn" @close-audio="closeAudio" />
+          <!-- </HoverButton> -->
           <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
             <template #default="{ handleInput, handleBlur, handleFocus }">
+              <!-- <div class="input-wrapper"> -->
               <NInput
                 ref="inputRef"
                 v-model:value="prompt"
@@ -706,6 +777,7 @@ onUnmounted(() => {
                 @blur="handleBlur"
                 @keypress="handleEnter"
               />
+              <!-- </div> -->
             </template>
           </NAutoComplete>
           <NButton type="primary" :disabled="buttonDisabled" @click="handleSubmit">
@@ -720,3 +792,18 @@ onUnmounted(() => {
     </footer>
   </div>
 </template>
+
+<style scoped>
+.global-spin {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8); /* 半透明背景 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* 确保在最顶层 */
+}
+</style>
