@@ -118,7 +118,7 @@ function isActive(uuid: number) {
                 <NPopconfirm placement="bottom" @positive-click="handleDeleteDebounce(index, $event)">
                   <template #trigger>
                     <button class="p-1">
-                      <SvgIcon icon="ri:delete-bin-line" />
+                      <SvgIcon title="清空所有的历史记录" icon="ri:delete-bin-line" />
                     </button>
                   </template>
                   {{ $t('chat.deleteHistoryConfirm') }}
