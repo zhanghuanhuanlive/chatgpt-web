@@ -137,6 +137,10 @@ async function chatReplyProcess(options: RequestOptions) {
       options.completionParams.model = 'investment'// 招商政策
       options.systemMessage = ''
     }
+    else if (businessType === 1001) {
+      options.completionParams.model = 'customerService'// 语义查询
+      options.systemMessage = ''
+    }
     else { // 纯聊天
       options.completionParams.model = 'chatglm3-6b'
     }

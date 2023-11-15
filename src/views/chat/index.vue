@@ -74,6 +74,8 @@ const currentBusinessType = computed(() => {
     currentBusinessTypeName = '招商政策知识库'
   else if (businessType === 101)
     currentBusinessTypeName = '民法典'
+  else if (businessType === 1001)
+    currentBusinessTypeName = '语义查询'
   return currentBusinessTypeName
 })
 

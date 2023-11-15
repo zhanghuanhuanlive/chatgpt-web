@@ -30,6 +30,8 @@ const dataSources = computed(() => {
       history.businessName = '招商政策知识库'
     else if (businessType === 101)
       history.businessName = '民法典'
+    else if (businessType === 1001)
+      history.businessName = '语义查询'
     else
       history.businessName = 'ChatGLM3'
   })
@@ -118,7 +120,7 @@ function isActive(uuid: number) {
                 <NPopconfirm placement="bottom" @positive-click="handleDeleteDebounce(index, $event)">
                   <template #trigger>
                     <button class="p-1">
-                      <SvgIcon title="清空所有的历史记录" icon="ri:delete-bin-line" />
+                      <SvgIcon icon="ri:delete-bin-line" />
                     </button>
                   </template>
                   {{ $t('chat.deleteHistoryConfirm') }}

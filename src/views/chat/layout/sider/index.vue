@@ -50,6 +50,14 @@ const options = [
     key: 'd1',
   },
   {
+    label: '语义查询',
+    key: '1001',
+  },
+  {
+    type: 'divider',
+    key: 'd1',
+  },
+  {
     label: '选择知识库',
     key: '10000',
     disabled: true,
