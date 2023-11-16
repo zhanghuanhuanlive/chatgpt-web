@@ -312,12 +312,14 @@ async function onConversation() {
       let businessType = 0
       if (undefined !== currentHistory)
         businessType = currentHistory.businessType
+      console.log('--------------0')
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: message,
         options,
         signal: controller.signal,
         businessType,
         onDownloadProgress: ({ event }) => {
+          console.log('--------------')
           const xhr = event.target
           const { responseText } = xhr
           // Always process the final line

@@ -7,7 +7,7 @@ export function fetchChatAPI<T = any>(
   options?: { conversationId?: string; parentMessageId?: string },
   signal?: GenericAbortSignal,
 ) {
-  // console.log(prompt)
+  console.log(prompt)
   // console.log('-----------------------')
   return post<T>({
     url: '/chat',

@@ -20,71 +20,91 @@ const show = ref(false)
 const collapsed = computed(() => appStore.siderCollapsed)
 
 const options = [
+  // {
+  //   label: 'AI聊天',
+  //   key: '10000',
+  //   disabled: true,
+  // },
   {
-    label: '选择模型',
-    key: '1000',
-    disabled: true,
-  },
-  {
-    label: '本地ChatGLM3',
-    key: '0',
-  },
-  {
-    label: '百度文心一言',
-    key: '10',
-  },
-  {
-    label: '科大讯飞星火认知V3.0',
-    key: '20',
-  },
-  {
-    label: '阿里通义千问',
-    key: '30',
-  },
-  {
-    label: 'GPT3.5',
-    key: '90',
-  },
-  {
-    type: 'divider',
-    key: 'd1',
-  },
-  {
-    label: '语义查询',
-    key: '1001',
-  },
-  {
-    type: 'divider',
-    key: 'd1',
-  },
-  {
-    label: '选择知识库',
-    key: '10000',
-    disabled: true,
-  },
-  {
-    label: '办事事项知识库',
-    key: '100',
-  },
-  {
-    label: '招商政策知识库',
-    key: '108',
-  },
-  {
-    label: '法律法规',
-    key: 'others1',
+    label: '选择模型对话',
+    key: '-1000',
     children: [
       {
-        label: '民法典',
-        key: '101',
+        label: '本地ChatGLM3',
+        key: '0',
       },
       {
-        label: '矛盾调解',
-        key: '102',
+        label: '百度文心一言',
+        key: '10',
+      },
+      {
+        label: '科大讯飞星火认知V3.0',
+        key: '20',
+      },
+      {
+        label: '阿里通义千问',
+        key: '30',
+      },
+      {
+        label: 'GPT3.5',
+        key: '90',
+      },
+    ],
+    // disabled: true,
+  },
+
+  {
+    type: 'divider',
+    key: 'd1',
+  },
+  // {
+  //   label: '应用聊天',
+  //   key: '-1',
+  //   disabled: true,
+  // },
+  {
+    label: '选择应用对话',
+    key: '1000',
+    children: [
+      {
+        label: '语义查询@ChatGLM3',
+        key: '1001',
+      },
+      {
+        type: 'divider',
+        key: 'd1',
+      },
+      {
+        label: '选择知识库',
+        key: '10000',
         disabled: true,
+      },
+      {
+        label: '办事事项知识库@ChatGLM3',
+        key: '100',
+      },
+      {
+        label: '招商政策知识库@ChatGLM3',
+        key: '108',
+      },
+      {
+        label: '法律法规',
+        key: 'others1',
+        children: [
+          {
+            label: '民法典@ChatGLM3',
+            key: '101',
+          },
+          {
+            label: '矛盾调解@ChatGLM3',
+            key: '102',
+            disabled: true,
+          },
+        ],
       },
     ],
   },
+
 ]
 
 // const message = useMessage()
