@@ -67,7 +67,7 @@ const options = [
     key: '1000',
     children: [
       {
-        label: '语义查询@ChatGLM3',
+        label: '数据分析@ChatGLM3',
         key: '1001',
       },
       {

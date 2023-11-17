@@ -6,12 +6,14 @@ export interface RequestProps {
   systemMessage: string
   temperature?: number
   top_p?: number
+  // 这里是因为/service/arc/index.ts需要才加的
+  businessType: number
 }
 
 export interface ChatContext {
   conversationId?: string
   parentMessageId?: string
-  businessType: string
+  businessType: number
 }
 
 export interface ChatGPTUnofficialProxyAPIOptions {

@@ -69,6 +69,10 @@ export function get<T = any>(
 export function post<T = any>(
   { url, data, method = 'POST', headers, onDownloadProgress, signal, beforeRequest, afterRequest }: HttpOption,
 ): Promise<Response<T>> {
+  // console.log('start request 222')
+  // console.log(headers)
+  // console.log(data)
+  // console.log(url)
   return http<T>({
     url,
     method,

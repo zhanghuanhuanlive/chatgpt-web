@@ -48,7 +48,9 @@ export function fetchChatAPIProcess<T = any>(
     }
   }
 
-  console.log(data)
+  // console.log('start request 111')
+  // console.log(url)
+  // console.log(`post to /chat-process${data}`)
   return post<T>({
     url: '/chat-process',
     data,

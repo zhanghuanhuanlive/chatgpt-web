@@ -33,6 +33,7 @@ if (!isNotEmptyString(process.env.OPENAI_API_KEY) && !isNotEmptyString(process.e
   throw new Error('Missing OPENAI_API_KEY or OPENAI_ACCESS_TOKEN environment variable')
 
 let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
+let api_semantic: ChatGPTAPI
 
 (async () => {
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
@@ -68,9 +69,12 @@ let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
     if (isNotEmptyString(OPENAI_API_BASE_URL))
       options.apiBaseUrl = `${OPENAI_API_BASE_URL}/v1`
 
-    setupProxy(options)
+    // setupProxy(options)
 
     api = new ChatGPTAPI({ ...options })
+    const OPENAI_API_BASE_URL_SEMANTIC = process.env.OPENAI_API_BASE_URL_SEMANTIC
+    options.apiBaseUrl = `${OPENAI_API_BASE_URL_SEMANTIC}/v1`
+    api_semantic = new ChatGPTAPI({ ...options })
     apiModel = 'ChatGPTAPI'
   }
   else {
@@ -108,6 +112,7 @@ async function chatReplyProcess(options: RequestOptions) {
 
     const businessType = lastContext.businessType
     // console.log('----------------1')
+
     // console.log(businessType)
     // let api_options = api.apiKey;
     // console.log(api)
@@ -150,17 +155,26 @@ async function chatReplyProcess(options: RequestOptions) {
     // options.ma
     // api = new ChatGPTAPI({ ...api_options })
 
-    // eslint-disable-next-line no-console
-    console.log(options)
+    // console.log(options)
     // eslint-disable-next-line no-console
     console.log(message)
-    const response = await api.sendMessage(message, {
-      ...options,
-      onProgress: (partialResponse) => {
-        process?.(partialResponse)
-      },
-    })
-
+    let response
+    if (businessType > 1000) {
+      response = await api_semantic.sendMessage(message, {
+        ...options,
+        onProgress: (partialResponse) => {
+          process?.(partialResponse)
+        },
+      })
+    }
+    else {
+      response = await api.sendMessage(message, {
+        ...options,
+        onProgress: (partialResponse) => {
+          process?.(partialResponse)
+        },
+      })
+    }
     return sendResponse({ type: 'Success', data: response })
   }
   catch (error: any) {
