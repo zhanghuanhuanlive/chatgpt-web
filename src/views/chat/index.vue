@@ -51,6 +51,13 @@ const showAudioInputBtn = ref(false)
 
 const isSpinning = ref(false)
 
+// const xyz = fetchGetenv()
+
+// await fetchChatAPIProcess
+
+// console.log(xyz)
+console.log(import.meta.env)
+
 // const WHISPER_API_BASE_URL = process.env.WHISPER_API_BASE_URL as string
 
 // const loadingBar = useLoadingBar()
