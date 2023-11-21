@@ -115,54 +115,6 @@ function handleSelectModal(key: string) {
   proceedToAddHistory(parseInt(key))
   // message.info(String(key))
 }
-// const labelPlacement = ref('top')
-
-// function handleAdd() {
-//   const dialogObj = dialog.info({
-//     title: t('请选择使用场景'),
-//     content: () => {
-//       return [
-//         h(NButton, {
-//           onClick: () => {
-//             proceedToAddHistory(0)
-//             dialogObj.destroy()
-//           },
-//         }, t('本地ChatGLM3模型')),
-//         h(NButton, {
-//           onClick: () => {
-//             proceedToAddHistory(10)
-//             dialogObj.destroy()
-//           },
-//         }, t('百度文心一言模型')),
-//         h(NButton, {
-//           onClick: () => {
-//             proceedToAddHistory(20)
-//             dialogObj.destroy()
-//           },
-//         }, t('科大讯飞星火认知V3.0')),
-//         h(NButton, {
-//           onClick: () => {
-//             proceedToAddHistory(30)
-//             dialogObj.destroy()
-//           },
-//         }, t('')),
-//         h(NButton, {
-//           onClick: () => {
-//             proceedToAddHistory(90)
-//             dialogObj.destroy()
-//           },
-//         }, t('GPT3.5')),
-//         h(NButton, {
-//           onClick: () => {
-//             proceedToAddHistory(100)
-//             dialogObj.destroy()
-//           },
-//         }, t('政策事项查询')),
-//       ]
-//     },
-//     // ...其他配置项
-//   })
-// }
 
 function proceedToAddHistory(businessType: number) {
   chatStore.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false, businessType })

@@ -51,6 +51,8 @@ const showAudioInputBtn = ref(false)
 
 const isSpinning = ref(false)
 
+const WHISPER_API_BASE_URL = process.env.WHISPER_API_BASE_URL as string
+
 // const loadingBar = useLoadingBar()
 
 // 当前的应用场景类型
@@ -100,7 +102,7 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const response = await fetch('http://172.16.1.118:7001/transcribe/', {
+    const response = await fetch(WHISPER_API_BASE_URL, {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -195,7 +197,7 @@ async function handleUploadAudio(files: FileList | null) {
     // 移除 console.log，或者替换为其他日志记录方式
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const response = await fetch(' http://172.16.1.118:7001/transcribe/', {
+    const response = await fetch(WHISPER_API_BASE_URL, {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -312,14 +314,14 @@ async function onConversation() {
       let businessType = 0
       if (undefined !== currentHistory)
         businessType = currentHistory.businessType
-      console.log('--------------0')
+      // console.log('--------------0')
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: message,
         options,
         signal: controller.signal,
         businessType,
         onDownloadProgress: ({ event }) => {
-          console.log('--------------')
+          // console.log('--------------')
           const xhr = event.target
           const { responseText } = xhr
           // Always process the final line

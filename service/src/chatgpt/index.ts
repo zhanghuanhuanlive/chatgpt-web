@@ -72,8 +72,8 @@ let api_semantic: ChatGPTAPI
     // setupProxy(options)
 
     api = new ChatGPTAPI({ ...options })
-    const OPENAI_API_BASE_URL_SEMANTIC = process.env.OPENAI_API_BASE_URL_SEMANTIC
-    options.apiBaseUrl = `${OPENAI_API_BASE_URL_SEMANTIC}/v1`
+    const SEMANTIC_API_BASE_URL = process.env.SEMANTIC_API_BASE_URL
+    options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/v1`
     api_semantic = new ChatGPTAPI({ ...options })
     apiModel = 'ChatGPTAPI'
   }
