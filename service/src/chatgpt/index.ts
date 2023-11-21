@@ -188,28 +188,28 @@ async function chatReplyProcess(options: RequestOptions) {
 
 async function fetchUsage() {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY
-  const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
+  // const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
 
   if (!isNotEmptyString(OPENAI_API_KEY))
     return Promise.resolve('-')
 
-  const API_BASE_URL = isNotEmptyString(OPENAI_API_BASE_URL)
-    ? OPENAI_API_BASE_URL
-    : 'https://api.openai.com'
+  // const API_BASE_URL = isNotEmptyString(OPENAI_API_BASE_URL)
+  //   ? OPENAI_API_BASE_URL
+  //   : 'https://api.openai.com'
 
-  const [startDate, endDate] = formatDate()
+  // const [startDate, endDate] = formatDate()
 
-  // 每月使用量
-  // const urlUsage = `${API_BASE_URL}/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`
+  // // 每月使用量
+  // // const urlUsage = `${API_BASE_URL}/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`
 
-  const headers = {
-    'Authorization': `Bearer ${OPENAI_API_KEY}`,
-    'Content-Type': 'application/json',
-  }
+  // const headers = {
+  //   'Authorization': `Bearer ${OPENAI_API_KEY}`,
+  //   'Content-Type': 'application/json',
+  // }
 
-  const options = {} as SetProxyOptions
+  // const options = {} as SetProxyOptions
 
-  setupProxy(options)
+  // setupProxy(options)
 
   // try {
   //   // 获取已使用量
@@ -226,18 +226,19 @@ async function fetchUsage() {
   // }
 }
 
-function formatDate(): string[] {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = today.getMonth() + 1
-  const lastDay = new Date(year, month, 0)
-  const formattedFirstDay = `${year}-${month.toString().padStart(2, '0')}-01`
-  const formattedLastDay = `${year}-${month.toString().padStart(2, '0')}-${lastDay.getDate().toString().padStart(2, '0')}`
-  return [formattedFirstDay, formattedLastDay]
-}
+// function formatDate(): string[] {
+//   const today = new Date()
+//   const year = today.getFullYear()
+//   const month = today.getMonth() + 1
+//   const lastDay = new Date(year, month, 0)
+//   const formattedFirstDay = `${year}-${month.toString().padStart(2, '0')}-01`
+//   const formattedLastDay = `${year}-${month.toString().padStart(2, '0')}-${lastDay.getDate().toString().padStart(2, '0')}`
+//   return [formattedFirstDay, formattedLastDay]
+// }
 
 async function chatConfig() {
   const usage = await fetchUsage()
+  // const extraInfo = process.env.
   const reverseProxy = process.env.API_REVERSE_PROXY ?? '-'
   const httpsProxy = (process.env.HTTPS_PROXY || process.env.ALL_PROXY) ?? '-'
   const socksProxy = (process.env.SOCKS_PROXY_HOST && process.env.SOCKS_PROXY_PORT)
