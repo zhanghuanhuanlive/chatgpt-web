@@ -51,7 +51,7 @@ const showAudioInputBtn = ref(false)
 
 const isSpinning = ref(false)
 
-const WHISPER_API_BASE_URL = process.env.WHISPER_API_BASE_URL as string
+// const WHISPER_API_BASE_URL = process.env.WHISPER_API_BASE_URL as string
 
 // const loadingBar = useLoadingBar()
 
@@ -102,7 +102,7 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const response = await fetch(WHISPER_API_BASE_URL, {
+    const response = await fetch('http://localhost:7001/transcribe', {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -197,7 +197,7 @@ async function handleUploadAudio(files: FileList | null) {
     // 移除 console.log，或者替换为其他日志记录方式
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const response = await fetch(WHISPER_API_BASE_URL, {
+    const response = await fetch('http://localhost:7001/transcribe', {
       method: 'POST',
       body: formData,
       signal: controller.signal,
