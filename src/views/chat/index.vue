@@ -60,6 +60,7 @@ interface ConfigState {
   usage?: string
 }
 const config = ref<ConfigState>()
+// const whisperApiBaseUrl = ref<config>
 async function fetchConfig() {
   try {
     loading.value = true
@@ -131,7 +132,8 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const response = await fetch(config.value!.reverseProxy, {
+    const whisperApiBaseUrl = config.value!.reverseProxy | ''
+    const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -226,7 +228,8 @@ async function handleUploadAudio(files: FileList | null) {
     // 移除 console.log，或者替换为其他日志记录方式
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const response = await fetch(config.value!.reverseProxy, {
+    const whisperApiBaseUrl = config.value!.reverseProxy | ''
+    const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
       signal: controller.signal,
