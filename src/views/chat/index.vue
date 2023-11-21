@@ -132,7 +132,7 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = config.value!.reverseProxy | ''
+    const whisperApiBaseUrl = config.value!.reverseProxy | 'http://fastgpt.learnoh.cn/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -228,7 +228,7 @@ async function handleUploadAudio(files: FileList | null) {
     // 移除 console.log，或者替换为其他日志记录方式
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = config.value!.reverseProxy | ''
+    const whisperApiBaseUrl = config.value!.reverseProxy | 'http://fastgpt.learnoh.cn/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
