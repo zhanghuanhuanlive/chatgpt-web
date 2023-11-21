@@ -64,7 +64,7 @@ async function fetchConfig() {
   try {
     loading.value = true
     const { data } = await fetchChatConfig<ConfigState>()
-    config.value = data
+    config.value = data | { timeoutMs: 60000 }
     console.log(config.value.reverseProxy)
   }
   finally {
