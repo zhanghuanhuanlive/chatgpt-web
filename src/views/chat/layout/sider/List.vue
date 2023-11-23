@@ -32,6 +32,10 @@ const dataSources = computed(() => {
       history.businessName = '民法典'
     else if (businessType === 1001)
       history.businessName = '数据分析'
+    else if (businessType === 10001)
+      history.businessName = '语音转写'
+    else if (businessType === 10002)
+      history.businessName = '文档总结'
     else
       history.businessName = 'ChatGLM3'
   })

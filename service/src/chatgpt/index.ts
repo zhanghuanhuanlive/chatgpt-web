@@ -1,13 +1,13 @@
 import * as dotenv from 'dotenv'
 import 'isomorphic-fetch'
-import type { ChatGPTAPIOptions, ChatMessage, SendMessageOptions } from 'chatgpt'
-import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
+import type { ChatGPTAPIOptions, ChatGPTUnofficialProxyAPI, ChatMessage, SendMessageOptions } from 'chatgpt'
+import { ChatGPTAPI } from 'chatgpt'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
 import fetch from 'node-fetch'
 import { sendResponse } from '../utils'
 import { isNotEmptyString } from '../utils/is'
-import type { ApiModel, ChatContext, ChatGPTUnofficialProxyAPIOptions, ModelConfig } from '../types'
+import type { ApiModel, ChatContext, ModelConfig } from '../types'
 import type { RequestOptions, SetProxyOptions } from './types'
 
 const { HttpsProxyAgent } = httpsProxyAgent
@@ -15,12 +15,12 @@ const { HttpsProxyAgent } = httpsProxyAgent
 dotenv.config()
 
 const ErrorCodeMessage: Record<string, string> = {
-  401: '[OpenAI] 提供错误的API密钥 | Incorrect API key provided',
-  403: '[OpenAI] 服务器拒绝访问，请稍后再试 | Server refused to access, please try again later',
-  502: '[OpenAI] 错误的网关 |  Bad Gateway',
-  503: '[OpenAI] 服务器繁忙，请稍后再试 | Server is busy, please try again later',
-  504: '[OpenAI] 网关超时 | Gateway Time-out',
-  500: '[OpenAI] 服务器繁忙，请稍后再试 | Internal Server Error',
+  401: '提供错误的API密钥 | Incorrect API key provided',
+  403: '服务器拒绝访问，请稍后再试 | Server refused to access, please try again later',
+  502: '错误的网关 |  Bad Gateway',
+  503: '服务器繁忙，请稍后再试 | Server is busy, please try again later',
+  504: '网关超时 | Gateway Time-out',
+  500: '服务器繁忙，请稍后再试 | Internal Server Error',
 }
 
 const timeoutMs: number = !isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000
@@ -33,7 +33,7 @@ if (!isNotEmptyString(process.env.OPENAI_API_KEY) && !isNotEmptyString(process.e
   throw new Error('Missing OPENAI_API_KEY or OPENAI_ACCESS_TOKEN environment variable')
 
 let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
-let api_semantic: ChatGPTAPI
+let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
 
 (async () => {
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
@@ -54,16 +54,20 @@ let api_semantic: ChatGPTAPI
         options.maxModelTokens = 32768
         options.maxResponseTokens = 8192
       }
-      else {
-        options.maxModelTokens = 8192
-        options.maxResponseTokens = 2048
-      }
+      // else {
+      //   options.maxModelTokens = 8192
+      //   options.maxResponseTokens = 2048
+      // }
     }
     else if (model.toLowerCase().includes('gpt-3.5')) {
       if (model.toLowerCase().includes('16k')) {
         options.maxModelTokens = 16384
         options.maxResponseTokens = 4096
       }
+    }
+    else {
+      options.maxModelTokens = 8192
+      options.maxResponseTokens = 2048
     }
 
     if (isNotEmptyString(OPENAI_API_BASE_URL))
@@ -72,24 +76,28 @@ let api_semantic: ChatGPTAPI
     // setupProxy(options)
 
     api = new ChatGPTAPI({ ...options })
-    const SEMANTIC_API_BASE_URL = process.env.SEMANTIC_API_BASE_URL
-    options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/v1`
+    const SEMANTIC_API_BASE_URL = `${process.env.API_REVERSE_PROXY}:9876/customerService`
+    options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/semantic/v1`
     api_semantic = new ChatGPTAPI({ ...options })
+    options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/document/v1`
+    api_document = new ChatGPTAPI({ ...options })
+    options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/whisper/v1`
+    api_whisper = new ChatGPTAPI({ ...options })
     apiModel = 'ChatGPTAPI'
   }
-  else {
-    const options: ChatGPTUnofficialProxyAPIOptions = {
-      accessToken: process.env.OPENAI_ACCESS_TOKEN,
-      apiReverseProxyUrl: isNotEmptyString(process.env.API_REVERSE_PROXY) ? process.env.API_REVERSE_PROXY : 'https://ai.fakeopen.com/api/conversation',
-      model,
-      debug: !disableDebug,
-    }
+  // else {
+  //   const options: ChatGPTUnofficialProxyAPIOptions = {
+  //     accessToken: process.env.OPENAI_ACCESS_TOKEN,
+  //     apiReverseProxyUrl: isNotEmptyString(process.env.API_REVERSE_PROXY) ? process.env.API_REVERSE_PROXY : 'https://ai.fakeopen.com/api/conversation',
+  //     model,
+  //     debug: !disableDebug,
+  //   }
 
-    setupProxy(options)
+  //   setupProxy(options)
 
-    api = new ChatGPTUnofficialProxyAPI({ ...options })
-    apiModel = 'ChatGPTUnofficialProxyAPI'
-  }
+  //   api = new ChatGPTUnofficialProxyAPI({ ...options })
+  //   apiModel = 'ChatGPTUnofficialProxyAPI'
+  // }
 })()
 
 async function chatReplyProcess(options: RequestOptions) {
@@ -144,14 +152,30 @@ async function chatReplyProcess(options: RequestOptions) {
     }
     else if (businessType === 1001) {
       options.completionParams.model = 'customerService'// 语义查询
+      // eslint-disable-next-line no-console
+      console.log(options.systemMessage)
       options.systemMessage = ''
+    }
+    else if (businessType === 10001) {
+      // options.completionParams.model = 'customerService'// 语音转写
+      // eslint-disable-next-line no-console
+      console.log(options.systemMessage)
+      // options.systemMessage = ''
+    }
+    else if (businessType === 10002) {
+      // options.completionParams.model = 'customerService'// 文档总结
+      // eslint-disable-next-line no-console
+      console.log(options.systemMessage)
+
+      // console.log('111111111111')
+      // options.systemMessage = ''
     }
     else { // 纯聊天
       options.completionParams.model = 'chatglm3-6b'
     }
     // options.completionParams.maxModelTokens = 32768
     // options.maxResponseTokens = 8192
-    options.completionParams.max_tokens = 2000
+    options.completionParams.max_tokens = 4000
     // options.ma
     // api = new ChatGPTAPI({ ...api_options })
 
@@ -159,8 +183,24 @@ async function chatReplyProcess(options: RequestOptions) {
     // eslint-disable-next-line no-console
     console.log(message)
     let response
-    if (businessType > 1000) {
+    if (businessType === 1001) {
       response = await api_semantic.sendMessage(message, {
+        ...options,
+        onProgress: (partialResponse) => {
+          process?.(partialResponse)
+        },
+      })
+    }
+    else if (businessType === 10001) {
+      response = await api_whisper.sendMessage(message, {
+        ...options,
+        onProgress: (partialResponse) => {
+          process?.(partialResponse)
+        },
+      })
+    }
+    else if (businessType === 10002) {
+      response = await api_document.sendMessage(message, {
         ...options,
         onProgress: (partialResponse) => {
           process?.(partialResponse)

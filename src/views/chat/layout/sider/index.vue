@@ -63,11 +63,11 @@ const options = [
   //   disabled: true,
   // },
   {
-    label: '选择应用对话',
+    label: '选择应用对话@ChatGLM3',
     key: '1000',
     children: [
       {
-        label: '数据分析@ChatGLM3',
+        label: '数据分析',
         key: '1001',
       },
       {
@@ -80,11 +80,11 @@ const options = [
         disabled: true,
       },
       {
-        label: '办事事项知识库@ChatGLM3',
+        label: '办事事项知识库',
         key: '100',
       },
       {
-        label: '招商政策知识库@ChatGLM3',
+        label: '招商政策知识库',
         key: '108',
       },
       {
@@ -92,15 +92,34 @@ const options = [
         key: 'others1',
         children: [
           {
-            label: '民法典@ChatGLM3',
+            label: '民法典',
             key: '101',
           },
           {
-            label: '矛盾调解@ChatGLM3',
+            label: '矛盾调解',
             key: '102',
             disabled: true,
           },
         ],
+      },
+    ],
+  },
+
+  {
+    label: '选择组件对话@ChatGLM3',
+    key: '10000',
+    children: [
+      {
+        label: '音频转写文字',
+        key: '10001',
+      },
+      {
+        type: 'divider',
+        key: 'd1',
+      },
+      {
+        label: '文档总结',
+        key: '10002',
       },
     ],
   },

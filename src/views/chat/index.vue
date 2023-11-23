@@ -85,10 +85,11 @@ async function fetchConfig() {
 
 // const loadingBar = useLoadingBar()
 
-// 当前的应用场景类型
+let businessType = 0
+
 const currentBusinessType = computed(() => {
   const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-  let businessType = 0
+  // let businessType = 0
   let currentBusinessTypeName = 'ChatGLM3'
   if (undefined !== currentHistory)
     businessType = currentHistory.businessType
@@ -108,6 +109,10 @@ const currentBusinessType = computed(() => {
     currentBusinessTypeName = '民法典'
   else if (businessType === 1001)
     currentBusinessTypeName = '数据分析'
+  else if (businessType === 10001)
+    currentBusinessTypeName = '语音转写文字'
+  else if (businessType === 10002)
+    currentBusinessTypeName = '文档总结'
   return currentBusinessTypeName
 })
 
@@ -119,20 +124,16 @@ function closeAudio(audioBlob: Blob) {
   handleAudioInput(audioBlob)
 }
 
+// 语音输入触发语音转写
 async function handleAudioInput(audioBlob: Blob) {
   isSpinning.value = true // 开始加载，显示全局加载状态
   console.log('start handleAudioInput')
-  // console.log('--------------')
-  // 创建一个 FormData 对象
   const formData = new FormData()
   formData.append('file', audioBlob, 'audio.wav')
-  // loadingBar.start() // 开始显示加载条
-  // console.log(formData)
-  // console.log(audioBlob)
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = config.value!.reverseProxy || 'http://fastgpt.learnoh.cn/transcribe'
+    const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'http://fastgpt.learnoh.cn/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -166,23 +167,21 @@ dataSources.value.forEach((item, index) => {
     updateChatSome(+uuid, index, { loading: false })
 })
 
+// 上传按钮触发语音转写
 function triggerFileInput() {
   const fileInput = document.createElement('input')
   fileInput.type = 'file'
+  if (businessType === 10001)
+    fileInput.accept = '.mp3,.wav'
+  else if (businessType === 10002)
+    fileInput.accept = '.doc,.docx,.pdf,.xls,.xlsx'
   // fileInput.accept = 'audio/*'
-  fileInput.accept = '.mp3,.wav'
   fileInput.onchange = (event) => {
     if (event.target instanceof HTMLInputElement)
       handleUploadAudio(event.target.files)
   }
   fileInput.click()
 }
-
-// function handleFileChange(event) {
-//   const file = event.target.files[0]
-//   // 在这里处理上传的文件
-//   console.log('上传的文件:', file)
-// }
 
 async function handleUploadAudio(files: FileList | null) {
   if (!files || files.length === 0) {
@@ -191,8 +190,24 @@ async function handleUploadAudio(files: FileList | null) {
   }
   const file = files[0]
 
+  // Get the name of the file
+  const fileName = file.name
+  // console.log('File name:', fileName)
+
+  // Extracting the file extension
+  const fileExtension = fileName.split('.').pop() || 'doc'
+  // console.log('File extension:', fileExtension)
+
   const formData = new FormData()
   formData.append('file', file)
+
+  const documentExtensions = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx']
+  const audioExtensions = ['wav', 'mp3']
+
+  // let userText = ''
+  // let const assistentText = ''
+  // Determine the file type
+  // Handle unsupported file type
 
   // 添加初始聊天消息以显示文件正在上传
   // const chatIndex = dataSources.value.length;
@@ -200,7 +215,7 @@ async function handleUploadAudio(files: FileList | null) {
     +uuid,
     {
       dateTime: new Date().toLocaleString(),
-      text: `转写音频文件：${file.name}成文字`,
+      text: `上传文件：${fileName}`,
       inversion: true,
       error: false,
       conversationOptions: null,
@@ -208,13 +223,13 @@ async function handleUploadAudio(files: FileList | null) {
     },
   )
   scrollToBottom()
-  loading.value = true
+  // loading.value = true
   prompt.value = ''
   addChat(
     +uuid,
     {
       dateTime: new Date().toLocaleString(),
-      text: '转换中',
+      text: '上传中',
       loading: true,
       inversion: false,
       error: false,
@@ -228,7 +243,8 @@ async function handleUploadAudio(files: FileList | null) {
     // 移除 console.log，或者替换为其他日志记录方式
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = config.value!.reverseProxy || 'http://fastgpt.learnoh.cn/transcribe'
+    const whisperApiBaseUrl = `${config.value!.reverseProxy}:9876/customerService/upload/v1/chat/completions` || 'http://fastgpt.learnoh.cn/transcribe'
+    // console.log(whisperApiBaseUrl)
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -243,6 +259,8 @@ async function handleUploadAudio(files: FileList | null) {
 
     // 使用 result.text 来获取转录文本
     const transcription = result.text
+    // console.log(transcription)
+    const uploadedFileName = result.fileName
     // 移除 console.log，或者替换为其他日志记录方式
 
     // 更新聊天消息以显示转写文本
@@ -258,11 +276,26 @@ async function handleUploadAudio(files: FileList | null) {
         conversationOptions: null,
         requestOptions: {
           prompt: `这是语音转写的结果，需要你帮我检查是否有问题，并返回完善后的内容给我：${transcription}`,
+          // prompt: '',
           options: null,
         },
       },
     )
     scrollToBottomIfAtBottom()
+    if (documentExtensions.includes(fileExtension)) { // config.value!.reverseProxy
+      prompt.value = '总结文档'
+    }
+    else if (audioExtensions.includes(fileExtension)) {
+      prompt.value = '转写音频文件成文字'
+    }
+    else { console.log('Unsupported file type') }
+    // loading.value = false
+    // 直接向后台发送转写或总结的请求
+    // console.log(uploadedFileName)
+    if (undefined !== uploadedFileName && uploadedFileName !== '')
+      onConversation(uploadedFileName)// 把文件名作为systemMessage传给后台
+    else
+      onConversation('')
   }
   catch (error) {
     ms.error(error instanceof Error ? error.message : '上传文件失败')
@@ -287,11 +320,14 @@ async function handleUploadAudio(files: FileList | null) {
 }
 
 function handleSubmit() {
-  onConversation()
+  onConversation('')
 }
 
-async function onConversation() {
+// systemMessage就是上传的文件绝对路径
+async function onConversation(systemMessage: string) {
   let message = prompt.value
+  const postMessage = `${message}**##**${systemMessage}**##**`
+  // console.log(message)
 
   if (loading.value)
     return
@@ -305,7 +341,7 @@ async function onConversation() {
     +uuid,
     {
       dateTime: new Date().toLocaleString(),
-      text: message,
+      text: postMessage,
       inversion: true,
       error: false,
       conversationOptions: null,
@@ -313,6 +349,7 @@ async function onConversation() {
     },
   )
   scrollToBottom()
+  // console.log('----------------------')
 
   loading.value = true
   prompt.value = ''
@@ -327,7 +364,7 @@ async function onConversation() {
     +uuid,
     {
       dateTime: new Date().toLocaleString(),
-      text: '思考中',
+      text: businessType === 10001 ? '转写中' : businessType === 10002 ? '总结中' : '思考中',
       loading: true,
       inversion: false,
       error: false,
@@ -348,10 +385,11 @@ async function onConversation() {
         businessType = currentHistory.businessType
       // console.log('--------------0')
       await fetchChatAPIProcess<Chat.ConversationResponse>({
-        prompt: message,
+        prompt: postMessage,
         options,
         signal: controller.signal,
         businessType,
+        systemMessage,
         onDownloadProgress: ({ event }) => {
           // console.log('--------------')
           const xhr = event.target
@@ -363,6 +401,7 @@ async function onConversation() {
             chunk = responseText.substring(lastIndex)
           try {
             const data = JSON.parse(chunk)
+            // console.log(data.text)
             updateChat(
               +uuid,
               dataSources.value.length - 1,
@@ -489,6 +528,7 @@ async function onRegenerate(index: number) {
         options,
         signal: controller.signal,
         businessType,
+        systemMessage: '',
         onDownloadProgress: ({ event }) => {
           const xhr = event.target
           const { responseText } = xhr
@@ -776,7 +816,7 @@ onUnmounted(() => {
       <footer :class="footerClass">
         <div class="w-full max-w-screen-xl m-auto">
           <div class="flex items-center justify-between space-x-2">
-            <HoverButton v-if="!isMobile" title="音频转写文字" accept="image/png, image/jpeg" @click="triggerFileInput">
+            <HoverButton v-if="!isMobile && (businessType === 10001 || businessType === 10002)" :title="businessType === 10001 ? '音频转写文字' : businessType === 10002 ? '文档总结' : ''" @click="triggerFileInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <SvgIcon icon="fe:file-audio" />
               </span>
@@ -792,35 +832,31 @@ onUnmounted(() => {
                 <SvgIcon icon="ri:download-2-line" />
               </span>
             </HoverButton>
-            <HoverButton title="不携带历史记录" @click="toggleUsingContext">
+            <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="不携带历史记录" @click="toggleUsingContext">
               <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
                 <SvgIcon icon="ri:chat-history-line" />
               </span>
             </HoverButton>
-            <HoverButton title="语音输入" @click="showAudioInput">
+            <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="语音输入" @click="showAudioInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <SvgIcon icon="lets-icons:sound-max-duotone" />
               </span>
             </HoverButton>
-            <!-- <AudioEnter /> -->
-            <!-- <HoverButton title="语音"> -->
             <AudioEnter :is-show="showAudioInputBtn" @close-audio="closeAudio" />
-            <!-- </HoverButton> -->
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
               <template #default="{ handleInput, handleBlur, handleFocus }">
-                <!-- <div class="input-wrapper"> -->
                 <NInput
                   ref="inputRef"
                   v-model:value="prompt"
                   type="textarea"
                   :placeholder="placeholder"
                   :autosize="{ minRows: 1, maxRows: isMobile ? 4 : 8 }"
+                  :disabled="businessType === 10001 || businessType === 10002"
                   @input="handleInput"
                   @focus="handleFocus"
                   @blur="handleBlur"
                   @keypress="handleEnter"
                 />
-              <!-- </div> -->
               </template>
             </NAutoComplete>
             <NButton type="primary" :disabled="buttonDisabled" @click="handleSubmit">

@@ -28,6 +28,7 @@ export function fetchChatAPIProcess<T = any>(
     options?: { conversationId?: string; parentMessageId?: string }
     signal?: GenericAbortSignal
     businessType: number
+    systemMessage: string
     onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void },
 ) {
   const settingStore = useSettingStore()
@@ -42,11 +43,14 @@ export function fetchChatAPIProcess<T = any>(
   if (authStore.isChatGPTAPI) {
     data = {
       ...data,
-      systemMessage: settingStore.systemMessage,
+      // systemMessage: settingStore.systemMessage,
+      // systemMessage: 'hahaha',
       temperature: settingStore.temperature,
       top_p: settingStore.top_p,
     }
   }
+  data.systemMessage = (params.systemMessage !== null && params.systemMessage !== undefined && params.systemMessage !== '') ? params.systemMessage : settingStore.systemMessage
+  // if (params.)
 
   // console.log('start request 111')
   // console.log(url)
