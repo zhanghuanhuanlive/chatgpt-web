@@ -326,7 +326,8 @@ function handleSubmit() {
 // systemMessage就是上传的文件绝对路径
 async function onConversation(systemMessage: string) {
   let message = prompt.value
-  const postMessage = `${message}**##**${systemMessage}**##**`
+  // const postMessage = `${message}**##**${systemMessage}**##**`
+  const postMessage = systemMessage === '' ? message : `${message}**##**${systemMessage}**##**`
   // console.log(message)
 
   if (loading.value)
@@ -851,7 +852,7 @@ onUnmounted(() => {
                   type="textarea"
                   :placeholder="placeholder"
                   :autosize="{ minRows: 1, maxRows: isMobile ? 4 : 8 }"
-                  :disabled="businessType === 10001 || businessType === 10002"
+                  :disabled="businessType === 10001"
                   @input="handleInput"
                   @focus="handleFocus"
                   @blur="handleBlur"
