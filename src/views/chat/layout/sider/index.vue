@@ -118,7 +118,7 @@ const options = [
         key: 'd1',
       },
       {
-        label: '文档总结',
+        label: '文档分析',
         key: '10002',
       },
     ],
