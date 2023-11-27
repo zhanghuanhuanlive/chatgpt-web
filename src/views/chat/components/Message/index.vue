@@ -83,7 +83,9 @@ function handleRegenerate() {
 
 async function handleCopy() {
   try {
-    await copyToClip(props.text || '')
+    let text = props.text
+    text = text === undefined ? '' : text.replace(/\*\*\#\#\*\*(.*?)\*\*\#\#\*\*/g, '')
+    await copyToClip(text || '')
     message.success('复制成功')
   }
   catch {
