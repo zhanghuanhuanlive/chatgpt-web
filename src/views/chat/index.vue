@@ -323,7 +323,7 @@ function handleSubmit() {
   onConversation('')
 }
 
-// systemMessage就是上传的文件绝对路径
+// systemMessage就是上传的文件(音频、文件)在服务器的绝对路径
 async function onConversation(systemMessage: string) {
   let message = prompt.value
   // const postMessage = `${message}**##**${systemMessage}**##**`
