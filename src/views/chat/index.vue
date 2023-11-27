@@ -112,7 +112,7 @@ const currentBusinessType = computed(() => {
   else if (businessType === 10001)
     currentBusinessTypeName = '语音转写文字'
   else if (businessType === 10002)
-    currentBusinessTypeName = '文档总结'
+    currentBusinessTypeName = '文档分析'
   return currentBusinessTypeName
 })
 

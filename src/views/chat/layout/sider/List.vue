@@ -35,7 +35,7 @@ const dataSources = computed(() => {
     else if (businessType === 10001)
       history.businessName = '语音转写'
     else if (businessType === 10002)
-      history.businessName = '文档总结'
+      history.businessName = '文档分析'
     else
       history.businessName = 'ChatGLM3'
   })
