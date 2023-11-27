@@ -819,9 +819,8 @@ onUnmounted(() => {
           <div class="flex items-center justify-between space-x-2">
             <HoverButton v-if="!isMobile && (businessType === 10001 || businessType === 10002)" :title="businessType === 10001 ? '音频转写文字' : businessType === 10002 ? '文档总结' : ''" @click="triggerFileInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <SvgIcon icon="fe:file-audio" />
+                <SvgIcon :icon="businessType === 10001 ? 'fe:file-audio' : businessType === 10002 ? 'ic:twotone-upload-file' : ''" />
               </span>
-            <!-- <input type="file" ref="fileInput" style="display: none" accept="audio/*" @change="handleFileChange" /> -->
             </HoverButton>
             <HoverButton v-if="!isMobile" title="清空当前会话" @click="handleClear">
               <span class="text-xl text-[#4f555e] dark:text-white">
