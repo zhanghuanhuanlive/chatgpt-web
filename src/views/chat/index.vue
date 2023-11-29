@@ -5,6 +5,9 @@ import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { NAutoComplete, NButton, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faArrowDown, faFileUpload, faHistory, faMusic, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
 import { useChat } from './hooks/useChat'
@@ -16,6 +19,8 @@ import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore } from '@/store'
 import { fetchChatAPIProcess, fetchChatConfig } from '@/api'
 import { t } from '@/locales'
+
+library.add(faTrashAlt, faFileUpload, faMusic, faArrowDown, faHistory, faVolumeUp)
 
 let controller = new AbortController()
 
@@ -819,27 +824,32 @@ onUnmounted(() => {
           <div class="flex items-center justify-between space-x-2">
             <HoverButton v-if="!isMobile && (businessType === 10001 || businessType === 10002)" :title="businessType === 10001 ? '音频转写文字' : businessType === 10002 ? '文档总结' : ''" @click="triggerFileInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <SvgIcon :icon="businessType === 10001 ? 'fe:file-audio' : businessType === 10002 ? 'ic:twotone-upload-file' : ''" />
+                <!-- <SvgIcon :icon="businessType === 10001 ? 'fe:file-audio' : businessType === 10002 ? 'ic:twotone-upload-file' : ''" /> -->
+                <FontAwesomeIcon :icon="businessType === 10001 ? 'fas fa-music' : businessType === 10002 ? 'fas fa-file-upload' : ''" />
               </span>
             </HoverButton>
             <HoverButton v-if="!isMobile" title="清空当前会话" @click="handleClear">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <SvgIcon icon="ri:delete-bin-line" />
+                <!-- <SvgIcon icon="ri:delete-bin-line" /> -->
+                <FontAwesomeIcon icon="fas fa-trash-alt" />
               </span>
             </HoverButton>
             <HoverButton v-if="!isMobile" title="保存会话到图片" @click="handleExport">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <SvgIcon icon="ri:download-2-line" />
+                <!-- <SvgIcon icon="ri:download-2-line" /> -->
+                <FontAwesomeIcon icon="fas fa-arrow-down" />
               </span>
             </HoverButton>
             <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="不携带历史记录" @click="toggleUsingContext">
               <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
-                <SvgIcon icon="ri:chat-history-line" />
+                <!-- <SvgIcon icon="ri:chat-history-line" /> -->
+                <FontAwesomeIcon icon="fas fa-history" />
               </span>
             </HoverButton>
             <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="语音输入" @click="showAudioInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <SvgIcon icon="lets-icons:sound-max-duotone" />
+                <!-- <SvgIcon icon="lets-icons:sound-max-duotone" /> -->
+                <FontAwesomeIcon icon="fas fa-volume-up" />
               </span>
             </HoverButton>
             <AudioEnter :is-show="showAudioInputBtn" @close-audio="closeAudio" />
