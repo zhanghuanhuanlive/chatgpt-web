@@ -6,7 +6,7 @@ import { storeToRefs } from 'pinia'
 import { NAutoComplete, NButton, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowDown, faFileUpload, faHistory, faMusic, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
+import { faArrowDown, faFileUpload, faHistory, faMusic, faPaperPlane, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -20,7 +20,7 @@ import { useChatStore, usePromptStore } from '@/store'
 import { fetchChatAPIProcess, fetchChatConfig } from '@/api'
 import { t } from '@/locales'
 
-library.add(faTrashAlt, faFileUpload, faMusic, faArrowDown, faHistory, faVolumeUp)
+library.add(faTrashAlt, faFileUpload, faMusic, faArrowDown, faHistory, faVolumeUp, faPaperPlane)
 
 let controller = new AbortController()
 
@@ -872,7 +872,8 @@ onUnmounted(() => {
             <NButton type="primary" :disabled="buttonDisabled" @click="handleSubmit">
               <template #icon>
                 <span class="dark:text-black">
-                  <SvgIcon icon="ri:send-plane-fill" />
+                  <!-- <SvgIcon icon="ri:send-plane-fill" /> -->
+                  <FontAwesomeIcon icon="fas fa-paper-plane" />
                 </span>
               </template>
             </NButton>

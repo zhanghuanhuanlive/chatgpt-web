@@ -2,12 +2,17 @@
 import type { CSSProperties } from 'vue'
 import { computed, ref, watch } from 'vue'
 import { NButton, NDropdown, NLayoutSider, useDialog } from 'naive-ui'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import List from './List.vue'
 import Footer from './Footer.vue'
 import { useAppStore, useChatStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { PromptStore, SvgIcon } from '@/components/common'
+import { PromptStore } from '@/components/common'
 import { t } from '@/locales'
+
+library.add(faTimesCircle)
 
 const appStore = useAppStore()
 const chatStore = useChatStore()
@@ -224,7 +229,8 @@ watch(
             </NButton>
           </div>
           <NButton @click="handleClearAll">
-            <SvgIcon icon="ri:close-circle-line" />
+            <!-- <SvgIcon icon="ri:close-circle-line" /> -->
+            <FontAwesomeIcon icon="fas fa-times-circle" />
           </NButton>
         </div>
       </main>
