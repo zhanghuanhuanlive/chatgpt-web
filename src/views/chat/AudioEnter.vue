@@ -394,7 +394,7 @@ export default {
           </div>
 
           <div class="audio-pie_txt">
-            {{ beginRecoding ? '松开发送，上滑取消' : '按住说话' }}-{{ isMobile }}
+            {{ beginRecoding ? '松开发送，上滑取消' : '按住说话' }}
           </div>
         </div>
         <div

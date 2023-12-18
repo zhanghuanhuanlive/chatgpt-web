@@ -1,10 +1,14 @@
 <script setup lang='ts'>
 import { computed } from 'vue'
 import { NInput, NPopconfirm, NScrollbar } from 'naive-ui'
-import { SvgIcon } from '@/components/common'
+import { faCheck, faComments, faEdit, faHistory, faImage, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
 import { useAppStore, useChatStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { debounce } from '@/utils/functions/debounce'
+
+library.add(faCheck, faComments, faEdit, faHistory, faImage, faTrashAlt)
 
 const { isMobile } = useBasicLayout()
 
@@ -85,7 +89,7 @@ function isActive(uuid: number) {
     <div class="flex flex-col gap-2 text-sm">
       <template v-if="!dataSources.length">
         <div class="flex flex-col items-center mt-4 text-center text-neutral-300">
-          <SvgIcon icon="ri:inbox-line" class="mb-2 text-3xl" />
+          <FontAwesomeIcon icon="fas fa-image" class="mb-2 text-3xl" />
           <span>{{ $t('common.noData') }}</span>
         </div>
       </template>
@@ -97,7 +101,7 @@ function isActive(uuid: number) {
             @click="handleSelect(item)"
           >
             <span>
-              <SvgIcon icon="ri:message-3-line" />
+              <FontAwesomeIcon icon="fas fa-comments" />
             </span>
             <div class="relative flex-1 overflow-hidden break-all text-ellipsis whitespace-nowrap">
               <NInput
@@ -114,17 +118,17 @@ function isActive(uuid: number) {
             <div v-if="isActive(item.uuid)" class="absolute z-10 flex visible right-1">
               <template v-if="item.isEdit">
                 <button class="p-1" @click="handleEdit(item, false, $event)">
-                  <SvgIcon icon="ri:save-line" />
+                  <FontAwesomeIcon icon="fas fa-check" />
                 </button>
               </template>
               <template v-else>
                 <button class="p-1">
-                  <SvgIcon icon="ri:edit-line" @click="handleEdit(item, true, $event)" />
+                  <FontAwesomeIcon icon="fas fa-edit" @click="handleEdit(item, true, $event)" />
                 </button>
                 <NPopconfirm placement="bottom" @positive-click="handleDeleteDebounce(index, $event)">
                   <template #trigger>
                     <button class="p-1">
-                      <SvgIcon icon="ri:delete-bin-line" />
+                      <FontAwesomeIcon icon="fas fa-trash-alt" />
                     </button>
                   </template>
                   {{ $t('chat.deleteHistoryConfirm') }}

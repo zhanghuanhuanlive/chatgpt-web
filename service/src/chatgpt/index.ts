@@ -151,7 +151,7 @@ async function chatReplyProcess(options: RequestOptions) {
       options.systemMessage = ''
     }
     else if (businessType === 1001) {
-      options.completionParams.model = 'customerService'// 语义查询
+      // options.completionParams.model = 'customerService'// 语义查询
       // eslint-disable-next-line no-console
       console.log(options.systemMessage)
       options.systemMessage = ''

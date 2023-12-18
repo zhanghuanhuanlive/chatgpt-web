@@ -1,13 +1,21 @@
 <script setup lang='ts'>
 import { computed, ref } from 'vue'
 import { NDropdown, useMessage } from 'naive-ui'
+import { faArrowRotateLeft, faCopy, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
 import AvatarComponent from './Avatar.vue'
 import TextComponent from './Text.vue'
-import { SvgIcon } from '@/components/common'
 import { useIconRender } from '@/hooks/useIconRender'
 import { t } from '@/locales'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { copyToClip } from '@/utils/copy'
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<Emit>()
+
+library.add(faArrowRotateLeft, faCopy, faEllipsisVertical)
 
 interface Props {
   dateTime?: string
@@ -21,10 +29,6 @@ interface Emit {
   (ev: 'regenerate'): void
   (ev: 'delete'): void
 }
-
-const props = defineProps<Props>()
-
-const emit = defineEmits<Emit>()
 
 const { isMobile } = useBasicLayout()
 
@@ -128,7 +132,7 @@ async function handleCopy() {
             class="mb-2 transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-300"
             @click="handleRegenerate"
           >
-            <SvgIcon icon="ri:restart-line" />
+            <FontAwesomeIcon icon="fas fa-arrow-rotate-left" />
           </button>
           <NDropdown
             :trigger="isMobile ? 'click' : 'hover'"
@@ -137,7 +141,7 @@ async function handleCopy() {
             @select="handleSelect"
           >
             <button class="transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-200">
-              <SvgIcon icon="ri:more-2-fill" />
+              <FontAwesomeIcon icon="fas fa-ellipsis-vertical" />
             </button>
           </NDropdown>
         </div>

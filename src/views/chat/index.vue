@@ -6,7 +6,7 @@ import { storeToRefs } from 'pinia'
 import { NAutoComplete, NButton, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowDown, faFileUpload, faHistory, faMusic, faPaperPlane, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faFileUpload, faHistory, faMusic, faPaperPlane, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -20,7 +20,7 @@ import { useChatStore, usePromptStore } from '@/store'
 import { fetchChatAPIProcess, fetchChatConfig } from '@/api'
 import { t } from '@/locales'
 
-library.add(faTrashAlt, faFileUpload, faMusic, faArrowDown, faHistory, faVolumeUp, faPaperPlane)
+library.add(faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faVolumeUp, faPaperPlane)
 
 let controller = new AbortController()
 
@@ -138,7 +138,7 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'http://fastgpt.learnoh.cn/transcribe'
+    const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'https://fastgpt.learnoh.cn/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -837,7 +837,7 @@ onUnmounted(() => {
             <HoverButton v-if="!isMobile" title="保存会话到图片" @click="handleExport">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <!-- <SvgIcon icon="ri:download-2-line" /> -->
-                <FontAwesomeIcon icon="fas fa-arrow-down" />
+                <FontAwesomeIcon icon="fas fa-download" />
               </span>
             </HoverButton>
             <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="不携带历史记录" @click="toggleUsingContext">
