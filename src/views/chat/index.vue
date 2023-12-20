@@ -138,7 +138,7 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'https://fastgpt.learnoh.cn/transcribe'
+    const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'https://fastgpt.learnoh.cn/transcribe/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -148,7 +148,7 @@ async function handleAudioInput(audioBlob: Blob) {
     if (!response.ok)
       throw new Error(`服务器响应错误：${response.status}`)
 
-    const result = await response.json()
+    const result = await response.json()// 如果是json：response.json()
     console.log(result)
     prompt.value = result.text // 更新 prompt 的值
     // loadingBar.finish() // 完成后隐藏加载条
@@ -248,7 +248,7 @@ async function handleUploadAudio(files: FileList | null) {
     // 移除 console.log，或者替换为其他日志记录方式
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = `${config.value!.reverseProxy}:9876/customerService/upload/v1/chat/completions` || 'http://fastgpt.learnoh.cn/transcribe'
+    const whisperApiBaseUrl = `${config.value!.reverseProxy}:9876/customerService/upload/v1/files` || 'https://fastgpt.learnoh.cn/customerService'
     // console.log(whisperApiBaseUrl)
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
@@ -262,7 +262,7 @@ async function handleUploadAudio(files: FileList | null) {
     // 使用 .json() 方法解析 JSON 响应
     const result = await response.json()
 
-    // 使用 result.text 来获取转录文本
+    //
     const transcription = result.text
     // console.log(transcription)
     const uploadedFileName = result.fileName
@@ -280,8 +280,8 @@ async function handleUploadAudio(files: FileList | null) {
         loading: false,
         conversationOptions: null,
         requestOptions: {
-          prompt: `这是语音转写的结果，需要你帮我检查是否有问题，并返回完善后的内容给我：${transcription}`,
-          // prompt: '',
+          // prompt: `这是语音转写的结果，需要你帮我检查是否有问题，并返回完善后的内容给我：${transcription}`,
+          prompt: '',
           options: null,
         },
       },

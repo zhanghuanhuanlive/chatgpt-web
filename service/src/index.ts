@@ -1,5 +1,5 @@
 import express from 'express'
-import type { RequestProps } from './types'
+import type { ChatContext, RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
 import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
 import { auth } from './middleware/auth'
@@ -27,11 +27,14 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   // const businessType = req.body.businessType
   // console.log(businessType)
   try {
-    const { prompt, options = {}, systemMessage, temperature, top_p } = req.body as RequestProps
+    const { prompt, options = {} as ChatContext, systemMessage, temperature, top_p } = req.body as RequestProps
     let firstChunk = true
+
+    // eslint-disable-next-line no-console
+    console.log(req.body)
     // console.log('Received chat-process request', { prompt, options, systemMessage, temperature, top_p })
-    options.businessType = req.body.businessType
-    // console.log('options')
+    options.businessType = req.body.businessType// 这个值将传到/service/src/chatgpt/index.ts用
+    // console.log(options)
     // console.log(options)
     // console.log('111111111111111111')
     // 接下来调用/services/chatgpt/index.ts的chatReplyProcess

@@ -27,13 +27,13 @@ const timeoutMs: number = !isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT
 const disableDebug: boolean = process.env.OPENAI_API_DISABLE_DEBUG === 'true'
 
 let apiModel: ApiModel
-const model = isNotEmptyString(process.env.OPENAI_API_MODEL) ? process.env.OPENAI_API_MODEL : 'gpt-3.5-turbo'
+const model = isNotEmptyString(process.env.OPENAI_API_MODEL) ? process.env.OPENAI_API_MODEL : 'gpt-3.5-turbo-1106'
 
 if (!isNotEmptyString(process.env.OPENAI_API_KEY) && !isNotEmptyString(process.env.OPENAI_ACCESS_TOKEN))
   throw new Error('Missing OPENAI_API_KEY or OPENAI_ACCESS_TOKEN environment variable')
 
 let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
-let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
+// let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
 
 (async () => {
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
@@ -48,12 +48,12 @@ let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
     }
 
     // increase max token limit if use gpt-4
-    if (model.toLowerCase().includes('gpt-4')) {
+    if (model.toLowerCase().includes('gpt-4')) { // 128K
       // if use 32k model
-      if (model.toLowerCase().includes('32k')) {
-        options.maxModelTokens = 32768
-        options.maxResponseTokens = 8192
-      }
+      // if (model.toLowerCase().includes('32k')) {
+      options.maxModelTokens = 130000
+      options.maxResponseTokens = 8192
+      // }
       // else {
       //   options.maxModelTokens = 8192
       //   options.maxResponseTokens = 2048
@@ -76,13 +76,13 @@ let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
     // setupProxy(options)
 
     api = new ChatGPTAPI({ ...options })
-    const SEMANTIC_API_BASE_URL = `${process.env.API_REVERSE_PROXY}:9876/customerService`
-    options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/semantic/v1`
-    api_semantic = new ChatGPTAPI({ ...options })
-    options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/document/v1`
-    api_document = new ChatGPTAPI({ ...options })
-    options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/whisper/v1`
-    api_whisper = new ChatGPTAPI({ ...options })
+    // const SEMANTIC_API_BASE_URL = `${process.env.API_REVERSE_PROXY}:9876/customerService`
+    // options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/semantic/v1`
+    // api_semantic = new ChatGPTAPI({ ...options })
+    // options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/document/v1`
+    // api_document = new ChatGPTAPI({ ...options })
+    // options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/whisper/v1`
+    // api_whisper = new ChatGPTAPI({ ...options })
     apiModel = 'ChatGPTAPI'
   }
   // else {
@@ -140,30 +140,34 @@ async function chatReplyProcess(options: RequestOptions) {
     else if (businessType === 90) {
       options.completionParams.model = 'gpt-3.5-turbo-1106'
     }
-    else if (businessType === 100) {
-      options.completionParams.model = 'guidance'// 政务事项
+    else if (businessType === 100) { // 政务事项
+      options.completionParams.model = 'guidance'
     }
-    else if (businessType === 101) {
-      options.completionParams.model = 'law'// 民法典
+    else if (businessType === 101) { // 民法典
+      options.completionParams.model = 'law'
     }
-    else if (businessType === 108) {
-      options.completionParams.model = 'investment'// 招商政策
+    else if (businessType === 108) { // 招商政策
+      options.completionParams.model = 'investment'
       options.systemMessage = ''
     }
-    else if (businessType === 1001) {
-      // options.completionParams.model = 'customerService'// 语义查询
-      // eslint-disable-next-line no-console
-      console.log(options.systemMessage)
+    else if (businessType === 1001) { // 语义查询
+      options.completionParams.model = 'semantic'
+
+      // console.log(options.systemMessage)
+
+      // console.log('semantic')
       options.systemMessage = ''
     }
-    else if (businessType === 10001) {
-      // options.completionParams.model = 'customerService'// 语音转写
-      // eslint-disable-next-line no-console
-      console.log(options.systemMessage)
+    else if (businessType === 10001) { // 语音转写
+      options.completionParams.model = 'whisper'
+
+      // console.log(options.systemMessage)
+
+      // console.log('whisper')
       // options.systemMessage = ''
     }
-    else if (businessType === 10002) {
-      // options.completionParams.model = 'customerService'// 文档总结
+    else if (businessType === 10002) { // 文档总结
+      options.completionParams.model = 'document'
       // eslint-disable-next-line no-console
       console.log(options.systemMessage)
 
@@ -175,46 +179,46 @@ async function chatReplyProcess(options: RequestOptions) {
     }
     // options.completionParams.maxModelTokens = 32768
     // options.maxResponseTokens = 8192
-    options.completionParams.max_tokens = 4000
+    options.completionParams.max_tokens = 2000
     // options.ma
     // api = new ChatGPTAPI({ ...api_options })
 
     // console.log(options)
     // eslint-disable-next-line no-console
     console.log(message)
-    let response
-    if (businessType === 1001) {
-      response = await api_semantic.sendMessage(message, {
-        ...options,
-        onProgress: (partialResponse) => {
-          process?.(partialResponse)
-        },
-      })
-    }
-    else if (businessType === 10001) {
-      response = await api_whisper.sendMessage(message, {
-        ...options,
-        onProgress: (partialResponse) => {
-          process?.(partialResponse)
-        },
-      })
-    }
-    else if (businessType === 10002) {
-      response = await api_document.sendMessage(message, {
-        ...options,
-        onProgress: (partialResponse) => {
-          process?.(partialResponse)
-        },
-      })
-    }
-    else {
-      response = await api.sendMessage(message, {
-        ...options,
-        onProgress: (partialResponse) => {
-          process?.(partialResponse)
-        },
-      })
-    }
+    // let response
+    // if (businessType === 1001) {
+    //   response = await api_semantic.sendMessage(message, {
+    //     ...options,
+    //     onProgress: (partialResponse) => {
+    //       process?.(partialResponse)
+    //     },
+    //   })
+    // }
+    // else if (businessType === 10001) {
+    //   response = await api_whisper.sendMessage(message, {
+    //     ...options,
+    //     onProgress: (partialResponse) => {
+    //       process?.(partialResponse)
+    //     },
+    //   })
+    // }
+    // else if (businessType === 10002) {
+    //   response = await api_document.sendMessage(message, {
+    //     ...options,
+    //     onProgress: (partialResponse) => {
+    //       process?.(partialResponse)
+    //     },
+    //   })
+    // }
+    // else {
+    const response = await api.sendMessage(message, {
+      ...options,
+      onProgress: (partialResponse) => {
+        process?.(partialResponse)
+      },
+    })
+    // }
     return sendResponse({ type: 'Success', data: response })
   }
   catch (error: any) {
