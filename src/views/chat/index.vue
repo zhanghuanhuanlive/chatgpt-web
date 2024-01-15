@@ -129,16 +129,34 @@ function closeAudio(audioBlob: Blob) {
   handleAudioInput(audioBlob)
 }
 
+function isIpAddress(value) {
+  // 简单的正则表达式来检查是否为 IP 地址
+  // 这个正则仅适用于 IPv4 地址
+  const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+  return ipRegex.test(value)
+}
+
 // 语音输入触发语音转写
 async function handleAudioInput(audioBlob: Blob) {
   isSpinning.value = true // 开始加载，显示全局加载状态
   console.log('start handleAudioInput')
   const formData = new FormData()
   formData.append('file', audioBlob, 'audio.wav')
+  const reverseProxy = config.value!.reverseProxy
+  let whisperApiBaseUrl
+
+  if (isIpAddress(reverseProxy)) {
+  // 如果是 IP 地址，则添加端口号
+    whisperApiBaseUrl = `${reverseProxy}:7001/transcribe`
+  }
+  else {
+  // 如果是域名，则不添加端口号
+    whisperApiBaseUrl = `${reverseProxy}/transcribe`
+  }
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'https://fastgpt.learnoh.cn/transcribe/transcribe'
+    // const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'https://fastgpt.learnoh.cn/transcribe/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -244,11 +262,23 @@ async function handleUploadAudio(files: FileList | null) {
   )
   scrollToBottom()
 
+  const reverseProxy = config.value!.reverseProxy
+  let whisperApiBaseUrl
+
+  if (isIpAddress(reverseProxy)) {
+  // 如果是 IP 地址，则添加端口号
+    whisperApiBaseUrl = `${reverseProxy}:9876/customerService/upload/v1/files`
+  }
+  else {
+  // 如果是域名，则不添加端口号
+    whisperApiBaseUrl = `${reverseProxy}/customerService/upload/v1/files`
+  }
+
   try {
     // 移除 console.log，或者替换为其他日志记录方式
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = `${config.value!.reverseProxy}:9876/customerService/upload/v1/files` || 'https://fastgpt.learnoh.cn/customerService'
+    // const whisperApiBaseUrl = `${config.value!.reverseProxy}:9876/customerService/upload/v1/files` || 'https://fastgpt.learnoh.cn/customerService'
     // console.log(whisperApiBaseUrl)
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
