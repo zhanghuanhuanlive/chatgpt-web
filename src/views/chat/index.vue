@@ -271,7 +271,7 @@ async function handleUploadAudio(files: FileList | null) {
   }
   else {
   // 如果是域名，则不添加端口号
-    whisperApiBaseUrl = `${reverseProxy}/customerService/upload/v1/files`
+    whisperApiBaseUrl = `${reverseProxy}/customerService/customerService/upload/v1/files`
   }
 
   try {
