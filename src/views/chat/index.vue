@@ -176,6 +176,7 @@ async function handleAudioInput(audioBlob: Blob) {
   }
   finally {
     isSpinning.value = false // 加载结束，隐藏全局加载状态
+    handleSubmit()// 自动提交转写后的内容
   }
 }
 
