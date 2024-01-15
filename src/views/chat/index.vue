@@ -151,7 +151,7 @@ async function handleAudioInput(audioBlob: Blob) {
   }
   else {
   // 如果是域名，则不添加端口号
-    whisperApiBaseUrl = `${reverseProxy}/transcribe/transcribe`
+    whisperApiBaseUrl = `${reverseProxy}/transcribe/transcribe/`
   }
   try {
     // http://172.16.1.118:7001/transcribe/
