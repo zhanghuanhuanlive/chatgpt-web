@@ -138,7 +138,7 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = `${config.value!.reverseProxy}/transcribe` || 'https://fastgpt.learnoh.cn/transcribe/transcribe'
+    const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'https://fastgpt.learnoh.cn/transcribe/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
