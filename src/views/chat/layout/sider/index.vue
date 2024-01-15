@@ -4,7 +4,6 @@ import { computed, ref, watch } from 'vue'
 import { NButton, NDropdown, NLayoutSider, useDialog } from 'naive-ui'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import List from './List.vue'
 import Footer from './Footer.vue'
 import { useAppStore, useChatStore } from '@/store'
@@ -223,14 +222,15 @@ watch(
           <List />
         </div>
         <div class="flex items-center p-4 space-x-4">
-          <div class="flex-1">
+          <!-- <div class="flex-1">
             <NButton block @click="show = true">
               {{ $t('store.siderButton') }}
             </NButton>
-          </div>
-          <NButton @click="handleClearAll">
+          </div> -->
+          <NButton block @click="handleClearAll">
             <!-- <SvgIcon icon="ri:close-circle-line" /> -->
-            <FontAwesomeIcon icon="fas fa-times-circle" />
+            <!-- <FontAwesomeIcon icon="fas fa-times-circle" /> -->
+            清空会话
           </NButton>
         </div>
       </main>

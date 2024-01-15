@@ -6,7 +6,7 @@ import { storeToRefs } from 'pinia'
 import { NAutoComplete, NButton, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDownload, faFileUpload, faHistory, faMusic, faPaperPlane, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faFileUpload, faHistory, faMicrophoneLines, faMusic, faPaperPlane, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -20,7 +20,7 @@ import { useChatStore, usePromptStore } from '@/store'
 import { fetchChatAPIProcess, fetchChatConfig } from '@/api'
 import { t } from '@/locales'
 
-library.add(faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faVolumeUp, faPaperPlane)
+library.add(faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faVolumeUp, faPaperPlane)
 
 let controller = new AbortController()
 
@@ -138,7 +138,7 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'https://fastgpt.learnoh.cn/transcribe/transcribe'
+    const whisperApiBaseUrl = `${config.value!.reverseProxy}/transcribe` || 'https://fastgpt.learnoh.cn/transcribe/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -849,7 +849,7 @@ onUnmounted(() => {
             <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="语音输入" @click="showAudioInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <!-- <SvgIcon icon="lets-icons:sound-max-duotone" /> -->
-                <FontAwesomeIcon icon="fas fa-volume-up" />
+                <FontAwesomeIcon icon="fas fa-microphone-lines" />
               </span>
             </HoverButton>
             <AudioEnter :is-show="showAudioInputBtn" @close-audio="closeAudio" />

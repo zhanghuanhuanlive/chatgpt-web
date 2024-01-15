@@ -15,9 +15,10 @@ export interface UserState {
 export function defaultSetting(): UserState {
   return {
     userInfo: {
-      avatar: 'https://i-1-rar8.52tup.com/2023/2/24/e7a2033b-c04e-418c-a1a8-0c3a109557d1.png?imageView2/2/q/85',
-      name: 'ChatGLM',
-      description: 'AI助手',
+      // avatar: 'https://i-1-rar8.52tup.com/2023/2/24/e7a2033b-c04e-418c-a1a8-0c3a109557d1.png?imageView2/2/q/85',
+      avatar: '',
+      name: 'AI助手',
+      description: '',
     },
   }
 }
