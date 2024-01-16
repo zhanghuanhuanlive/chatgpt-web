@@ -26,12 +26,14 @@ const dataSources = computed(() => {
     // const businessType: number | undefined = history.businessType as number | undefined
 
     // const businessType: number = history.businessType || 0 as number
-    const businessType = history.businessType as number | undefined
-    let bType = 0
-    if (typeof businessType === 'number' || businessType === undefined)
-      bType = businessType || 0
-    const bTypeStr = String(bType)
-    history.businessName = keyLabelMap.get(bTypeStr)
+    // const businessType = history.businessType as number | undefined
+    const businessType = history.businessType as string
+
+    // let bType = 0
+    // if (typeof businessType === 'number' || businessType === undefined)
+    // bType = businessType || 0
+    // const bTypeStr = String(bType)
+    history.businessName = keyLabelMap.get(businessType)
     // console.log(bType)
     // console.log(typeof businessType)
     // if (businessType)
