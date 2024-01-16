@@ -101,21 +101,40 @@ let menu: string
 })()
 
 // 提取menu中的key和label组成map
-function createKeyLabelMap(menu: Array<string>) {
-  const keyLabelMap = new Map()
+// function createKeyLabelMap(menu: Array<string>) {
+//   const keyLabelMap = new Map()
 
-  function extractKeyLabel(data) {
-    if (data.key && data.label && data.model !== '' && data.model !== undefined)
-      keyLabelMap.set(data.key, data.label)
+//   function extractKeyLabel(data) {
+//     if (data.key && data.label && data.model !== '' && data.model !== undefined)
+//       keyLabelMap.set(data.key, data.label)
 
-    if (data.children && Array.isArray(data.children))
-      data.children.forEach(extractKeyLabel)
+//     if (data.children && Array.isArray(data.children))
+//       data.children.forEach(extractKeyLabel)
+//   }
+
+//   for (const menuItem of menu)
+//     extractKeyLabel(menuItem)
+
+//   return keyLabelMap
+// }
+
+// 递归函数，用于遍历嵌套的数据结构
+function findItemsWithModel(data) {
+  const result = []
+  for (const item of data) {
+    if (item.model) {
+      result.push({
+        label: item.label,
+        key: item.key,
+        model: item.model,
+      })
+    }
+    if (item.children && item.children.length > 0) {
+      const childResults = findItemsWithModel(item.children)
+      result.push(...childResults)
+    }
   }
-
-  for (const menuItem of menu)
-    extractKeyLabel(menuItem)
-
-  return keyLabelMap
+  return result
 }
 
 async function chatReplyProcess(options: RequestOptions) {
@@ -137,8 +156,17 @@ async function chatReplyProcess(options: RequestOptions) {
     }
 
     const businessType = lastContext.businessType
-    const keyLabelMap = createKeyLabelMap(JSON.parse(menu))
-    options.completionParams.model = keyLabelMap.get(String(businessType)) || 'chatglm3-6b'
+
+    // const jsonData = JSON.parse(menu)
+    // 构造新的对象数组，仅包含具有 model 值的项
+    // const filteredData = jsonData.filter(item => item.model)
+
+    const models = findItemsWithModel(JSON.parse(menu))
+    // const keyLabelMap = createKeyLabelMap(JSON.parse(menu))
+    const item = models.find(item => item.key === String(businessType))
+    // eslint-disable-next-line no-console
+    console.log(item.model)
+    options.completionParams.model = item.model || 'chatglm3-6b'
 
     // console.log(keyLabelMap)
     // const keyLabelMap = JSON.parse(localStorage.getItem('keyLabelMap') || '')
