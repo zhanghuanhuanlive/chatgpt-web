@@ -28,7 +28,7 @@ const dataSources = computed(() => {
     // const businessType: number = history.businessType || 0 as number
     const businessType = history.businessType as number | undefined
     let bType = 0
-    if (typeof businessType === 'number')
+    if (typeof businessType === 'number' || businessType === undefined)
       bType = businessType
     const bTypeStr = String(bType)
     history.businessName = keyLabelMap.get(bTypeStr)
