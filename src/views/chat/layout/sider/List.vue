@@ -15,10 +15,27 @@ const { isMobile } = useBasicLayout()
 const appStore = useAppStore()
 const chatStore = useChatStore()
 
+// interface ConfigState {
+//   timeoutMs?: number
+//   reverseProxy?: string
+//   apiModel?: string
+//   socksProxy?: string
+//   httpsProxy?: string
+//   usage?: string
+//   menu?: string
+//   affixes?: string
+// }
+// const config = ref<ConfigState>()
+
 const dataSources = computed(() => {
   // console.log(chatStore)
   // console.log(chatStore.history)
-  const keyLabelMap = new Map(JSON.parse(localStorage.getItem('keyLabelMap') || ''))
+  // const map = localStorage.getItem('keyLabelMap')
+  // if (!map) {
+  //   const { data } = await fetchChatConfig<ConfigState>()
+  // }
+  // console.log(chatStore.history)
+  const keyLabelMap = new Map(JSON.parse(localStorage.getItem('keyLabelMap') || '{}'))
   // console.log(keyLabelMap)
   chatStore.history.forEach((history) => {
     const businessType = history.businessType as number | undefined

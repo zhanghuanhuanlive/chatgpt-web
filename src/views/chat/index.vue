@@ -846,7 +846,7 @@ onUnmounted(() => {
       <template v-if="isSpinning">
         <NSpin :show="isSpinning" class="global-spin">
           <template #description>
-            语音转换中，请稍后
+            语音转写中，请稍后
           </template>
         </NSpin>
       </template>

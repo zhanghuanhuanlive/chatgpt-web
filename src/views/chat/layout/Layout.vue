@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { NLayout, NLayoutContent } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import Sider from './sider/index.vue'
@@ -11,6 +11,8 @@ const router = useRouter()
 const appStore = useAppStore()
 const chatStore = useChatStore()
 const authStore = useAuthStore()
+
+const showSider = ref(false)
 
 router.replace({ name: 'Chat', params: { uuid: chatStore.active } })
 
@@ -32,13 +34,21 @@ const getContainerClass = computed(() => {
     { 'pl-[260px]': !isMobile.value && !collapsed.value },
   ]
 })
+
+onMounted(() => {
+  setTimeout(() => {
+    showSider.value = true // 在1秒后显示Sider，要不然List页面没法获得缓存中的菜单
+  }, 500) // 1000毫秒 = 1秒
+})
 </script>
 
 <template>
   <div class="h-full dark:bg-[#24272e] transition-all" :class="[isMobile ? 'p-0' : 'p-4']">
     <div class="h-full overflow-hidden" :class="getMobileClass">
       <NLayout class="z-40 transition" :class="getContainerClass" has-sider>
-        <Sider />
+        <div v-if="showSider">
+          <Sider />
+        </div>
         <NLayoutContent class="h-full">
           <RouterView v-slot="{ Component, route }">
             <component :is="Component" :key="route.fullPath" />
