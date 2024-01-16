@@ -2,15 +2,13 @@ import * as dotenv from 'dotenv'
 import 'isomorphic-fetch'
 import type { ChatGPTAPIOptions, ChatGPTUnofficialProxyAPI, ChatMessage, SendMessageOptions } from 'chatgpt'
 import { ChatGPTAPI } from 'chatgpt'
-import { SocksProxyAgent } from 'socks-proxy-agent'
-import httpsProxyAgent from 'https-proxy-agent'
-import fetch from 'node-fetch'
+// import httpsProxyAgent from 'https-proxy-agent'
 import { sendResponse } from '../utils'
 import { isNotEmptyString } from '../utils/is'
 import type { ApiModel, ChatContext, ModelConfig } from '../types'
-import type { RequestOptions, SetProxyOptions } from './types'
+import type { RequestOptions } from './types'
 
-const { HttpsProxyAgent } = httpsProxyAgent
+// const { HttpsProxyAgent } = httpsProxyAgent
 
 dotenv.config()
 
@@ -33,11 +31,13 @@ if (!isNotEmptyString(process.env.OPENAI_API_KEY) && !isNotEmptyString(process.e
   throw new Error('Missing OPENAI_API_KEY or OPENAI_ACCESS_TOKEN environment variable')
 
 let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
+let menu: string
 // let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
 
 (async () => {
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
 
+  menu = process.env.MENU
   if (isNotEmptyString(process.env.OPENAI_API_KEY)) {
     const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
 
@@ -100,6 +100,24 @@ let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
   // }
 })()
 
+// 提取menu中的key和label组成map
+function createKeyLabelMap(menu: Array<string>) {
+  const keyLabelMap = new Map()
+
+  function extractKeyLabel(data) {
+    if (data.key && data.label && data.model !== '' && data.model !== undefined)
+      keyLabelMap.set(data.key, data.label)
+
+    if (data.children && Array.isArray(data.children))
+      data.children.forEach(extractKeyLabel)
+  }
+
+  for (const menuItem of menu)
+    extractKeyLabel(menuItem)
+
+  return keyLabelMap
+}
+
 async function chatReplyProcess(options: RequestOptions) {
   const { message, lastContext, process, systemMessage, temperature, top_p } = options
   try {
@@ -119,6 +137,11 @@ async function chatReplyProcess(options: RequestOptions) {
     }
 
     const businessType = lastContext.businessType
+    const keyLabelMap = createKeyLabelMap(JSON.parse(menu))
+    options.completionParams.model = keyLabelMap.get(String(businessType)) || 'chatglm3-6b'
+
+    // console.log(keyLabelMap)
+    // const keyLabelMap = JSON.parse(localStorage.getItem('keyLabelMap') || '')
     // console.log('----------------1')
 
     // console.log(businessType)
@@ -128,55 +151,55 @@ async function chatReplyProcess(options: RequestOptions) {
     // console.log(options)
     // console.log(api)
 
-    if (businessType === 10) {
-      options.completionParams.model = 'ERNIE-Bot-turbo'
-    }
-    else if (businessType === 20) {
-      options.completionParams.model = 'SparkDesk'
-    }
-    else if (businessType === 30) {
-      options.completionParams.model = 'qwen-turbo'
-    }
-    else if (businessType === 90) {
-      options.completionParams.model = 'gpt-3.5-turbo-1106'
-    }
-    else if (businessType === 100) { // 政务事项
-      options.completionParams.model = 'guidance'
-    }
-    else if (businessType === 101) { // 民法典
-      options.completionParams.model = 'law'
-    }
-    else if (businessType === 108) { // 招商政策
-      options.completionParams.model = 'investment'
-      options.systemMessage = ''
-    }
-    else if (businessType === 1001) { // 语义查询
-      options.completionParams.model = 'semantic'
+    // if (businessType === 10) {
+    //   options.completionParams.model = 'ERNIE-Bot-turbo'
+    // }
+    // else if (businessType === 20) {
+    //   options.completionParams.model = 'SparkDesk'
+    // }
+    // else if (businessType === 30) {
+    //   options.completionParams.model = 'qwen-turbo'
+    // }
+    // else if (businessType === 90) {
+    //   options.completionParams.model = 'gpt-3.5-turbo-1106'
+    // }
+    // else if (businessType === 100) { // 政务事项
+    //   options.completionParams.model = 'guidance'
+    // }
+    // else if (businessType === 101) { // 民法典
+    //   options.completionParams.model = 'law'
+    // }
+    // else if (businessType === 108) { // 招商政策
+    //   options.completionParams.model = 'investment'
+    //   options.systemMessage = ''
+    // }
+    // else if (businessType === 1001) { // 语义查询
+    //   options.completionParams.model = 'semantic'
 
-      // console.log(options.systemMessage)
+    //   // console.log(options.systemMessage)
 
-      // console.log('semantic')
-      options.systemMessage = ''
-    }
-    else if (businessType === 10001) { // 语音转写
-      options.completionParams.model = 'whisper'
+    //   // console.log('semantic')
+    //   options.systemMessage = ''
+    // }
+    // else if (businessType === 10001) { // 语音转写
+    //   options.completionParams.model = 'whisper'
 
-      // console.log(options.systemMessage)
+    //   // console.log(options.systemMessage)
 
-      // console.log('whisper')
-      // options.systemMessage = ''
-    }
-    else if (businessType === 10002) { // 文档总结
-      options.completionParams.model = 'document'
-      // eslint-disable-next-line no-console
-      console.log(options.systemMessage)
+    //   // console.log('whisper')
+    //   // options.systemMessage = ''
+    // }
+    // else if (businessType === 10002) { // 文档总结
+    //   options.completionParams.model = 'document'
+    //   // eslint-disable-next-line no-console
+    //   console.log(options.systemMessage)
 
-      // console.log('111111111111')
-      // options.systemMessage = ''
-    }
-    else { // 纯聊天
-      options.completionParams.model = 'chatglm3-6b'
-    }
+    //   // console.log('111111111111')
+    //   // options.systemMessage = ''
+    // }
+    // else { // 纯聊天
+    //   options.completionParams.model = 'chatglm3-6b'
+    // }
     // options.completionParams.maxModelTokens = 32768
     // options.maxResponseTokens = 8192
     options.completionParams.max_tokens = 2000
@@ -282,7 +305,7 @@ async function fetchUsage() {
 
 async function chatConfig() {
   const usage = await fetchUsage()
-  // const extraInfo = process.env.
+  const menu = process.env.MENU ?? '-'
   const reverseProxy = process.env.API_REVERSE_PROXY ?? '-'
   const httpsProxy = (process.env.HTTPS_PROXY || process.env.ALL_PROXY) ?? '-'
   const socksProxy = (process.env.SOCKS_PROXY_HOST && process.env.SOCKS_PROXY_PORT)
@@ -290,37 +313,37 @@ async function chatConfig() {
     : '-'
   return sendResponse<ModelConfig>({
     type: 'Success',
-    data: { apiModel, reverseProxy, timeoutMs, socksProxy, httpsProxy, usage },
+    data: { apiModel, reverseProxy, timeoutMs, socksProxy, httpsProxy, usage, menu },
   })
 }
 
-function setupProxy(options: SetProxyOptions) {
-  if (isNotEmptyString(process.env.SOCKS_PROXY_HOST) && isNotEmptyString(process.env.SOCKS_PROXY_PORT)) {
-    const agent = new SocksProxyAgent({
-      hostname: process.env.SOCKS_PROXY_HOST,
-      port: process.env.SOCKS_PROXY_PORT,
-      userId: isNotEmptyString(process.env.SOCKS_PROXY_USERNAME) ? process.env.SOCKS_PROXY_USERNAME : undefined,
-      password: isNotEmptyString(process.env.SOCKS_PROXY_PASSWORD) ? process.env.SOCKS_PROXY_PASSWORD : undefined,
-    })
-    options.fetch = (url, options) => {
-      return fetch(url, { agent, ...options })
-    }
-  }
-  else if (isNotEmptyString(process.env.HTTPS_PROXY) || isNotEmptyString(process.env.ALL_PROXY)) {
-    const httpsProxy = process.env.HTTPS_PROXY || process.env.ALL_PROXY
-    if (httpsProxy) {
-      const agent = new HttpsProxyAgent(httpsProxy)
-      options.fetch = (url, options) => {
-        return fetch(url, { agent, ...options })
-      }
-    }
-  }
-  else {
-    options.fetch = (url, options) => {
-      return fetch(url, { ...options })
-    }
-  }
-}
+// function setupProxy(options: SetProxyOptions) {
+//   if (isNotEmptyString(process.env.SOCKS_PROXY_HOST) && isNotEmptyString(process.env.SOCKS_PROXY_PORT)) {
+//     const agent = new SocksProxyAgent({
+//       hostname: process.env.SOCKS_PROXY_HOST,
+//       port: process.env.SOCKS_PROXY_PORT,
+//       userId: isNotEmptyString(process.env.SOCKS_PROXY_USERNAME) ? process.env.SOCKS_PROXY_USERNAME : undefined,
+//       password: isNotEmptyString(process.env.SOCKS_PROXY_PASSWORD) ? process.env.SOCKS_PROXY_PASSWORD : undefined,
+//     })
+//     options.fetch = (url, options) => {
+//       return fetch(url, { agent, ...options })
+//     }
+//   }
+//   else if (isNotEmptyString(process.env.HTTPS_PROXY) || isNotEmptyString(process.env.ALL_PROXY)) {
+//     const httpsProxy = process.env.HTTPS_PROXY || process.env.ALL_PROXY
+//     if (httpsProxy) {
+//       const agent = new HttpsProxyAgent(httpsProxy)
+//       options.fetch = (url, options) => {
+//         return fetch(url, { agent, ...options })
+//       }
+//     }
+//   }
+//   else {
+//     options.fetch = (url, options) => {
+//       return fetch(url, { ...options })
+//     }
+//   }
+// }
 
 function currentModel(): ApiModel {
   return apiModel

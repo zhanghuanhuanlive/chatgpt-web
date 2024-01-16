@@ -63,63 +63,97 @@ interface ConfigState {
   socksProxy?: string
   httpsProxy?: string
   usage?: string
+  menu?: string
 }
 const config = ref<ConfigState>()
-// const whisperApiBaseUrl = ref<config>
+let keyLabelMap: Map<string, string>
+let businessType = 0
+let currentBusinessType = 'ChatGLM3'
 async function fetchConfig() {
   try {
     loading.value = true
     const { data } = await fetchChatConfig<ConfigState>()
-    // if (undefined !== data)
     config.value = data
-    // console.log(config.value.reverseProxy)
+    const menu = config.value?.menu || '[]'
+    keyLabelMap = createKeyLabelMap(JSON.parse(menu))
+    // console.log(menu)
+    const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
+    if (undefined !== currentHistory)
+      businessType = currentHistory.businessType
+    if (keyLabelMap)
+      currentBusinessType = keyLabelMap.get(String(businessType)) || 'ChatGLM3'
+    localStorage.setItem('menu', menu)
+    localStorage.setItem('keyLabelMap', JSON.stringify(Array.from(keyLabelMap.entries())))
   }
   finally {
     loading.value = false
   }
 }
 
-// const xyz = fetchChatConfig()
+// 提取menu中的key和label组成map
+function createKeyLabelMap(menu: Array<string>) {
+  const keyLabelMap = new Map()
 
-// await fetchChatAPIProcess
+  function extractKeyLabel(data) {
+    if (data.key && data.label && data.model !== '' && data.model !== undefined)
+      keyLabelMap.set(data.key, data.label)
 
-// console.log(xyz.api)
-// console.log(import.meta.env)
+    if (data.children && Array.isArray(data.children))
+      data.children.forEach(extractKeyLabel)
+  }
 
-// const WHISPER_API_BASE_URL = process.env.WHISPER_API_BASE_URL as string
+  for (const menuItem of menu)
+    extractKeyLabel(menuItem)
+
+  return keyLabelMap
+}
 
 // const loadingBar = useLoadingBar()
 
-let businessType = 0
+// currentBusinessType = computed(() => {
+//   // const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
+//   if (keyLabelMap)
+//     return keyLabelMap.get(String(businessType)) || 'ChatGLM3'
+// })
 
-const currentBusinessType = computed(() => {
-  const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-  // let businessType = 0
-  let currentBusinessTypeName = 'ChatGLM3'
-  if (undefined !== currentHistory)
-    businessType = currentHistory.businessType
-  if (businessType === 10)
-    currentBusinessTypeName = '百度文心一言'
-  else if (businessType === 20)
-    currentBusinessTypeName = '科大讯飞星火认知V3.0'
-  else if (businessType === 30)
-    currentBusinessTypeName = '阿里通义千问'
-  else if (businessType === 90)
-    currentBusinessTypeName = 'GPT3.5'
-  else if (businessType === 100)
-    currentBusinessTypeName = '政策事项知识库'
-  else if (businessType === 108)
-    currentBusinessTypeName = '招商政策知识库'
-  else if (businessType === 101)
-    currentBusinessTypeName = '民法典'
-  else if (businessType === 1001)
-    currentBusinessTypeName = '数据分析'
-  else if (businessType === 10001)
-    currentBusinessTypeName = '语音转写文字'
-  else if (businessType === 10002)
-    currentBusinessTypeName = '文档分析'
-  return currentBusinessTypeName
-})
+// currentBusinessType = computed(() => {
+//   const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
+//   // let businessType = 0
+//   // let currentBusinessTypeName = 'ChatGLM3'
+//   console.log(keyLabelMap)
+//   if (undefined !== currentHistory)
+//     businessType = currentHistory.businessType
+//   // let currentBusinessTypeName = 'ChatGLM3'
+//   console.log(keyLabelMap)
+
+//   if (keyLabelMap)
+//     return keyLabelMap.get(String(businessType)) || 'ChatGLM3'
+//   return 'ChatGLM3'
+
+//   // const currentBusinessTypeName = keyLabelMap.get(businessType) || 'ChatGLM3'
+
+//   // if (businessType === 10)
+//   //   currentBusinessTypeName = '百度文心一言'
+//   // else if (businessType === 20)
+//   //   currentBusinessTypeName = '科大讯飞星火认知V3.0'
+//   // else if (businessType === 30)
+//   //   currentBusinessTypeName = '阿里通义千问'
+//   // else if (businessType === 90)
+//   //   currentBusinessTypeName = 'GPT3.5'
+//   // else if (businessType === 100)
+//   //   currentBusinessTypeName = '政策事项知识库'
+//   // else if (businessType === 108)
+//   //   currentBusinessTypeName = '招商政策知识库'
+//   // else if (businessType === 101)
+//   //   currentBusinessTypeName = '民法典'
+//   // else if (businessType === 1001)
+//   //   currentBusinessTypeName = '数据分析'
+//   // else if (businessType === 10001)
+//   //   currentBusinessTypeName = '语音转写文字'
+//   // else if (businessType === 10002)
+//   //   currentBusinessTypeName = '文档分析'
+//   // return currentBusinessTypeName
+// })
 
 function closeAudio(audioBlob: Blob) {
   console.log('closeAudioInput')

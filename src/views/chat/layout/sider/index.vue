@@ -23,112 +23,115 @@ const show = ref(false)
 
 const collapsed = computed(() => appStore.siderCollapsed)
 
-const options = [
-  // {
-  //   label: 'AI聊天',
-  //   key: '10000',
-  //   disabled: true,
-  // },
-  {
-    label: '选择模型对话',
-    key: '-1000',
-    children: [
-      {
-        label: '本地ChatGLM3',
-        key: '0',
-      },
-      {
-        label: '百度文心一言',
-        key: '10',
-      },
-      {
-        label: '科大讯飞星火认知V3.0',
-        key: '20',
-      },
-      {
-        label: '阿里通义千问',
-        key: '30',
-      },
-      {
-        label: 'GPT3.5',
-        key: '90',
-      },
-    ],
-    // disabled: true,
-  },
+// console.log(localStorage.getItem('menu'))
+const options = computed(() => JSON.parse(localStorage.getItem('menu') || ''))
+// console.log(options.value)
+// [
+//   // {
+//   //   label: 'AI聊天',
+//   //   key: '10000',
+//   //   disabled: true,
+//   // },
+//   {
+//     label: '选择模型对话',
+//     key: '-1000',
+//     children: [
+//       {
+//         label: '本地ChatGLM3',
+//         key: '0',
+//       },
+//       {
+//         label: '百度文心一言',
+//         key: '10',
+//       },
+//       {
+//         label: '科大讯飞星火认知V3.0',
+//         key: '20',
+//       },
+//       {
+//         label: '阿里通义千问',
+//         key: '30',
+//       },
+//       {
+//         label: 'GPT3.5',
+//         key: '90',
+//       },
+//     ],
+//     // disabled: true,
+//   },
 
-  {
-    type: 'divider',
-    key: 'd1',
-  },
-  // {
-  //   label: '应用聊天',
-  //   key: '-1',
-  //   disabled: true,
-  // },
-  {
-    label: '选择应用对话@ChatGLM3',
-    key: '1000',
-    children: [
-      {
-        label: '数据分析',
-        key: '1001',
-      },
-      {
-        type: 'divider',
-        key: 'd1',
-      },
-      {
-        label: '选择知识库',
-        key: '10000',
-        disabled: true,
-      },
-      {
-        label: '办事事项知识库',
-        key: '100',
-      },
-      {
-        label: '招商政策知识库',
-        key: '108',
-      },
-      {
-        label: '法律法规',
-        key: 'others1',
-        children: [
-          {
-            label: '民法典',
-            key: '101',
-          },
-          {
-            label: '矛盾调解',
-            key: '102',
-            disabled: true,
-          },
-        ],
-      },
-    ],
-  },
+//   {
+//     type: 'divider',
+//     key: 'd1',
+//   },
+//   // {
+//   //   label: '应用聊天',
+//   //   key: '-1',
+//   //   disabled: true,
+//   // },
+//   {
+//     label: '选择应用对话@ChatGLM3',
+//     key: '1000',
+//     children: [
+//       {
+//         label: '数据分析',
+//         key: '1001',
+//       },
+//       {
+//         type: 'divider',
+//         key: 'd1',
+//       },
+//       {
+//         label: '选择知识库',
+//         key: '10000',
+//         disabled: true,
+//       },
+//       {
+//         label: '办事事项知识库',
+//         key: '100',
+//       },
+//       {
+//         label: '招商政策知识库',
+//         key: '108',
+//       },
+//       {
+//         label: '法律法规',
+//         key: 'others1',
+//         children: [
+//           {
+//             label: '民法典',
+//             key: '101',
+//           },
+//           {
+//             label: '矛盾调解',
+//             key: '102',
+//             disabled: true,
+//           },
+//         ],
+//       },
+//     ],
+//   },
 
-  {
-    label: '选择组件对话@ChatGLM3',
-    key: '10000',
-    children: [
-      {
-        label: '音频转写文字',
-        key: '10001',
-      },
-      {
-        type: 'divider',
-        key: 'd1',
-      },
-      {
-        label: '文档分析',
-        key: '10002',
-      },
-    ],
-  },
+//   {
+//     label: '选择组件对话@ChatGLM3',
+//     key: '10000',
+//     children: [
+//       {
+//         label: '音频转写文字',
+//         key: '10001',
+//       },
+//       {
+//         type: 'divider',
+//         key: 'd1',
+//       },
+//       {
+//         label: '文档分析',
+//         key: '10002',
+//       },
+//     ],
+//   },
 
-]
+// ]
 
 // const message = useMessage()
 // const showDropdownRef = ref(false)
