@@ -26,7 +26,7 @@ const dataSources = computed(() => {
     // const businessType: number | undefined = history.businessType as number | undefined
 
     // const businessType: number = history.businessType || 0 as number
-    const businessType = history.businessType! as number
+    const businessType = history.businessType as number | undefined
     let bType = 0
     if (typeof businessType === 'number')
       bType = businessType
