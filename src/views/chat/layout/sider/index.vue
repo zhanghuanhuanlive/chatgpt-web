@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import type { CSSProperties } from 'vue'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { NButton, NDropdown, NLayoutSider, useDialog } from 'naive-ui'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
@@ -181,17 +181,18 @@ const mobileSafeArea = computed(() => {
   }
   return {}
 })
-
-watch(
-  isMobile,
-  (val) => {
-    appStore.setSiderCollapsed(val)
-  },
-  {
-    immediate: true,
-    flush: 'post',
-  },
-)
+// 注释以下代码，要不然只要不是Mobile就会默认展开侧边栏,如果放开注释，需要import { computed, ref, watch } from 'vue'
+// watch(
+//   isMobile,
+//   (val) => {
+//     console.log(`watch: ${val}`);
+//     appStore.setSiderCollapsed(val)
+//   },
+//   {
+//     immediate: true,
+//     flush: 'post',
+//   },
+// )
 </script>
 
 <template>
