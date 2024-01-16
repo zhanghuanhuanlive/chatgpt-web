@@ -38,7 +38,7 @@ const getContainerClass = computed(() => {
 onMounted(() => {
   setTimeout(() => {
     showSider.value = true // 在1秒后显示Sider，要不然List页面没法获得缓存中的菜单
-  }, 500) // 1000毫秒 = 1秒
+  }, 1000) // 1000毫秒 = 1秒
 })
 </script>
 
