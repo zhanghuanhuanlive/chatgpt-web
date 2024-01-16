@@ -22,7 +22,7 @@ const dataSources = computed(() => {
   // console.log(keyLabelMap)
   chatStore.history.forEach((history) => {
     const businessType: number = history.businessType || 0 as number
-    if (businessType)
+    if (businessType && typeof businessType === 'number')
       history.businessName = keyLabelMap.get(String(businessType))
     // if (businessType === 10)
     //   history.businessName = '百度文心一言'
