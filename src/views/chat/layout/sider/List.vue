@@ -35,13 +35,18 @@ const dataSources = computed(() => {
   //   const { data } = await fetchChatConfig<ConfigState>()
   // }
   // console.log(chatStore.history)
-  const keyLabelMap = new Map(JSON.parse(localStorage.getItem('keyLabelMap') || '{}'))
+  // const models = new Map(JSON.parse(localStorage.getItem('models') || '{}'))
+
   // console.log(keyLabelMap)
+  const models = computed(() => JSON.parse(localStorage.getItem('models') || ''))
   chatStore.history.forEach((history) => {
     const businessType = history.businessType as number | undefined
     const bType = typeof businessType === 'number' ? businessType : 0
     const bTypeStr = String(bType)
-    history.businessName = keyLabelMap.get(bTypeStr) as string | undefined
+    const item = models.value.find(item => item.key === bTypeStr)
+    // if (keyLabelMap)
+    // currentBusinessType = item.label || 'ChatGLM3'
+    history.businessName = item.label || 'ChatGLM3' as string | undefined
 
     // let businessType = 0
     // const businessType: number | undefined = history.businessType as number | undefined

@@ -70,7 +70,7 @@ interface ConfigState {
   affixes?: string
 }
 const config = ref<ConfigState>()
-let keyLabelMap: Map<string, string>
+// let keyLabelMap: Map<string, string>
 let businessType = 0
 let currentBusinessType = 'ChatGLM3'
 let affixes
@@ -80,22 +80,48 @@ async function fetchConfig() {
     const { data } = await fetchChatConfig<ConfigState>()
     config.value = data
     const menu = config.value?.menu || '[]'
-    const tmp = config.value?.affixes
+    const tmp = config.value?.affixes// 固定的快捷菜单
     if (tmp)
       affixes = tmp.split(',')
-    keyLabelMap = createKeyLabelMap(JSON.parse(menu))
+    // const jsonData = JSON.parse(menu)
+    // 构造新的对象数组，仅包含具有 model 值的项
+    // const filteredData = jsonData.filter(item => item.model)
+
+    const models = findItemsWithModel(JSON.parse(menu))
+    // console.log(models)
+    // keyLabelMap = createKeyLabelMap(JSON.parse(menu))
     // console.log(menu)
     const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
     if (undefined !== currentHistory)
       businessType = currentHistory.businessType
-    if (keyLabelMap)
-      currentBusinessType = keyLabelMap.get(String(businessType)) || 'ChatGLM3'
+    const item = models.find(item => item.key === String(businessType))
+    // if (keyLabelMap)
+    currentBusinessType = item.label || 'ChatGLM3'
     localStorage.setItem('menu', menu)
-    localStorage.setItem('keyLabelMap', JSON.stringify(Array.from(keyLabelMap.entries())))
+    localStorage.setItem('models', JSON.stringify(Array.from(models)))
   }
   finally {
     loading.value = false
   }
+}
+
+// 递归函数，用于遍历嵌套的数据结构
+function findItemsWithModel(data) {
+  const result = []
+  for (const item of data) {
+    if (item.model) {
+      result.push({
+        label: item.label,
+        key: item.key,
+        model: item.model,
+      })
+    }
+    if (item.children && item.children.length > 0) {
+      const childResults = findItemsWithModel(item.children)
+      result.push(...childResults)
+    }
+  }
+  return result
 }
 
 // 提取menu中的key和label组成map

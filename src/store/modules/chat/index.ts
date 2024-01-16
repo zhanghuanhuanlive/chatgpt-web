@@ -41,7 +41,7 @@ export const useChatStore = defineStore('chat-store', {
     },
 
     addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {
-      console.log(history)
+      // console.log(history)
       // 加到数组的开头
       this.history.unshift(history)
       this.chat.unshift({ uuid: history.uuid, data: chatData, businessType: history.businessType })

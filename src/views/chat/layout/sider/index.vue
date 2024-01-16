@@ -25,6 +25,7 @@ const collapsed = computed(() => appStore.siderCollapsed)
 
 // console.log(localStorage.getItem('menu'))
 const options = computed(() => JSON.parse(localStorage.getItem('menu') || ''))
+
 // console.log(options.value)
 // [
 //   // {
