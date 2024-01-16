@@ -125,22 +125,22 @@ function findItemsWithModel(data) {
 }
 
 // 提取menu中的key和label组成map
-function createKeyLabelMap(menu: Array<string>) {
-  const keyLabelMap = new Map()
+// function createKeyLabelMap(menu: Array<string>) {
+//   const keyLabelMap = new Map()
 
-  function extractKeyLabel(data) {
-    if (data.key && data.label && data.model !== '' && data.model !== undefined)
-      keyLabelMap.set(data.key, data.label)
+//   function extractKeyLabel(data) {
+//     if (data.key && data.label && data.model !== '' && data.model !== undefined)
+//       keyLabelMap.set(data.key, data.label)
 
-    if (data.children && Array.isArray(data.children))
-      data.children.forEach(extractKeyLabel)
-  }
+//     if (data.children && Array.isArray(data.children))
+//       data.children.forEach(extractKeyLabel)
+//   }
 
-  for (const menuItem of menu)
-    extractKeyLabel(menuItem)
+//   for (const menuItem of menu)
+//     extractKeyLabel(menuItem)
 
-  return keyLabelMap
-}
+//   return keyLabelMap
+// }
 
 // const loadingBar = useLoadingBar()
 
