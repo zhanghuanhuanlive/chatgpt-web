@@ -107,7 +107,7 @@ async function fetchConfig() {
 
 // 递归函数，用于遍历嵌套的数据结构
 function findItemsWithModel(data) {
-  const result = []
+  const result: Array<{ key: string; label: string; model: string }> = []
   for (const item of data) {
     if (item.model) {
       result.push({
