@@ -21,16 +21,19 @@ const dataSources = computed(() => {
   const keyLabelMap = new Map(JSON.parse(localStorage.getItem('keyLabelMap') || ''))
   // console.log(keyLabelMap)
   chatStore.history.forEach((history) => {
-    let businessType = 0
+    // let businessType = 0
     // const businessType: number | undefined = history.businessType as number | undefined
     // const businessType: number | undefined = history.businessType as number | undefined
 
     // const businessType: number = history.businessType || 0 as number
-    businessType = history.businessType! as any
-    console.log(businessType)
+    const businessType = history.businessType! as number
+    let bType = 0
+    if (typeof businessType === 'number')
+      bType = businessType
+    console.log(bType)
     console.log(typeof businessType)
     if (businessType)
-      history.businessName = keyLabelMap.get(String(businessType))
+      history.businessName = keyLabelMap.get(String(bType))
     // if (businessType === 10)
     //   history.businessName = '百度文心一言'
     // else if (businessType === 20)
