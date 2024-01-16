@@ -56,7 +56,7 @@ const showAudioInputBtn = ref(false)
 
 const isSpinning = ref(false)
 
-const showArrowIcon = ref(false)
+// const showArrowIcon = ref(false)
 const activeIndex = ref(null)
 
 interface ConfigState {
