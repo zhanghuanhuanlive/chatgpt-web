@@ -33,6 +33,7 @@ export interface ModelConfig {
   httpsProxy?: string
   usage?: string
   menu?: string
+  affixes?: string
 }
 
 export type ApiModel = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined

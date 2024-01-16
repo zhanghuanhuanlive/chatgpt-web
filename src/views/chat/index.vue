@@ -3,10 +3,10 @@ import type { Ref } from 'vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { NAutoComplete, NButton, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
+import { NAlert, NAutoComplete, NButton, NGi, NGrid, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDownload, faFileUpload, faHistory, faMicrophoneLines, faMusic, faPaperPlane, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpLong, faDownload, faFileUpload, faHistory, faMicrophoneLines, faMusic, faPaperPlane, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -20,7 +20,7 @@ import { useChatStore, usePromptStore } from '@/store'
 import { fetchChatAPIProcess, fetchChatConfig } from '@/api'
 import { t } from '@/locales'
 
-library.add(faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faVolumeUp, faPaperPlane)
+library.add(faArrowUpLong, faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faVolumeUp, faPaperPlane)
 
 let controller = new AbortController()
 
@@ -56,6 +56,9 @@ const showAudioInputBtn = ref(false)
 
 const isSpinning = ref(false)
 
+const showArrowIcon = ref(false)
+const activeIndex = ref(null)
+
 interface ConfigState {
   timeoutMs?: number
   reverseProxy?: string
@@ -64,17 +67,22 @@ interface ConfigState {
   httpsProxy?: string
   usage?: string
   menu?: string
+  affixes?: string
 }
 const config = ref<ConfigState>()
 let keyLabelMap: Map<string, string>
 let businessType = 0
 let currentBusinessType = 'ChatGLM3'
+let affixes
 async function fetchConfig() {
   try {
     loading.value = true
     const { data } = await fetchChatConfig<ConfigState>()
     config.value = data
     const menu = config.value?.menu || '[]'
+    const tmp = config.value?.affixes
+    if (tmp)
+      affixes = tmp.split(',')
     keyLabelMap = createKeyLabelMap(JSON.parse(menu))
     // console.log(menu)
     const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
@@ -767,6 +775,15 @@ function handleStop() {
   }
 }
 
+function handleAffixClick(item) {
+  prompt.value = item
+  handleSubmit()
+}
+
+function setActiveIndex(index) {
+  this.activeIndex = index
+}
+
 // 可优化部分
 // 搜索选项计算，这里使用value作为索引项，所以当出现重复value时渲染异常(多项同时出现选中效果)
 // 理想状态下其实应该是key作为索引项,但官方的renderOption会出现问题，所以就需要value反renderLabel实现
@@ -886,6 +903,24 @@ onUnmounted(() => {
       </main>
       <footer :class="footerClass">
         <div class="w-full max-w-screen-xl m-auto">
+          <template v-if="!isMobile && businessType === 1001">
+            <div class="flex items-center justify-between space-x-2" style="margin-bottom: 8px;">
+              <NGrid x-gap="12" :cols="4">
+                <NGi
+                  v-for="(item, index) of affixes" :key="index" class="affix"
+                  :class="{ 'hovered-grid': activeIndex === index }"
+                  @click="handleAffixClick(item)"
+                  @mouseover="setActiveIndex(index)"
+                  @mouseout="setActiveIndex(null)"
+                >
+                  <NAlert title="" :show-icon="false">
+                    {{ item }}
+                    <FontAwesomeIcon v-if="activeIndex === index" icon="fas fa-arrow-up-long" style="float: right !important; padding-top: 5px;" />
+                  </NAlert>
+                </NGi>
+              </NGrid>
+            </div>
+          </template>
           <div class="flex items-center justify-between space-x-2">
             <HoverButton v-if="!isMobile && (businessType === 10001 || businessType === 10002)" :title="businessType === 10001 ? '音频转写文字' : businessType === 10002 ? '文档总结' : ''" @click="triggerFileInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
@@ -950,6 +985,13 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.affix {
+  cursor: pointer;
+  /* border-radius: 8px; */
+}
+.hovered-grid {
+  background-color: #333;
+}
 .global-spin {
   position: fixed;
   top: 0;
