@@ -87,7 +87,7 @@ async function fetchConfig() {
     // 构造新的对象数组，仅包含具有 model 值的项
     // const filteredData = jsonData.filter(item => item.model)
 
-    const models = findItemsWithModel(JSON.parse(menu))
+    const models: Array<{ key: string; label: string; model: string }> = findItemsWithModel(JSON.parse(menu))
     // console.log(models)
     // keyLabelMap = createKeyLabelMap(JSON.parse(menu))
     // console.log(menu)
@@ -95,8 +95,8 @@ async function fetchConfig() {
     if (undefined !== currentHistory)
       businessType = currentHistory.businessType
     const item = models.find(item => item.key === String(businessType))
-    // if (keyLabelMap)
-    currentBusinessType = item.label || 'ChatGLM3'
+    if (item)
+      currentBusinessType = item.label || 'ChatGLM3'
     localStorage.setItem('menu', menu)
     localStorage.setItem('models', JSON.stringify(Array.from(models)))
   }

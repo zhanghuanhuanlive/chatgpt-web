@@ -166,7 +166,8 @@ async function chatReplyProcess(options: RequestOptions) {
     const item = models.find(item => item.key === String(businessType))
     // eslint-disable-next-line no-console
     console.log(item.model)
-    options.completionParams.model = item.model || 'chatglm3-6b'
+    if (item)
+      options.completionParams.model = item.model || 'chatglm3-6b'
 
     // console.log(keyLabelMap)
     // const keyLabelMap = JSON.parse(localStorage.getItem('keyLabelMap') || '')
