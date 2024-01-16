@@ -807,7 +807,7 @@ function handleAffixClick(item) {
 }
 
 function setActiveIndex(index) {
-  this.activeIndex = index
+  activeIndex.value = index
 }
 
 // 可优化部分
