@@ -33,7 +33,7 @@ const dataSources = computed(() => {
     console.log(bType)
     console.log(typeof businessType)
     if (businessType)
-      history.businessName = keyLabelMap.get(String(bType))
+      history.businessName = keyLabelMap.get(String(bType))!
     // if (businessType === 10)
     //   history.businessName = '百度文心一言'
     // else if (businessType === 20)
