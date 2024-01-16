@@ -21,7 +21,7 @@ const dataSources = computed(() => {
   const keyLabelMap = new Map(JSON.parse(localStorage.getItem('keyLabelMap') || ''))
   // console.log(keyLabelMap)
   chatStore.history.forEach((history) => {
-    const businessType: number = history.businessType
+    const businessType: number = history.businessType || 0
     if (businessType)
       history.businessName = keyLabelMap.get(String(businessType))
     // if (businessType === 10)
