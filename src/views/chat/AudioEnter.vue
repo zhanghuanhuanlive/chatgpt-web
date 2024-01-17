@@ -369,8 +369,8 @@ export default {
     },
     // 关闭组件
     close() {
-      // if (!this.beginRecoding)
-      this.stopRecorder() // 停止录音
+      if (this.beginRecoding)
+        this.stopRecorder() // 停止录音
       this.$emit('closeAudio', null)
     },
     // 销毁实例
