@@ -78,8 +78,21 @@ export default {
     }
 
     // this.startCanvas();
+    document.addEventListener('keydown', this.handleKeyDown)// 监听按键
+  },
+  beforeUnmount() {
+    // 在组件销毁前移除事件监听
+    document.removeEventListener('keydown', this.handleKeyDown)
   },
   methods: {
+    handleKeyDown(event) {
+      if (event.key === 'Escape' || event.keyCode === 27) {
+        // 当按下 ESC 键时触发的操作
+        console.log('ESC 键被按下了')
+        this.$emit('closeAudio', null)
+        // 这里可以执行其他操作
+      }
+    },
     // 获取麦克风权限
     getPermission() {
       Recorder.getPermission().then(() => {
@@ -356,7 +369,8 @@ export default {
     },
     // 关闭组件
     close() {
-      this.$emit('closeAudio')
+      console.log('11111111111')
+      this.$emit('closeAudio', null)
     },
     // 销毁实例
     beforeDestroy() {
@@ -367,8 +381,8 @@ export default {
 </script>
 
 <template>
-  <div v-show="isShow" class="audio-enter">
-    <van-overlay :show="isShow" class-name="custom-overlay" @click="close">
+  <div v-show="isShow" class="audio-enter" @click="close">
+    <van-overlay :show="isShow" class-name="custom-overlay">
       <div class="audio-pie" @click.stop>
         <!-- 录音时显示音波图和时长 -->
         <div v-if="beginRecoding">
@@ -428,7 +442,7 @@ export default {
     height: 100%;
     width: 100%;
     z-index: 999999999;
-    background-color: #FFFFFF;
+    background-color: rgba(0, 0, 0, 0.5);
 
     .custom-overlay {
       // background-color: rgba(0, 0, 0, 0.8);
@@ -439,7 +453,7 @@ export default {
       position: absolute;
       left: 0;
       right: 0;
-      bottom: 74px;
+      bottom: 174px;
       text-align: center;
 
       .audio-pie_txt {
