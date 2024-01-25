@@ -537,8 +537,8 @@ async function onConversation(systemMessage: string) {
             // console.log(systemMessage)
             const input = data.text// tts的input
             if (playAudio.value && input && input !== '') {
-              // needTts = true
-              fetchAndPlayAudio(audioPlayer.value, input.replace(/#/g, ''))
+              if (audioPlayer.value !== null)
+                fetchAndPlayAudio(audioPlayer.value, input.replace(/#/g, ''))
             }
 
             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
@@ -684,8 +684,8 @@ async function onRegenerate(index: number) {
 
             const input = data.text// tts的input
             if (playAudio.value && input && input !== '') {
-              // needTts = true
-              fetchAndPlayAudio(audioPlayer.value, input.replace(/#/g, ''))
+              if (audioPlayer.value !== null)
+                fetchAndPlayAudio(audioPlayer.value, input.replace(/#/g, ''))
             }
 
             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
