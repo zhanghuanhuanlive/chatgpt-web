@@ -1007,7 +1007,7 @@ function togglePlay() {
                 <FontAwesomeIcon :icon="businessType === 10001 ? 'fas fa-file-upload' : businessType === 10002 ? 'fas fa-file-upload' : ''" />
               </span>
             </HoverButton>
-            <HoverButton v-if="playAudio && isPlaying" @click="togglePlay">
+            <HoverButton v-if="playAudio" @click="togglePlay">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <FontAwesomeIcon :icon="isPlaying ? 'fas fa-pause-circle' : 'fas fa-play-circle'" />
               </span>
