@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { NButton, NInput, NSlider, useMessage } from 'naive-ui'
+import { NButton, NInput, NSlider, NSwitch, useMessage } from 'naive-ui'
 import { useSettingStore } from '@/store'
 import type { SettingsState } from '@/store/modules/settings/helper'
 import { t } from '@/locales'
@@ -11,9 +11,11 @@ const ms = useMessage()
 
 const systemMessage = ref(settingStore.systemMessage ?? '')
 
+const playAudio = ref(settingStore.playAudio ?? false)
+
 const temperature = ref(settingStore.temperature ?? 0.5)
 
-const top_p = ref(settingStore.top_p ?? 1)
+// const top_p = ref(settingStore.top_p ?? 1)
 
 function updateSettings(options: Partial<SettingsState>) {
   settingStore.updateSetting(options)
@@ -33,9 +35,18 @@ function handleReset() {
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">{{ $t('setting.role') }}</span>
         <div class="flex-1">
-          <NInput v-model:value="systemMessage" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }" />
+          <NInput v-model:value="systemMessage" type="textarea" :autosize="{ minRows: 3, maxRows: 6 }" />
         </div>
         <NButton size="tiny" text type="primary" @click="updateSettings({ systemMessage })">
+          {{ $t('common.save') }}
+        </NButton>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[120px]">{{ $t('setting.playAudio') }} </span>
+        <div class="flex-1">
+          <NSwitch v-model:value="playAudio" />
+        </div>
+        <NButton size="tiny" text type="primary" @click="updateSettings({ playAudio })">
           {{ $t('common.save') }}
         </NButton>
       </div>
@@ -49,7 +60,7 @@ function handleReset() {
           {{ $t('common.save') }}
         </NButton>
       </div>
-      <div class="flex items-center space-x-4">
+      <!-- <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">{{ $t('setting.top_p') }} </span>
         <div class="flex-1">
           <NSlider v-model:value="top_p" :max="1" :min="0" :step="0.1" />
@@ -58,7 +69,7 @@ function handleReset() {
         <NButton size="tiny" text type="primary" @click="updateSettings({ top_p })">
           {{ $t('common.save') }}
         </NButton>
-      </div>
+      </div> -->
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">&nbsp;</span>
         <NButton size="small" @click="handleReset">

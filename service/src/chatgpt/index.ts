@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as dotenv from 'dotenv'
 import 'isomorphic-fetch'
 import type { ChatGPTAPIOptions, ChatGPTUnofficialProxyAPI, ChatMessage, SendMessageOptions } from 'chatgpt'
@@ -32,15 +33,16 @@ if (!isNotEmptyString(process.env.OPENAI_API_KEY) && !isNotEmptyString(process.e
 
 let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
 let menu: string
+declare let fetch: any
 // let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
 
+const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 (async () => {
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
 
   menu = process.env.MENU
   if (isNotEmptyString(process.env.OPENAI_API_KEY)) {
-    const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
-
     const options: ChatGPTAPIOptions = {
       apiKey: process.env.OPENAI_API_KEY,
       completionParams: { model },
@@ -74,49 +76,11 @@ let menu: string
       options.apiBaseUrl = `${OPENAI_API_BASE_URL}/v1`
 
     // setupProxy(options)
-
     api = new ChatGPTAPI({ ...options })
-    // const SEMANTIC_API_BASE_URL = `${process.env.API_REVERSE_PROXY}:9876/customerService`
-    // options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/semantic/v1`
-    // api_semantic = new ChatGPTAPI({ ...options })
-    // options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/document/v1`
-    // api_document = new ChatGPTAPI({ ...options })
-    // options.apiBaseUrl = `${SEMANTIC_API_BASE_URL}/whisper/v1`
-    // api_whisper = new ChatGPTAPI({ ...options })
+
     apiModel = 'ChatGPTAPI'
   }
-  // else {
-  //   const options: ChatGPTUnofficialProxyAPIOptions = {
-  //     accessToken: process.env.OPENAI_ACCESS_TOKEN,
-  //     apiReverseProxyUrl: isNotEmptyString(process.env.API_REVERSE_PROXY) ? process.env.API_REVERSE_PROXY : 'https://ai.fakeopen.com/api/conversation',
-  //     model,
-  //     debug: !disableDebug,
-  //   }
-
-  //   setupProxy(options)
-
-  //   api = new ChatGPTUnofficialProxyAPI({ ...options })
-  //   apiModel = 'ChatGPTUnofficialProxyAPI'
-  // }
 })()
-
-// 提取menu中的key和label组成map
-// function createKeyLabelMap(menu: Array<string>) {
-//   const keyLabelMap = new Map()
-
-//   function extractKeyLabel(data) {
-//     if (data.key && data.label && data.model !== '' && data.model !== undefined)
-//       keyLabelMap.set(data.key, data.label)
-
-//     if (data.children && Array.isArray(data.children))
-//       data.children.forEach(extractKeyLabel)
-//   }
-
-//   for (const menuItem of menu)
-//     extractKeyLabel(menuItem)
-
-//   return keyLabelMap
-// }
 
 // 递归函数，用于遍历嵌套的数据结构
 function findItemsWithModel(data) {
@@ -156,121 +120,44 @@ async function chatReplyProcess(options: RequestOptions) {
     }
 
     const businessType = lastContext.businessType
+    // const needTts = lastContext.needTts
 
-    // const jsonData = JSON.parse(menu)
-    // 构造新的对象数组，仅包含具有 model 值的项
-    // const filteredData = jsonData.filter(item => item.model)
-
-    const models = findItemsWithModel(JSON.parse(menu))
-    // const keyLabelMap = createKeyLabelMap(JSON.parse(menu))
+    const models = findItemsWithModel(JSON.parse(menu))// key: businessType,value: model的map
     const item = models.find(item => item.key === String(businessType))
-    // eslint-disable-next-line no-console
+
     console.log(item.model)
     if (item)
       options.completionParams.model = item.model || 'chatglm3-6b'
 
-    // console.log(keyLabelMap)
-    // const keyLabelMap = JSON.parse(localStorage.getItem('keyLabelMap') || '')
-    // console.log('----------------1')
-
-    // console.log(businessType)
-    // let api_options = api.apiKey;
-    // console.log(api)
-    // console.log(api_options)
-    // console.log(options)
-    // console.log(api)
-
-    // if (businessType === 10) {
-    //   options.completionParams.model = 'ERNIE-Bot-turbo'
-    // }
-    // else if (businessType === 20) {
-    //   options.completionParams.model = 'SparkDesk'
-    // }
-    // else if (businessType === 30) {
-    //   options.completionParams.model = 'qwen-turbo'
-    // }
-    // else if (businessType === 90) {
-    //   options.completionParams.model = 'gpt-3.5-turbo-1106'
-    // }
-    // else if (businessType === 100) { // 政务事项
-    //   options.completionParams.model = 'guidance'
-    // }
-    // else if (businessType === 101) { // 民法典
-    //   options.completionParams.model = 'law'
-    // }
-    // else if (businessType === 108) { // 招商政策
-    //   options.completionParams.model = 'investment'
-    //   options.systemMessage = ''
-    // }
-    // else if (businessType === 1001) { // 语义查询
-    //   options.completionParams.model = 'semantic'
-
-    //   // console.log(options.systemMessage)
-
-    //   // console.log('semantic')
-    //   options.systemMessage = ''
-    // }
-    // else if (businessType === 10001) { // 语音转写
-    //   options.completionParams.model = 'whisper'
-
-    //   // console.log(options.systemMessage)
-
-    //   // console.log('whisper')
-    //   // options.systemMessage = ''
-    // }
-    // else if (businessType === 10002) { // 文档总结
-    //   options.completionParams.model = 'document'
-    //   // eslint-disable-next-line no-console
-    //   console.log(options.systemMessage)
-
-    //   // console.log('111111111111')
-    //   // options.systemMessage = ''
-    // }
-    // else { // 纯聊天
-    //   options.completionParams.model = 'chatglm3-6b'
-    // }
-    // options.completionParams.maxModelTokens = 32768
-    // options.maxResponseTokens = 8192
     options.completionParams.max_tokens = 2000
-    // options.ma
-    // api = new ChatGPTAPI({ ...api_options })
+
+    // console.log(message)
 
     // console.log(options)
-    // eslint-disable-next-line no-console
-    console.log(message)
     // let response
-    // if (businessType === 1001) {
-    //   response = await api_semantic.sendMessage(message, {
-    //     ...options,
-    //     onProgress: (partialResponse) => {
-    //       process?.(partialResponse)
-    //     },
-    //   })
-    // }
-    // else if (businessType === 10001) {
-    //   response = await api_whisper.sendMessage(message, {
-    //     ...options,
-    //     onProgress: (partialResponse) => {
-    //       process?.(partialResponse)
-    //     },
-    //   })
-    // }
-    // else if (businessType === 10002) {
-    //   response = await api_document.sendMessage(message, {
-    //     ...options,
-    //     onProgress: (partialResponse) => {
-    //       process?.(partialResponse)
-    //     },
-    //   })
-    // }
-    // else {
+
+    // if (!needTts) {
     const response = await api.sendMessage(message, {
       ...options,
       onProgress: (partialResponse) => {
+        // console.log(partialResponse)
         process?.(partialResponse)
       },
     })
     // }
+    // else {
+    //   response = await fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       'Authorization': `Bearer ${OPENAI_API_KEY}`,
+    //     },
+    //     body: JSON.stringify({ model: 'tts', input: message }),
+    //   })
+    // }
+    // }
+
+    // console.log(`---------------${response}`)
     return sendResponse({ type: 'Success', data: response })
   }
   catch (error: any) {

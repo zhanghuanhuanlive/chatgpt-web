@@ -73,6 +73,7 @@ export default {
     httpsProxy: 'HTTPS Proxy',
     balance: 'API Balance',
     monthlyUsage: 'Monthly Usage',
+    playAudio: 'Text To Speech',
   },
   store: {
     siderButton: 'Prompt Store',

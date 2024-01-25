@@ -14,6 +14,7 @@ export interface ChatContext {
   conversationId?: string
   parentMessageId?: string
   businessType: number
+  // needTts: boolean
 }
 
 export interface ChatGPTUnofficialProxyAPIOptions {

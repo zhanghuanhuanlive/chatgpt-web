@@ -6,7 +6,7 @@ import { storeToRefs } from 'pinia'
 import { NAlert, NAutoComplete, NButton, NGi, NGrid, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowUpLong, faDownload, faFileUpload, faHistory, faMicrophoneLines, faMusic, faPaperPlane, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpLong, faDownload, faFileUpload, faHistory, faMicrophoneLines, faMusic, faPaperPlane, faPauseCircle, faPlayCircle, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -16,11 +16,11 @@ import HeaderComponent from './components/Header/index.vue'
 import AudioEnter from './AudioEnter.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { useChatStore, usePromptStore } from '@/store'
-import { fetchChatAPIProcess, fetchChatConfig } from '@/api'
+import { useChatStore, usePromptStore, useSettingStore } from '@/store'
+import { fetchAndPlayAudio, fetchChatAPIProcess, fetchChatConfig } from '@/api'
 import { t } from '@/locales'
 
-library.add(faArrowUpLong, faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faVolumeUp, faPaperPlane)
+library.add(faArrowUpLong, faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faPauseCircle, faPlayCircle, faVolumeUp, faPaperPlane)
 
 let controller = new AbortController()
 
@@ -31,6 +31,9 @@ const dialog = useDialog()
 const ms = useMessage()
 
 const chatStore = useChatStore()
+const settingStore = useSettingStore()
+
+const playAudio = ref(settingStore.playAudio ?? false)
 
 const { isMobile } = useBasicLayout()
 const { addChat, updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
@@ -58,6 +61,9 @@ const isSpinning = ref(false)
 
 // const showArrowIcon = ref(false)
 const activeIndex = ref(null)
+
+const isPlaying = ref(false)
+const audioPlayer = ref<HTMLAudioElement | null>(null)
 
 interface ConfigState {
   timeoutMs?: number
@@ -224,7 +230,6 @@ async function handleAudioInput(audioBlob: Blob) {
   try {
     // http://172.16.1.118:7001/transcribe/
     // http://fastgpt.learnoh.cn/transcribe
-    // const whisperApiBaseUrl = `${config.value!.reverseProxy}:7001/transcribe` || 'https://fastgpt.learnoh.cn/transcribe/transcribe'
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -489,24 +494,29 @@ async function onConversation(systemMessage: string) {
       if (undefined !== currentHistory)
         businessType = currentHistory.businessType
       // console.log('--------------0')
+      // let needTts = false
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: postMessage,
         options,
         signal: controller.signal,
         businessType,
+        // needTts,
         systemMessage,
         onDownloadProgress: ({ event }) => {
           // console.log('--------------')
+          // console.log(event)
           const xhr = event.target
-          const { responseText } = xhr
+          const { responseText } = xhr// 通过解构赋值，从 xhr 对象中提取 responseText 属性，responseText 通常包含了从服务器接收到的响应文本。
           // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
+          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)// 查找响应文本中的最后一个换行符 \n 的位置。lastIndexOf 方法用于在字符串中从后往前搜索指定字符的位置。responseText.length - 2 是为了排除最后一个字符，因为它可能是不完整的行。
+          let chunk = responseText// 创建了一个变量 chunk 并将其初始化为整个响应文本。在后续的代码中，将从响应文本中提取一部分数据并存储在 chunk 中。
+          if (lastIndex !== -1)// 检查是否找到了换行符 \n，如果找到了，说明响应文本中有多行数据。
+            chunk = responseText.substring(lastIndex)// 如果找到了换行符，这一行将 chunk 更新为从最后一个换行符开始到文本末尾的部分，以此来提取最后一行数据。
           try {
             const data = JSON.parse(chunk)
-            // console.log(data.text)
+            // console.log(uuid)
+            console.log(data.text)
+            console.log(data)
             updateChat(
               +uuid,
               dataSources.value.length - 1,
@@ -520,6 +530,16 @@ async function onConversation(systemMessage: string) {
                 requestOptions: { prompt: message, options: { ...options } },
               },
             )
+
+            // 实时语音播报
+            // console.log(options)
+            // console.log(controller.signal)
+            // console.log(systemMessage)
+            const input = data.text// tts的input
+            if (playAudio.value && input && input !== '') {
+              // needTts = true
+              fetchAndPlayAudio(audioPlayer.value, input.replace(/#/g, ''))
+            }
 
             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
               options.parentMessageId = data.id
@@ -623,6 +643,7 @@ async function onRegenerate(index: number) {
 
   try {
     let lastText = ''
+    // const needTts = false
     const fetchChatAPIOnce = async () => {
       const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
       let businessType = 0
@@ -633,6 +654,7 @@ async function onRegenerate(index: number) {
         options,
         signal: controller.signal,
         businessType,
+        // needTts,
         systemMessage: '',
         onDownloadProgress: ({ event }) => {
           const xhr = event.target
@@ -644,6 +666,8 @@ async function onRegenerate(index: number) {
             chunk = responseText.substring(lastIndex)
           try {
             const data = JSON.parse(chunk)
+            // console.log(uuid)
+            // console.log(data)
             updateChat(
               +uuid,
               index,
@@ -657,6 +681,12 @@ async function onRegenerate(index: number) {
                 requestOptions: { prompt: message, options: { ...options } },
               },
             )
+
+            const input = data.text// tts的input
+            if (playAudio.value && input && input !== '') {
+              // needTts = true
+              fetchAndPlayAudio(audioPlayer.value, input.replace(/#/g, ''))
+            }
 
             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
               options.parentMessageId = data.id
@@ -864,6 +894,18 @@ onUnmounted(() => {
   if (loading.value)
     controller.abort()
 })
+
+function togglePlay() {
+  if (!audioPlayer.value)
+    return
+  if (audioPlayer.value.paused) {
+    if (audioPlayer.value.src)
+      audioPlayer.value.play()
+  }
+  else {
+    audioPlayer.value.pause()
+  }
+}
 </script>
 
 <template>
@@ -929,6 +971,17 @@ onUnmounted(() => {
       </main>
       <footer :class="footerClass">
         <div class="w-full max-w-screen-xl m-auto">
+          <template v-if="playAudio">
+            <div class="flex items-center justify-between space-x-2" style="margin-bottom: 8px;">
+              <audio
+                ref="audioPlayer"
+                @play="isPlaying = true"
+                @pause="isPlaying = false"
+                @ended="isPlaying = false"
+              />
+            </div>
+          </template>
+          <!-- 数据分析的四个快捷按钮 -->
           <template v-if="!isMobile && businessType === 1001">
             <div class="flex items-center justify-between space-x-2" style="margin-bottom: 8px;">
               <NGrid x-gap="12" :cols="4">
@@ -951,7 +1004,12 @@ onUnmounted(() => {
             <HoverButton v-if="!isMobile && (businessType === 10001 || businessType === 10002)" :title="businessType === 10001 ? '音频转写文字' : businessType === 10002 ? '文档总结' : ''" @click="triggerFileInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <!-- <SvgIcon :icon="businessType === 10001 ? 'fe:file-audio' : businessType === 10002 ? 'ic:twotone-upload-file' : ''" /> -->
-                <FontAwesomeIcon :icon="businessType === 10001 ? 'fas fa-music' : businessType === 10002 ? 'fas fa-file-upload' : ''" />
+                <FontAwesomeIcon :icon="businessType === 10001 ? 'fas fa-file-upload' : businessType === 10002 ? 'fas fa-file-upload' : ''" />
+              </span>
+            </HoverButton>
+            <HoverButton v-if="playAudio && isPlaying" @click="togglePlay">
+              <span class="text-xl text-[#4f555e] dark:text-white">
+                <FontAwesomeIcon :icon="isPlaying ? 'fas fa-pause-circle' : 'fas fa-play-circle'" />
               </span>
             </HoverButton>
             <HoverButton v-if="!isMobile" title="清空当前会话" @click="handleClear">
@@ -960,12 +1018,11 @@ onUnmounted(() => {
                 <FontAwesomeIcon icon="fas fa-trash-alt" />
               </span>
             </HoverButton>
-            <HoverButton v-if="!isMobile" title="保存会话到图片" @click="handleExport">
+            <!-- <HoverButton v-if="!isMobile" title="保存会话到图片" @click="handleExport">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <!-- <SvgIcon icon="ri:download-2-line" /> -->
                 <FontAwesomeIcon icon="fas fa-download" />
               </span>
-            </HoverButton>
+            </HoverButton> -->
             <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="不携带历史记录" @click="toggleUsingContext">
               <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
                 <!-- <SvgIcon icon="ri:chat-history-line" /> -->

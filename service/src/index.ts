@@ -1,4 +1,7 @@
+/* eslint-disable no-console */
+import * as dotenv from 'dotenv'
 import express from 'express'
+import fetch from 'node-fetch'
 import type { ChatContext, RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
 import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
@@ -6,8 +9,13 @@ import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
 import { isNotEmptyString } from './utils/is'
 
+dotenv.config()
+const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const app = express()
 const router = express.Router()
+
+// declare let fetch: any
 
 app.use(express.static('public'))
 app.use(express.json())
@@ -30,14 +38,19 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
     const { prompt, options = {} as ChatContext, systemMessage, temperature, top_p } = req.body as RequestProps
     let firstChunk = true
 
-    // eslint-disable-next-line no-console
-    console.log(req.body)
-    // console.log('Received chat-process request', { prompt, options, systemMessage, temperature, top_p })
     options.businessType = req.body.businessType// 这个值将传到/service/src/chatgpt/index.ts用
-    // console.log(options)
+    // const needTts: boolean = req.body.needTts === false// 是否需要tts
+    // options.needTts = req.body.needTts// 这个值将传到/service/src/chatgpt/index.ts用
+
+    // console.log('req.body')
+    // console.log(req.body)
+    // console.log(`needTts: ${req.body.needTts}`)
+    // console.log(`prompt: ${prompt}`)
+
     // console.log(options)
     // console.log('111111111111111111')
     // 接下来调用/services/chatgpt/index.ts的chatReplyProcess
+    // if (!req.body.needTts) {
     await chatReplyProcess({
       message: prompt,
       lastContext: options,
@@ -49,12 +62,64 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       temperature,
       top_p,
     })
+    // }
+    // else { // 需要tts
+    //   // console.log(`prompt: ${prompt}， OPENAI_API_BASE_URL： ${OPENAI_API_BASE_URL}`)
+    //   // const messageBody = `{"model": "tts", "input": "${prompt}"}`
+    //   // console.log(messageBody)
+    //   const response = await fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       'Authorization': `Bearer ${OPENAI_API_KEY}`,
+    //     },
+    //     body: `{"model": "tts", "input": "${prompt}"}`,
+    //   })
+    //   console.log('response')
+    //   // console.log(response)
+    //   // console.log(response.status)
+    //   // console.log(response.headers)
+    //   const contentType = response.headers.get('content-type')
+    //   // console.log(contentType)
+    //   if (response.status === 200) {
+    //     // 检查内容类型是否为 JSON
+    //     if (contentType && contentType.includes('audio/mpeg'))
+    //       return response.blob()
+    //   }
+    //   return response.text()
+    // }
   }
   catch (error) {
     res.write(JSON.stringify(error))
   }
   finally {
     res.end()
+  }
+})
+
+router.post('/tts-process', auth, async (req, res) => {
+  // const { prompt } = req.body
+  // let firstChunk = true
+  console.log('tts-process')
+  console.log(req.body)
+  try {
+    const response = await fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({ model: 'tts', input: req.body.message }),
+    })
+    if (!response.ok) {
+      res.status(500).send('Error fetching audio data')
+      return
+    }
+    res.setHeader('Content-Type', 'audio/mpeg')
+    response.body.pipe(res)
+  }
+  catch (error) {
+    res.send(error)
   }
 })
 

@@ -54,7 +54,7 @@ export default {
   setting: {
     setting: '设置',
     general: '总览',
-    advanced: '高级',
+    advanced: '通用',
     config: '配置',
     avatarLink: '头像链接',
     name: '名称',
@@ -73,6 +73,7 @@ export default {
     httpsProxy: 'HTTPS Proxy',
     balance: 'API余额',
     monthlyUsage: '本月使用量',
+    playAudio: '语音播报',
   },
   store: {
     siderButton: '提示词库',

@@ -6,6 +6,7 @@ export interface SettingsState {
   systemMessage: string
   temperature: number
   top_p: number
+  playAudio: boolean// 是否播放音频你
 }
 
 export function defaultSetting(): SettingsState {
@@ -14,6 +15,7 @@ export function defaultSetting(): SettingsState {
     systemMessage: '用简体中文回答问题，请确保你回答的内容是正确的，对于不确定的问题请回复我不清楚这个问题',
     temperature: 0.0,
     top_p: 1,
+    playAudio: false,
   }
 }
 
