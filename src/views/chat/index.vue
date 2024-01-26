@@ -33,7 +33,8 @@ const ms = useMessage()
 const chatStore = useChatStore()
 const settingStore = useSettingStore()
 
-const playAudio = ref(settingStore.playAudio ?? false)
+// const playAudio = ref(settingStore.playAudio ?? false)
+const playAudio = computed(() => settingStore.playAudio)
 
 const { isMobile } = useBasicLayout()
 const { addChat, updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
@@ -131,7 +132,7 @@ function findItemsWithModel(data) {
 }
 
 function closeAudio(audioBlob: Blob) {
-  console.log('closeAudioInput')
+  // console.log('closeAudioInput')
   showAudioInputBtn.value = false
   if (audioBlob === null)
     return
@@ -148,7 +149,7 @@ function isIpAddress(value) {
 // 语音输入触发语音转写
 async function handleAudioInput(audioBlob: Blob) {
   isSpinning.value = true // 开始加载，显示全局加载状态
-  console.log('start handleAudioInput')
+  // console.log('start handleAudioInput')
   const formData = new FormData()
   formData.append('file', audioBlob, 'audio.wav')
   const reverseProxy = config.value!.reverseProxy
@@ -175,7 +176,7 @@ async function handleAudioInput(audioBlob: Blob) {
       throw new Error(`服务器响应错误：${response.status}`)
 
     const result = await response.json()// 如果是json：response.json()
-    console.log(result)
+    // console.log(result)
     prompt.value = result.text // 更新 prompt 的值
     // loadingBar.finish() // 完成后隐藏加载条
   }
@@ -424,11 +425,21 @@ const punctuationRegex = /[!！,，.。;；?？\n]/
 const punctuationRegexOnly = /^[!！,，.。;；?？\n]+$/
 // 截取到最后一个标点符号
 function extractLastPunctuation(str) {
-  const match = str.match(punctuationRegex)
-  if (match)
-    return str.substring(0, match.index + match[0].length)
-  else
+  // console.log(`${str}`)
+  const matches = [...str.matchAll(/[!！,，.。;；?？\n]/g)]
+  // console.log(matches.length)
+  if (matches.length > 0) {
+    // 获取最后一个匹配项
+    const lastMatch = matches[matches.length - 1]
+    // 返回最后一个标点符号及其之前的内容
+    const abc = str.substring(0, lastMatch.index + lastMatch[0].length)
+    // console.log(`abc: ${abc}`)
+    return abc
+  }
+  else {
+    // 如果没有找到匹配项，返回原字符串
     return str
+  }
 }
 
 // systemMessage就是上传的文件(音频、文件)在服务器的绝对路径
@@ -524,11 +535,22 @@ async function onConversation(systemMessage: string) {
             // console.log(data)
 
             // 实时语音播报
-            let input = data.text.substring(previousText.length)
+            let input = data.text
+              // .replace(/[\n\r\t#]+/g, '') // 删除换行符、回车符、制表符
+              // .substring(previousText.length)
+              .substring(previousText.length)
             // console.log(punctuationRegex.test(input))
+            // console.log(`${index} ${input} ${previousText} ${playAudio.value} ${!punctuationRegexOnly.test(input)} ${punctuationRegex.test(input)}`)
             if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
-              input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-              if (!punctuationRegexOnly.test(input)) {
+              let isEnqueueAudio = false
+              if (punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) {
+                input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
+                isEnqueueAudio = true
+              }
+              else if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了
+                isEnqueueAudio = true
+              }
+              if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
                 previousText = previousText + input
                 // console.log(`${index} ${previousText} ${isPlaying.value}`)
                 enqueueAudio(input.replace(/#/g, ''), index++)
@@ -686,10 +708,16 @@ async function onRegenerate(index: number) {
 
             // 实时语音播报
             let input = data.text.substring(previousText.length)
-            // console.log(punctuationRegex.test(input))
             if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
-              input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-              if (!punctuationRegexOnly.test(input)) {
+              let isEnqueueAudio = false
+              if (punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) {
+                input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
+                isEnqueueAudio = true
+              }
+              else if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了
+                isEnqueueAudio = true
+              }
+              if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
                 previousText = previousText + input
                 // console.log(`${index} ${previousText} ${isPlaying.value}`)
                 enqueueAudio(input.replace(/#/g, ''), index++)
@@ -711,7 +739,7 @@ async function onRegenerate(index: number) {
             )
 
             // const input = data.text// tts的input
-            // if (playAudio.value && input && input !== '') {
+            // if (playAudio && input && input !== '') {
             //   if (audioElement.value !== null)
             //     fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
             // }
@@ -728,6 +756,7 @@ async function onRegenerate(index: number) {
           }
         },
       })
+      markQueueAsFinished()
       updateChatSome(+uuid, index, { loading: false })
     }
     await fetchChatAPIOnce()

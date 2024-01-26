@@ -39,6 +39,7 @@ const dataSources = computed(() => {
 
   // console.log(keyLabelMap)
   const models = computed(() => JSON.parse(localStorage.getItem('models') || ''))
+  // console.log(models.value)
   chatStore.history.forEach((history) => {
     const businessType = history.businessType as number | undefined
     const bType = typeof businessType === 'number' ? businessType : 0
@@ -46,7 +47,9 @@ const dataSources = computed(() => {
     const item = models.value.find(item => item.key === bTypeStr)
     // if (keyLabelMap)
     // currentBusinessType = item.label || 'ChatGLM3'
-    history.businessName = item.label || 'ChatGLM3' as string | undefined
+    // console.log(bTypeStr)
+    // console.log(item)
+    history.businessName = item ? item.label : 'ChatGLM3' as string | undefined
 
     // let businessType = 0
     // const businessType: number | undefined = history.businessType as number | undefined
