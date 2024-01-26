@@ -376,17 +376,12 @@ function handleSubmit() {
 //   }
 
 // Modify enqueueAudio to accept an index
-let queue = []// 要播放音频的队列
+let queue: Blob[] = []// 要播放音频的队列
 let queueFinished = false // 新增标志，表示所有音频是否已加入队列
 let currentIndex = 0 // 新增变量，跟踪当前处理的音频索引
 async function enqueueAudio(message, index) {
   console.log(`${index} ${message} ${isPlaying.value}`)
   const audioBlob = await fetchAndConvertToAudio(message)
-  // Ensure the queue has a slot for each expected index
-  // while (this.queue.length <= index)
-  //   this.queue.push(null)
-
-  // Place the audio blob in its correct position
   queue[index] = audioBlob
   console.log(audioBlob)
 
@@ -408,18 +403,20 @@ async function playNextAudio() {
     const audioBlob = queue[currentIndex++]
     const audioUrl = URL.createObjectURL(audioBlob)
     console.log(audioUrl)
-    audioElement.value.src = audioUrl
+    if (audioElement.value !== null) {
+      audioElement.value.src = audioUrl
 
-    audioElement.value.play().then(() => {
-      audioElement.value.onended = () => {
+      audioElement.value.play().then(() => {
+        audioElement.value.onended = () => {
+          isPlaying.value = false
+          playNextAudio() // 尝试播放下一个音频片段
+        }
+      }).catch((error) => {
+        console.error('Auto-play failed', error)
         isPlaying.value = false
-        playNextAudio() // 尝试播放下一个音频片段
-      }
-    }).catch((error) => {
-      console.error('Auto-play failed', error)
-      isPlaying.value = false
-      playNextAudio()
-    })
+        playNextAudio()
+      })
+    }
   }
   else {
     // 如果没有更多音频并且队列已完成，重置状态
