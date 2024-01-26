@@ -383,7 +383,7 @@ async function enqueueAudio(message, index) {
   // console.log(`${index} ${message} ${isPlaying.value}`)
   const audioBlob = await fetchAndConvertToAudio(message)
   queue[index] = audioBlob
-  console.log(audioBlob)
+  // console.log(audioBlob)
 
   // If this is the first item and nothing is playing, start playback
   if (index === 0 && !isPlaying.value)
@@ -402,7 +402,7 @@ async function playNextAudio() {
   if (currentIndex < queue.length) {
     const audioBlob = queue[currentIndex++]
     const audioUrl = URL.createObjectURL(audioBlob)
-    console.log(audioUrl)
+    // console.log(audioUrl)
     if (audioElement.value !== null) {
       audioElement.value.src = audioUrl
 
@@ -540,7 +540,7 @@ async function onConversation(systemMessage: string) {
             if (playAudio.value && input && input !== '' && punctuationRegex.test(input)) { // 是否包含需要断句的标点符号
               input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
               previousText = previousText + input
-              console.log(`${index} ${previousText} ${isPlaying.value}`)
+              // console.log(`${index} ${previousText} ${isPlaying.value}`)
               enqueueAudio(input.replace(/#/g, ''), index++)
               // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
             }
@@ -668,6 +668,11 @@ async function onRegenerate(index: number) {
       let businessType = 0
       if (undefined !== currentHistory)
         businessType = currentHistory.businessType
+      let previousText = ''
+      let index = 0
+      currentIndex = 0
+      queueFinished = false
+      queue = []
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: message,
         options,
@@ -687,6 +692,17 @@ async function onRegenerate(index: number) {
             const data = JSON.parse(chunk)
             // console.log(uuid)
             // console.log(data)
+
+            // 实时语音播报
+            let input = data.text.substring(previousText.length)
+            // console.log(punctuationRegex.test(input))
+            if (playAudio.value && input && input !== '' && punctuationRegex.test(input)) { // 是否包含需要断句的标点符号
+              input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
+              previousText = previousText + input
+              // console.log(`${index} ${previousText} ${isPlaying.value}`)
+              enqueueAudio(input.replace(/#/g, ''), index++)
+              // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
+            }
             updateChat(
               +uuid,
               index,
