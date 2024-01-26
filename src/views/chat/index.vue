@@ -407,9 +407,11 @@ async function playNextAudio() {
       audioElement.value.src = audioUrl
 
       audioElement.value.play().then(() => {
-        audioElement.value.onended = () => {
-          isPlaying.value = false
-          playNextAudio() // 尝试播放下一个音频片段
+        if (audioElement.value !== null) {
+          audioElement.value.onended = () => {
+            isPlaying.value = false
+            playNextAudio() // 尝试播放下一个音频片段
+          }
         }
       }).catch((error) => {
         console.error('Auto-play failed', error)
