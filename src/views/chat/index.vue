@@ -17,7 +17,7 @@ import AudioEnter from './AudioEnter.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore, useSettingStore } from '@/store'
-import { fetchAndPlayAudio, fetchChatAPIProcess, fetchChatConfig } from '@/api'
+import { fetchAndConvertToAudio, fetchChatAPIProcess, fetchChatConfig } from '@/api'
 import { t } from '@/locales'
 
 library.add(faArrowUpLong, faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faPauseCircle, faPlayCircle, faVolumeUp, faPaperPlane)
@@ -63,7 +63,7 @@ const isSpinning = ref(false)
 const activeIndex = ref(null)
 
 const isPlaying = ref(false)
-const audioPlayer = ref<HTMLAudioElement | null>(null)
+const audioElement = ref<HTMLAudioElement | null>(null)
 
 interface ConfigState {
   timeoutMs?: number
@@ -129,71 +129,6 @@ function findItemsWithModel(data) {
   }
   return result
 }
-
-// 提取menu中的key和label组成map
-// function createKeyLabelMap(menu: Array<string>) {
-//   const keyLabelMap = new Map()
-
-//   function extractKeyLabel(data) {
-//     if (data.key && data.label && data.model !== '' && data.model !== undefined)
-//       keyLabelMap.set(data.key, data.label)
-
-//     if (data.children && Array.isArray(data.children))
-//       data.children.forEach(extractKeyLabel)
-//   }
-
-//   for (const menuItem of menu)
-//     extractKeyLabel(menuItem)
-
-//   return keyLabelMap
-// }
-
-// const loadingBar = useLoadingBar()
-
-// currentBusinessType = computed(() => {
-//   // const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-//   if (keyLabelMap)
-//     return keyLabelMap.get(String(businessType)) || 'ChatGLM3'
-// })
-
-// currentBusinessType = computed(() => {
-//   const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-//   // let businessType = 0
-//   // let currentBusinessTypeName = 'ChatGLM3'
-//   console.log(keyLabelMap)
-//   if (undefined !== currentHistory)
-//     businessType = currentHistory.businessType
-//   // let currentBusinessTypeName = 'ChatGLM3'
-//   console.log(keyLabelMap)
-
-//   if (keyLabelMap)
-//     return keyLabelMap.get(String(businessType)) || 'ChatGLM3'
-//   return 'ChatGLM3'
-
-//   // const currentBusinessTypeName = keyLabelMap.get(businessType) || 'ChatGLM3'
-
-//   // if (businessType === 10)
-//   //   currentBusinessTypeName = '百度文心一言'
-//   // else if (businessType === 20)
-//   //   currentBusinessTypeName = '科大讯飞星火认知V3.0'
-//   // else if (businessType === 30)
-//   //   currentBusinessTypeName = '阿里通义千问'
-//   // else if (businessType === 90)
-//   //   currentBusinessTypeName = 'GPT3.5'
-//   // else if (businessType === 100)
-//   //   currentBusinessTypeName = '政策事项知识库'
-//   // else if (businessType === 108)
-//   //   currentBusinessTypeName = '招商政策知识库'
-//   // else if (businessType === 101)
-//   //   currentBusinessTypeName = '民法典'
-//   // else if (businessType === 1001)
-//   //   currentBusinessTypeName = '数据分析'
-//   // else if (businessType === 10001)
-//   //   currentBusinessTypeName = '语音转写文字'
-//   // else if (businessType === 10002)
-//   //   currentBusinessTypeName = '文档分析'
-//   // return currentBusinessTypeName
-// })
 
 function closeAudio(audioBlob: Blob) {
   console.log('closeAudioInput')
@@ -432,6 +367,82 @@ function handleSubmit() {
   onConversation('')
 }
 
+// class AudioPlayQueue {
+//   constructor() {
+//     // this.audioElement = audioElement
+//     this.queue = []
+//     // this.isPlaying = false
+//     // this.queueSize = 0 // Track the expected size of the queue
+//   }
+
+// Modify enqueueAudio to accept an index
+let queue = []// 要播放音频的队列
+let queueFinished = false // 新增标志，表示所有音频是否已加入队列
+let currentIndex = 0 // 新增变量，跟踪当前处理的音频索引
+async function enqueueAudio(message, index) {
+  console.log(`${index} ${message} ${isPlaying.value}`)
+  const audioBlob = await fetchAndConvertToAudio(message)
+  // Ensure the queue has a slot for each expected index
+  // while (this.queue.length <= index)
+  //   this.queue.push(null)
+
+  // Place the audio blob in its correct position
+  queue[index] = audioBlob
+  console.log(audioBlob)
+
+  // If this is the first item and nothing is playing, start playback
+  if (index === 0 && !isPlaying.value)
+    playNextAudio()
+}
+
+async function playNextAudio() {
+  isPlaying.value = true
+
+  // 等待直到有音频可播放
+  // eslint-disable-next-line no-unmodified-loop-condition
+  while (currentIndex >= queue.length && !queueFinished)
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+  // 检查是否还有更多音频要播放
+  if (currentIndex < queue.length) {
+    const audioBlob = queue[currentIndex++]
+    const audioUrl = URL.createObjectURL(audioBlob)
+    console.log(audioUrl)
+    audioElement.value.src = audioUrl
+
+    audioElement.value.play().then(() => {
+      audioElement.value.onended = () => {
+        isPlaying.value = false
+        playNextAudio() // 尝试播放下一个音频片段
+      }
+    }).catch((error) => {
+      console.error('Auto-play failed', error)
+      isPlaying.value = false
+      playNextAudio()
+    })
+  }
+  else {
+    // 如果没有更多音频并且队列已完成，重置状态
+    isPlaying.value = false
+    queueFinished = false // 重置队列完成标志，以备下次使用
+  }
+}
+
+// 在音频序列结束时调用这个函数
+function markQueueAsFinished() {
+  queueFinished = true
+}
+
+const punctuationRegex = /[!！,，.。;；?？]/
+// 截取到最后一个标点符号
+function extractLastPunctuation(str) {
+  const match = str.match(punctuationRegex)
+  if (match)
+    return str.substring(0, match.index + match[0].length)
+  else
+    return str
+}
+
 // systemMessage就是上传的文件(音频、文件)在服务器的绝对路径
 async function onConversation(systemMessage: string) {
   let message = prompt.value
@@ -486,6 +497,7 @@ async function onConversation(systemMessage: string) {
 
   try {
     let lastText = ''
+    // const audioQueue = new AudioPlayQueue()
     const fetchChatAPIOnce = async () => {
       console.log(message)
       // console.log(options)
@@ -495,6 +507,11 @@ async function onConversation(systemMessage: string) {
         businessType = currentHistory.businessType
       // console.log('--------------0')
       // let needTts = false
+      let previousText = ''
+      let index = 0
+      currentIndex = 0
+      queueFinished = false
+      queue = []
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: postMessage,
         options,
@@ -514,9 +531,20 @@ async function onConversation(systemMessage: string) {
             chunk = responseText.substring(lastIndex)// 如果找到了换行符，这一行将 chunk 更新为从最后一个换行符开始到文本末尾的部分，以此来提取最后一行数据。
           try {
             const data = JSON.parse(chunk)
-            // console.log(uuid)
-            console.log(data.text)
-            console.log(data)
+            // console.log(responseText)
+            // console.log(data.text)
+            // console.log(data)
+
+            // 实时语音播报
+            const input = data.text.substring(previousText.length)
+            // console.log(punctuationRegex.test(input))
+            if (playAudio.value && input && input !== '' && punctuationRegex.test(input)) { // 是否包含需要断句的标点符号
+              previousText = extractLastPunctuation(input)// 取到最后一个断句的标点符号
+              // console.log(previousText)
+              enqueueAudio(previousText.replace(/#/g, ''), index++)
+              // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
+            }
+
             updateChat(
               +uuid,
               dataSources.value.length - 1,
@@ -530,16 +558,6 @@ async function onConversation(systemMessage: string) {
                 requestOptions: { prompt: message, options: { ...options } },
               },
             )
-
-            // 实时语音播报
-            // console.log(options)
-            // console.log(controller.signal)
-            // console.log(systemMessage)
-            const input = data.text// tts的input
-            if (playAudio.value && input && input !== '') {
-              if (audioPlayer.value !== null)
-                fetchAndPlayAudio(audioPlayer.value, input.replace(/#/g, ''))
-            }
 
             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
               options.parentMessageId = data.id
@@ -555,6 +573,7 @@ async function onConversation(systemMessage: string) {
           }
         },
       })
+      markQueueAsFinished()
       updateChatSome(+uuid, dataSources.value.length - 1, { loading: false })
     }
 
@@ -682,11 +701,11 @@ async function onRegenerate(index: number) {
               },
             )
 
-            const input = data.text// tts的input
-            if (playAudio.value && input && input !== '') {
-              if (audioPlayer.value !== null)
-                fetchAndPlayAudio(audioPlayer.value, input.replace(/#/g, ''))
-            }
+            // const input = data.text// tts的input
+            // if (playAudio.value && input && input !== '') {
+            //   if (audioElement.value !== null)
+            //     fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
+            // }
 
             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
               options.parentMessageId = data.id
@@ -896,14 +915,14 @@ onUnmounted(() => {
 })
 
 function togglePlay() {
-  if (!audioPlayer.value)
+  if (!audioElement.value)
     return
-  if (audioPlayer.value.paused) {
-    if (audioPlayer.value.src)
-      audioPlayer.value.play()
+  if (audioElement.value.paused) {
+    if (audioElement.value.src)
+      audioElement.value.play()
   }
   else {
-    audioPlayer.value.pause()
+    audioElement.value.pause()
   }
 }
 </script>
@@ -974,7 +993,7 @@ function togglePlay() {
           <template v-if="playAudio">
             <div class="flex items-center justify-between space-x-2" style="margin-bottom: 8px;">
               <audio
-                ref="audioPlayer"
+                ref="audioElement"
                 @play="isPlaying = true"
                 @pause="isPlaying = false"
                 @ended="isPlaying = false"

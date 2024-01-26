@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import * as dotenv from 'dotenv'
 import express from 'express'
 import fetch from 'node-fetch'
@@ -100,9 +99,25 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
 router.post('/tts-process', auth, async (req, res) => {
   // const { prompt } = req.body
   // let firstChunk = true
-  console.log('tts-process')
-  console.log(req.body)
+  // console.log('tts-process')
+  // console.log(req.body)
+  res.setHeader('Content-Type', 'audio/mpeg')
   try {
+    // fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${OPENAI_API_KEY}`,
+    //   },
+    //   body: JSON.stringify({ model: 'tts', input: req.body.message }),
+    // })
+    //   .then((response) => {
+    //     if (!response.ok)
+    //       throw new Error('Error fetching audio data')
+
+    //     // return response.blob() // 将响应体转换为Blob
+    //     response.body.pipe(res)
+    //   })
     const response = await fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
       method: 'POST',
       headers: {
@@ -115,7 +130,6 @@ router.post('/tts-process', auth, async (req, res) => {
       res.status(500).send('Error fetching audio data')
       return
     }
-    res.setHeader('Content-Type', 'audio/mpeg')
     response.body.pipe(res)
   }
   catch (error) {
