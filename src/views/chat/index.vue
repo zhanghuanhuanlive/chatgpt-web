@@ -421,6 +421,7 @@ function markQueueAsFinished() {
 }
 
 const punctuationRegex = /[!！,，.。;；?？\n]/
+const punctuationRegexOnly = /^[!！,，.。;；?？\n]+$/
 // 截取到最后一个标点符号
 function extractLastPunctuation(str) {
   const match = str.match(punctuationRegex)
@@ -525,12 +526,14 @@ async function onConversation(systemMessage: string) {
             // 实时语音播报
             let input = data.text.substring(previousText.length)
             // console.log(punctuationRegex.test(input))
-            if (playAudio.value && input && input !== '' && punctuationRegex.test(input)) { // 是否包含需要断句的标点符号
+            if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
               input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-              previousText = previousText + input
-              // console.log(`${index} ${previousText} ${isPlaying.value}`)
-              enqueueAudio(input.replace(/#/g, ''), index++)
+              if (!punctuationRegexOnly.test(input)) {
+                previousText = previousText + input
+                // console.log(`${index} ${previousText} ${isPlaying.value}`)
+                enqueueAudio(input.replace(/#/g, ''), index++)
               // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
+              }
             }
 
             updateChat(
@@ -684,12 +687,14 @@ async function onRegenerate(index: number) {
             // 实时语音播报
             let input = data.text.substring(previousText.length)
             // console.log(punctuationRegex.test(input))
-            if (playAudio.value && input && input !== '' && punctuationRegex.test(input)) { // 是否包含需要断句的标点符号
+            if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
               input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-              previousText = previousText + input
-              // console.log(`${index} ${previousText} ${isPlaying.value}`)
-              enqueueAudio(input.replace(/#/g, ''), index++)
+              if (!punctuationRegexOnly.test(input)) {
+                previousText = previousText + input
+                // console.log(`${index} ${previousText} ${isPlaying.value}`)
+                enqueueAudio(input.replace(/#/g, ''), index++)
               // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
+              }
             }
             updateChat(
               +uuid,
