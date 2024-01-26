@@ -236,13 +236,6 @@ async function handleUploadAudio(files: FileList | null) {
   const documentExtensions = ['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx']
   const audioExtensions = ['wav', 'mp3']
 
-  // let userText = ''
-  // let const assistentText = ''
-  // Determine the file type
-  // Handle unsupported file type
-
-  // 添加初始聊天消息以显示文件正在上传
-  // const chatIndex = dataSources.value.length;
   addChat(
     +uuid,
     {
@@ -284,11 +277,6 @@ async function handleUploadAudio(files: FileList | null) {
   }
 
   try {
-    // 移除 console.log，或者替换为其他日志记录方式
-    // http://172.16.1.118:7001/transcribe/
-    // http://fastgpt.learnoh.cn/transcribe
-    // const whisperApiBaseUrl = `${config.value!.reverseProxy}:9876/customerService/upload/v1/files` || 'https://fastgpt.learnoh.cn/customerService'
-    // console.log(whisperApiBaseUrl)
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -432,7 +420,7 @@ function markQueueAsFinished() {
   queueFinished = true
 }
 
-const punctuationRegex = /[!！,，.。;；?？]/
+const punctuationRegex = /[!！,，.。;；?？\n]/
 // 截取到最后一个标点符号
 function extractLastPunctuation(str) {
   const match = str.match(punctuationRegex)
