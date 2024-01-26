@@ -380,7 +380,7 @@ let queue: Blob[] = []// 要播放音频的队列
 let queueFinished = false // 新增标志，表示所有音频是否已加入队列
 let currentIndex = 0 // 新增变量，跟踪当前处理的音频索引
 async function enqueueAudio(message, index) {
-  console.log(`${index} ${message} ${isPlaying.value}`)
+  // console.log(`${index} ${message} ${isPlaying.value}`)
   const audioBlob = await fetchAndConvertToAudio(message)
   queue[index] = audioBlob
   console.log(audioBlob)
@@ -535,12 +535,13 @@ async function onConversation(systemMessage: string) {
             // console.log(data)
 
             // 实时语音播报
-            const input = data.text.substring(previousText.length)
+            let input = data.text.substring(previousText.length)
             // console.log(punctuationRegex.test(input))
             if (playAudio.value && input && input !== '' && punctuationRegex.test(input)) { // 是否包含需要断句的标点符号
-              previousText = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-              // console.log(previousText)
-              enqueueAudio(previousText.replace(/#/g, ''), index++)
+              input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
+              previousText = previousText + input
+              console.log(`${index} ${previousText} ${isPlaying.value}`)
+              enqueueAudio(input.replace(/#/g, ''), index++)
               // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
             }
 
