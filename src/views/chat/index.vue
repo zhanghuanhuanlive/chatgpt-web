@@ -421,12 +421,12 @@ function markQueueAsFinished() {
   queueFinished = true
 }
 
-const punctuationRegex = /[!！,，.。;；?？\n]/
+const punctuationRegex = /[!！，.。;；?？\n]/
 const punctuationRegexOnly = /^[!！,，.。;；?？\n]+$/
 // 截取到最后一个标点符号
 function extractLastPunctuation(str) {
   // console.log(`${str}`)
-  const matches = [...str.matchAll(/[!！,，.。;；?？\n]/g)]
+  const matches = [...str.matchAll(/[!！，.。;；?？\n]/g)]
   // console.log(matches.length)
   if (matches.length > 0) {
     // 获取最后一个匹配项
@@ -963,6 +963,10 @@ function togglePlay() {
     audioElement.value.pause()
   }
 }
+
+const handleEnded = () => {
+  isPlaying.value = false
+}
 </script>
 
 <template>
@@ -1034,7 +1038,7 @@ function togglePlay() {
                 ref="audioElement"
                 @play="isPlaying = true"
                 @pause="isPlaying = false"
-                @ended="isPlaying = false"
+                @ended="handleEnded"
               />
             </div>
           </template>
