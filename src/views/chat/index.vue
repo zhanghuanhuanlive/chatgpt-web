@@ -507,7 +507,7 @@ async function onConversation(systemMessage: string) {
       // console.log('--------------0')
       // let needTts = false
       let previousText = ''
-      let index = 0
+      let queueIndex = 0
       currentIndex = 0
       queueFinished = false
       queue = []
@@ -540,7 +540,7 @@ async function onConversation(systemMessage: string) {
               // .substring(previousText.length)
               .substring(previousText.length)
             // console.log(punctuationRegex.test(input))
-            // console.log(`${index} ${input} ${previousText} ${playAudio.value} ${!punctuationRegexOnly.test(input)} ${punctuationRegex.test(input)}`)
+            // console.log(`${queueIndex} ${input} ${previousText} ${playAudio.value} ${!punctuationRegexOnly.test(input)} ${punctuationRegex.test(input)}`)
             if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
               let isEnqueueAudio = false
               if (punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) {
@@ -552,8 +552,8 @@ async function onConversation(systemMessage: string) {
               }
               if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
                 previousText = previousText + input
-                // console.log(`${index} ${previousText} ${isPlaying.value}`)
-                enqueueAudio(input.replace(/#/g, ''), index++)
+                // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
+                enqueueAudio(input.replace(/#/g, ''), queueIndex++)
               // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
               }
             }
@@ -682,7 +682,7 @@ async function onRegenerate(index: number) {
       if (undefined !== currentHistory)
         businessType = currentHistory.businessType
       let previousText = ''
-      let index = 0
+      let queueIndex = 0
       currentIndex = 0
       queueFinished = false
       queue = []
@@ -704,7 +704,22 @@ async function onRegenerate(index: number) {
           try {
             const data = JSON.parse(chunk)
             // console.log(uuid)
-            // console.log(data)
+            console.log(data)
+            console.log(uuid)
+            console.log(lastText + (data.text ?? ''))
+            updateChat(
+              +uuid,
+              index,
+              {
+                dateTime: new Date().toLocaleString(),
+                text: lastText + (data.text ?? ''),
+                inversion: false,
+                error: false,
+                loading: true,
+                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+                requestOptions: { prompt: message, options: { ...options } },
+              },
+            )
 
             // 实时语音播报
             let input = data.text.substring(previousText.length)
@@ -719,24 +734,11 @@ async function onRegenerate(index: number) {
               }
               if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
                 previousText = previousText + input
-                // console.log(`${index} ${previousText} ${isPlaying.value}`)
-                enqueueAudio(input.replace(/#/g, ''), index++)
+                // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
+                enqueueAudio(input.replace(/#/g, ''), queueIndex++)
               // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
               }
             }
-            updateChat(
-              +uuid,
-              index,
-              {
-                dateTime: new Date().toLocaleString(),
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-              },
-            )
 
             // const input = data.text// tts的input
             // if (playAudio && input && input !== '') {
