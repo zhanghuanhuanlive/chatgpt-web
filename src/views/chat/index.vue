@@ -366,30 +366,48 @@ function handleSubmit() {
 
 // Modify enqueueAudio to accept an index
 let queue: Blob[] = []// 要播放音频的队列
-let queueFinished = false // 新增标志，表示所有音频是否已加入队列
-let currentIndex = 0 // 新增变量，跟踪当前处理的音频索引
+// const queueFinished = ref(true) // 新增标志，表示所有音频是否已加入队列
+let currentIndex = 0 // 跟踪当前处理的音频索引
+const queueLength = ref(100)// 要播放的队列长度，因为要播放的队列长度是未知的，先设置为100
 async function enqueueAudio(message, index) {
-  // console.log(`${index} ${message} ${isPlaying.value}`)
+  console.log(`${index} ${message} ${isPlaying.value}`)
   const audioBlob = await fetchAndConvertToAudio(message)
   queue[index] = audioBlob
-  // console.log(audioBlob)
+
+  // console.log(`${index} ${queueFinished.value} ${isPlaying.value}`)
 
   // If this is the first item and nothing is playing, start playback
-  if (index === 0 && !isPlaying.value)
+  if (index === 0) {
+    currentIndex = 0
+    // queueLength.value = 100
+    // console.log(222)
     playNextAudio()
+  }
+}
+
+function updateQueueLength(newLength) {
+  queueLength.value = newLength // 更新queueLength
 }
 
 async function playNextAudio() {
-  isPlaying.value = true
-
   // 等待直到有音频可播放
-  // eslint-disable-next-line no-unmodified-loop-condition
-  while (currentIndex >= queue.length && !queueFinished)
-    await new Promise(resolve => setTimeout(resolve, 100))
+  // console.log(`${currentIndex} ${!queueFinished.value}`)
+  // while (currentIndex >= queue.length && !queueFinished.value)
+  //   await new Promise(resolve => setTimeout(resolve, 100))
 
   // 检查是否还有更多音频要播放
-  if (currentIndex < queue.length) {
-    const audioBlob = queue[currentIndex++]
+  // console.log(queueLength.value)
+  // const length = queueLength.value
+  // console.log(length)
+  if (currentIndex < queueLength.value) {
+    isPlaying.value = true
+    const index = currentIndex++
+    // console.log(index)
+    while (queue[index] === undefined) {
+      // console.log(`wait: ${index} of ${queueLength.value}`)
+      await new Promise(resolve => setTimeout(resolve, 50))
+    }
+    const audioBlob = queue[index]
     const audioUrl = URL.createObjectURL(audioBlob)
     // console.log(audioUrl)
     if (audioElement.value !== null) {
@@ -398,13 +416,14 @@ async function playNextAudio() {
       audioElement.value.play().then(() => {
         if (audioElement.value !== null) {
           audioElement.value.onended = () => {
-            isPlaying.value = false
+            // isPlaying.value = false
+            console.log(`next id is: ${currentIndex} of ${queueLength.value}`)
             playNextAudio() // 尝试播放下一个音频片段
           }
         }
       }).catch((error) => {
         console.error('Auto-play failed', error)
-        isPlaying.value = false
+        // isPlaying.value = false
         playNextAudio()
       })
     }
@@ -412,14 +431,15 @@ async function playNextAudio() {
   else {
     // 如果没有更多音频并且队列已完成，重置状态
     isPlaying.value = false
-    queueFinished = false // 重置队列完成标志，以备下次使用
+    // queueFinished.value = true // 重置队列完成标志，以备下次使用
   }
 }
 
 // 在音频序列结束时调用这个函数
-function markQueueAsFinished() {
-  queueFinished = true
-}
+// function markQueueAsFinished() {
+//   isPlaying.value = false
+//   // queueFinished.value = true
+// }
 
 const punctuationRegex = /[!！，.。;；?？\n]/
 const punctuationRegexOnly = /^[!！,，.。;；?？\n]+$/
@@ -441,7 +461,7 @@ function extractLastPunctuation(str) {
     return str
   }
 }
-
+// console.log(queueFinished.value)
 // systemMessage就是上传的文件(音频、文件)在服务器的绝对路径
 async function onConversation(systemMessage: string) {
   let message = prompt.value
@@ -508,8 +528,9 @@ async function onConversation(systemMessage: string) {
       // let needTts = false
       let previousText = ''
       let queueIndex = 0
-      currentIndex = 0
-      queueFinished = false
+      // currentIndex = 0
+      // queueFinished.value = false
+      queueLength.value = 100
       queue = []
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: postMessage,
@@ -535,27 +556,31 @@ async function onConversation(systemMessage: string) {
             // console.log(data)
 
             // 实时语音播报
-            let input = data.text
-              // .replace(/[\n\r\t#]+/g, '') // 删除换行符、回车符、制表符
-              // .substring(previousText.length)
-              .substring(previousText.length)
+            let input = data.text.substring(previousText.length)
             // console.log(punctuationRegex.test(input))
             // console.log(`${queueIndex} ${input} ${previousText} ${playAudio.value} ${!punctuationRegexOnly.test(input)} ${punctuationRegex.test(input)}`)
             if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
               let isEnqueueAudio = false
+              // console.log(11111)
+              // console.log(data.detail.choices[0].finish_reason)
               if (punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) {
                 input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
                 isEnqueueAudio = true
               }
-              else if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了
+              if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
                 isEnqueueAudio = true
+                updateQueueLength(queueIndex + 1)
+                // queueLength.value = queueIndex + 1
+                // queueFinished.value = true
               }
               if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
+                // queueFinished.value = false
                 previousText = previousText + input
-                // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
+                // console.log(`${queueIndex} ${previousText} ${isPlaying.value} ${queueFinished.value}`)
                 enqueueAudio(input.replace(/#/g, ''), queueIndex++)
               // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
               }
+              // console.log(previousText)
             }
 
             updateChat(
@@ -586,7 +611,7 @@ async function onConversation(systemMessage: string) {
           }
         },
       })
-      markQueueAsFinished()
+      // markQueueAsFinished()
       updateChatSome(+uuid, dataSources.value.length - 1, { loading: false })
     }
 
@@ -677,14 +702,16 @@ async function onRegenerate(index: number) {
     let lastText = ''
     // const needTts = false
     const fetchChatAPIOnce = async () => {
+      console.log(message)
       const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
       let businessType = 0
       if (undefined !== currentHistory)
         businessType = currentHistory.businessType
       let previousText = ''
       let queueIndex = 0
-      currentIndex = 0
-      queueFinished = false
+      // currentIndex = 0
+      // queueFinished.value = false
+      queueLength.value = 100
       queue = []
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: message,
@@ -704,9 +731,36 @@ async function onRegenerate(index: number) {
           try {
             const data = JSON.parse(chunk)
             // console.log(uuid)
-            console.log(data)
-            console.log(uuid)
-            console.log(lastText + (data.text ?? ''))
+            // console.log(data)
+            // console.log(uuid)
+            // console.log(lastText + (data.text ?? ''))
+
+            // 实时语音播报
+            let input = data.text.substring(previousText.length)
+            if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
+              let isEnqueueAudio = false
+              // console.log(data.detail.choices[0].finish_reason)
+              if (punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) {
+                input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
+                isEnqueueAudio = true
+              }
+              if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
+                isEnqueueAudio = true
+                updateQueueLength(queueIndex + 1)
+                // queueLength.value = queueIndex + 1
+                console.log(`queueLength: ${queueLength.value}`)
+                // queueFinished.value = true
+              }
+              if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
+                // queueFinished.value = false
+                previousText = previousText + input
+                // console.log(`${queueIndex} ${previousText} ${isPlaying.value} ${queueFinished.value}`)
+                enqueueAudio(input.replace(/#/g, ''), queueIndex++)
+              // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
+              }
+              // console.log(previousText)
+            }
+
             updateChat(
               +uuid,
               index,
@@ -720,25 +774,6 @@ async function onRegenerate(index: number) {
                 requestOptions: { prompt: message, options: { ...options } },
               },
             )
-
-            // 实时语音播报
-            let input = data.text.substring(previousText.length)
-            if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
-              let isEnqueueAudio = false
-              if (punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) {
-                input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-                isEnqueueAudio = true
-              }
-              else if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了
-                isEnqueueAudio = true
-              }
-              if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
-                previousText = previousText + input
-                // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
-                enqueueAudio(input.replace(/#/g, ''), queueIndex++)
-              // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
-              }
-            }
 
             // const input = data.text// tts的input
             // if (playAudio && input && input !== '') {
@@ -758,7 +793,7 @@ async function onRegenerate(index: number) {
           }
         },
       })
-      markQueueAsFinished()
+      // markQueueAsFinished()
       updateChatSome(+uuid, index, { loading: false })
     }
     await fetchChatAPIOnce()
@@ -966,9 +1001,9 @@ function togglePlay() {
   }
 }
 
-const handleEnded = () => {
-  isPlaying.value = false
-}
+// const handleEnded = () => {
+//   isPlaying.value = false
+// }
 </script>
 
 <template>
@@ -1040,7 +1075,7 @@ const handleEnded = () => {
                 ref="audioElement"
                 @play="isPlaying = true"
                 @pause="isPlaying = false"
-                @ended="handleEnded"
+                @ended="isPlaying = false"
               />
             </div>
           </template>
@@ -1070,7 +1105,7 @@ const handleEnded = () => {
                 <FontAwesomeIcon :icon="businessType === 10001 ? 'fas fa-file-upload' : businessType === 10002 ? 'fas fa-file-upload' : ''" />
               </span>
             </HoverButton>
-            <HoverButton v-if="playAudio" @click="togglePlay">
+            <HoverButton v-if="playAudio && isPlaying" @click="togglePlay">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <FontAwesomeIcon :icon="isPlaying ? 'fas fa-pause-circle' : 'fas fa-play-circle'" />
               </span>
