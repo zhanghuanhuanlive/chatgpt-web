@@ -75,6 +75,7 @@ interface ConfigState {
   usage?: string
   menu?: string
   affixes?: string
+  openai_api_model?: string
 }
 const config = ref<ConfigState>()
 // let keyLabelMap: Map<string, string>
@@ -87,6 +88,7 @@ async function fetchConfig() {
     const { data } = await fetchChatConfig<ConfigState>()
     config.value = data
     const menu = config.value?.menu || '[]'
+    let model = config.value?.menu || 'chatglm3-6b'
     const tmp = config.value?.affixes// 固定的快捷菜单
     if (tmp)
       affixes = tmp.split(',')
@@ -102,8 +104,12 @@ async function fetchConfig() {
     if (undefined !== currentHistory)
       businessType = currentHistory.businessType
     const item = models.find(item => item.key === String(businessType))
-    if (item)
+
+    if (item) {
       currentBusinessType = item.label || 'ChatGLM3'
+      model = item.model
+    }
+    localStorage.setItem('model', model)
     localStorage.setItem('menu', menu)
     localStorage.setItem('models', JSON.stringify(Array.from(models)))
   }

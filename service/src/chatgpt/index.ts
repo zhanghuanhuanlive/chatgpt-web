@@ -221,7 +221,8 @@ async function fetchUsage() {
 
 async function chatConfig() {
   const usage = await fetchUsage()
-  const menu = process.env.MENU ?? '-'
+  const menu = process.env.MENU ?? '[]'
+  const openai_api_model = process.env.OPENAI_API_MODEL ?? 'chatglm3-6b'
   const affixes = process.env.AFFIXES ?? '-'
   const reverseProxy = process.env.API_REVERSE_PROXY ?? '-'
   const httpsProxy = (process.env.HTTPS_PROXY || process.env.ALL_PROXY) ?? '-'
@@ -230,7 +231,7 @@ async function chatConfig() {
     : '-'
   return sendResponse<ModelConfig>({
     type: 'Success',
-    data: { apiModel, reverseProxy, timeoutMs, socksProxy, httpsProxy, usage, menu, affixes },
+    data: { apiModel, reverseProxy, timeoutMs, socksProxy, httpsProxy, usage, menu, affixes, openai_api_model },
   })
 }
 

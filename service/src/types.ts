@@ -35,6 +35,7 @@ export interface ModelConfig {
   usage?: string
   menu?: string
   affixes?: string
+  openai_api_model?: string
 }
 
 export type ApiModel = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined

@@ -44,13 +44,16 @@ export function fetchChatAPIProcess<T = any>(
     // needTts: params.needTts,
   }
 
+  // console.log(params.options)
+  const model: string = localStorage.getItem('model') || 'chatglm3-6b'
+  const top_p = (model.startsWith('chatglm_') || model.startsWith('glm-4')) ? 0.9 : settingStore.top_p
   if (authStore.isChatGPTAPI) {
     data = {
       ...data,
       // systemMessage: settingStore.systemMessage,
       // systemMessage: 'hahaha',
       temperature: settingStore.temperature,
-      top_p: settingStore.top_p,
+      top_p,
     }
   }
   data.systemMessage = (params.systemMessage !== null && params.systemMessage !== undefined && params.systemMessage !== '') ? params.systemMessage : settingStore.systemMessage
