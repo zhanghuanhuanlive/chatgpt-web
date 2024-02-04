@@ -193,17 +193,20 @@ export default {
       }
       else if (this.needSubmit) {
         const duration = this.recorder.duration
-        console.log(`this.needSubmit: ${this.needSubmit} ${duration}`)
-        if (duration > 2)
+        // console.log(`this.needSubmit: ${this.needSubmit} ${duration}`)
+        if (duration > 2) {
           this.$emit('closeAudio', this.recorder.getWAVBlob())
-        else
+        }
+        else {
           this.$emit('closeAudio', null)
+          this.startRecorder()// 录音时间太短,重新开始录音
+        }
       }
       else {
         this.stopRecorder()
         this.$emit('closeAudio', null)
+        this.startRecorder()// 没有人说话,重新开始录音
       }
-
       this.beginRecoding = !this.beginRecoding
     },
     // 继续录音
