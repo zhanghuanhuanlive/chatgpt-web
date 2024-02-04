@@ -142,8 +142,10 @@ function findItemsWithModel(data) {
 function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
   showAudioInputComponent.value = false
-  if (audioBlob === null)
+  if (audioBlob === null) {
+    showAudioInputComponent.value = true
     return
+  }
   handleAudioInput(audioBlob)
 }
 

@@ -198,14 +198,17 @@ export default {
           this.$emit('closeAudio', this.recorder.getWAVBlob())
         }
         else {
+          // this.stopRecorder()
           this.$emit('closeAudio', null)
-          this.startRecorder()// 录音时间太短,重新开始录音
+          // this.isShow = true
+          // this.startRecorder()// 录音时间太短,重新开始录音
         }
       }
       else {
-        this.stopRecorder()
+        // this.stopRecorder()
+        // this.isShow = true
         this.$emit('closeAudio', null)
-        this.startRecorder()// 没有人说话,重新开始录音
+        // this.startRecorder()// 没有人说话,重新开始录音
       }
       this.beginRecoding = !this.beginRecoding
     },
