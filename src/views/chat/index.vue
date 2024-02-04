@@ -56,7 +56,9 @@ const promptStore = usePromptStore()
 // 使用storeToRefs，保证store修改后，联想部分能够重新渲染
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
-const showAudioInputBtn = ref(false)
+const showAudioInputComponent = ref(false)
+// const audioEnterRef = ref(null)// 引用的录音子组件
+// const audioEnterRef = ref<typeof AudioEnter | null>(null)
 
 const isSpinning = ref(false)
 
@@ -139,7 +141,7 @@ function findItemsWithModel(data) {
 
 function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
-  showAudioInputBtn.value = false
+  showAudioInputComponent.value = false
   if (audioBlob === null)
     return
   handleAudioInput(audioBlob)
@@ -196,7 +198,7 @@ async function handleAudioInput(audioBlob: Blob) {
 }
 
 function showAudioInput() {
-  showAudioInputBtn.value = true
+  showAudioInputComponent.value = true
   // console.log(showAudioInputBtn)
 }
 
@@ -362,24 +364,14 @@ function handleSubmit() {
   onConversation('')
 }
 
-// class AudioPlayQueue {
-//   constructor() {
-//     // this.audioElement = audioElement
-//     this.queue = []
-//     // this.isPlaying = false
-//     // this.queueSize = 0 // Track the expected size of the queue
-//   }
-
 // Modify enqueueAudio to accept an index
 let queue: Blob[] = []// 要播放音频的队列
-// const queueFinished = ref(true) // 新增标志，表示所有音频是否已加入队列
 let currentIndex = 0 // 跟踪当前处理的音频索引
 const queueLength = ref(100)// 要播放的队列长度，因为要播放的队列长度是未知的，先设置为100
 async function enqueueAudio(message, index) {
-  console.log(`${index} ${message} ${isPlaying.value}`)
+  // console.log(`${index} ${message} ${isPlaying.value}`)
   const audioBlob = await fetchAndConvertToAudio(message)
   queue[index] = audioBlob
-
   // console.log(`${index} ${queueFinished.value} ${isPlaying.value}`)
 
   // If this is the first item and nothing is playing, start playback
@@ -396,26 +388,15 @@ function updateQueueLength(newLength) {
 }
 
 async function playNextAudio() {
-  // 等待直到有音频可播放
-  // console.log(`${currentIndex} ${!queueFinished.value}`)
-  // while (currentIndex >= queue.length && !queueFinished.value)
-  //   await new Promise(resolve => setTimeout(resolve, 100))
-
-  // 检查是否还有更多音频要播放
-  // console.log(queueLength.value)
-  // const length = queueLength.value
-  // console.log(length)
   if (currentIndex < queueLength.value) {
     isPlaying.value = true
     const index = currentIndex++
-    // console.log(index)
     while (queue[index] === undefined) {
-      // console.log(`wait: ${index} of ${queueLength.value}`)
+    // console.log(`wait: ${index} of ${queueLength.value}`)
       await new Promise(resolve => setTimeout(resolve, 50))
     }
     const audioBlob = queue[index]
     const audioUrl = URL.createObjectURL(audioBlob)
-    // console.log(audioUrl)
     if (audioElement.value !== null) {
       audioElement.value.src = audioUrl
 
@@ -437,15 +418,10 @@ async function playNextAudio() {
   else {
     // 如果没有更多音频并且队列已完成，重置状态
     isPlaying.value = false
-    // queueFinished.value = true // 重置队列完成标志，以备下次使用
+    // startAudioEnterRecorder()// 子组件重新开始监听
+    showAudioInput()
   }
 }
-
-// 在音频序列结束时调用这个函数
-// function markQueueAsFinished() {
-//   isPlaying.value = false
-//   // queueFinished.value = true
-// }
 
 const punctuationRegex = /[!！，.。;；?？\n]/
 const punctuationRegexOnly = /^[!！,，.。;；?？\n]+$/
@@ -453,13 +429,11 @@ const punctuationRegexOnly = /^[!！,，.。;；?？\n]+$/
 function extractLastPunctuation(str) {
   // console.log(`${str}`)
   const matches = [...str.matchAll(/[!！，.。;；?？\n]/g)]
-  // console.log(matches.length)
   if (matches.length > 0) {
     // 获取最后一个匹配项
     const lastMatch = matches[matches.length - 1]
     // 返回最后一个标点符号及其之前的内容
     const abc = str.substring(0, lastMatch.index + lastMatch[0].length)
-    // console.log(`abc: ${abc}`)
     return abc
   }
   else {
@@ -467,7 +441,6 @@ function extractLastPunctuation(str) {
     return str
   }
 }
-// console.log(queueFinished.value)
 // systemMessage就是上传的文件(音频、文件)在服务器的绝对路径
 async function onConversation(systemMessage: string) {
   let message = prompt.value
@@ -602,6 +575,9 @@ async function onConversation(systemMessage: string) {
                 requestOptions: { prompt: message, options: { ...options } },
               },
             )
+
+            // if (!playAudio.value && data.detail.choices[0].finish_reason === 'stop')
+            // startAudioEnterRecorder()
 
             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
               options.parentMessageId = data.id
@@ -1007,6 +983,21 @@ function togglePlay() {
   }
 }
 
+// 子组件重新开始监听
+// function startAudioEnterRecorder() {
+//   showAudioInputComponent.value = true
+//   nextTick(() => {
+//     setTimeout(() => {
+//       // 确保组件已经挂载
+//       if (audioEnterRef.value)
+//         (audioEnterRef.value as any).toggleRecording()
+//         // audioEnterRef.value.toggleRecording()
+//       else
+//         console.log('组件尚未挂载或audioEnterRef不存在')
+//     }, 1000) // 延迟1秒
+//   })
+// }
+
 // const handleEnded = () => {
 //   isPlaying.value = false
 // }
@@ -1139,7 +1130,7 @@ function togglePlay() {
                 <FontAwesomeIcon icon="fas fa-microphone-lines" />
               </span>
             </HoverButton>
-            <AudioEnter :is-show="showAudioInputBtn" @close-audio="closeAudio" />
+            <AudioEnter v-if="showAudioInputComponent" ref="audioEnterRef" @close-audio="closeAudio" />
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
               <template #default="{ handleInput, handleBlur, handleFocus }">
                 <NInput

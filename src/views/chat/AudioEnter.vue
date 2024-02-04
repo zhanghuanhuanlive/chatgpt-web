@@ -15,16 +15,17 @@ export default {
   components: {
     [Overlay.name]: Overlay,
   },
-  props: {
-    isShow: {
-      type: Boolean,
-      default: false,
-    },
+  // props: {
+  //   isShow: {
+  //     type: Boolean,
+  //     default: false,
+  //   },
 
-  },
+  // },
   emits: ['closeAudio'],
   data() {
     return {
+      isShow: false, // 是否显示柱状音浪
       beginRecoding: false, // 开始录音
       blackBoxSpeak: false, // 是否上滑取消
       startY: 0, // 手指滑动开始Y轴坐标
@@ -39,18 +40,32 @@ export default {
       //   isRecording: false, // 用于跟踪录音状态，PC浏览器使用
       //   isTouchDevice: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
       isMobile: useBasicLayout().isMobile,
+      // silenceTimer: null, // 静音检测
+      // needCheckSilence: false, // 是否需要监测静音
+      // checkingSilence: false, // 正在监测是否静音
+      // 增加静音监测相关的属性
+      silenceStartTime: null, // 静音开始的时间
+      silenceDurationThresholdAfterTalk: 1500, // 静音时长的阈值，有人说过话以后，超过这个值，就会停止录音
+      silenceDurationThreshold: 5000, // 静音时长的阈值，没人说话的情况下超过这个值，，就会停止录音
+      talkDurationThreshold: 500, // 说话时长的阈值，超过这个值，才会提交进行撰写
+      talkingStartTime: null, // 监测到说话开始的时间
+      talkingDuration: null, // 说话的时长
+      talkingDetected: false, // 是否检测到有人说话
+      needSubmit: false, // 是否需要提交录音数据
+      needCheckSlicence: false, // 是否需要监测静音
     }
   },
-  watch: {
-    isShow: {
-      handler(nv, ov) {
-        if (nv)
-          this.getPermission()
-      },
-      deep: true,
-    },
-  },
+  // watch: {
+  //   isShow: {
+  //     handler(nv, ov) {
+  //       if (nv)
+  //         this.getPermission()
+  //     },
+  //     deep: true,
+  //   },
+  // },
   mounted() {
+    this.getPermission()// 获取录音权限
     // 创建录音实例
     this.recorder = new Recorder({
       sampleBits: 16, // 采样位数，支持 8 或 16，默认是16
@@ -70,15 +85,19 @@ export default {
       this.nowDuration = d // directly setting the data property
 
       // console.log('--------------START---------------')
-      // console.log('录音时长(秒)', params.duration);
+      // console.log('录音时长(秒)', params.duration)
       // console.log('录音大小(字节)', params.fileSize);
-      // console.log('录音音量百分比(%)', params.vol);
-      // console.log('当前录音的总数据([DataView, DataView...])', params.data);
+      // if (params.vol > 15)
+      //   console.log('录音音量百分比(%)', params.vol)
+      // console.log('当前录音的总数据([DataView, DataView...])', params.data)
       // console.log('--------------END---------------')
     }
 
-    // this.startCanvas();
+    // this.startCanvas()
     document.addEventListener('keydown', this.handleKeyDown)// 监听按键
+    // this.toggleRecording() // 页面初始化完成后，自动开始录音
+    if (!this.beginRecoding)
+      this.startRecorder()
   },
   beforeUnmount() {
     // 在组件销毁前移除事件监听
@@ -89,6 +108,7 @@ export default {
       if (event.key === 'Escape' || event.keyCode === 27) {
         // 当按下 ESC 键时触发的操作
         console.log('ESC 键被按下了')
+        this.beginRecoding = false
         this.$emit('closeAudio', null)
         // 这里可以执行其他操作
       }
@@ -96,6 +116,7 @@ export default {
     // 获取麦克风权限
     getPermission() {
       Recorder.getPermission().then(() => {
+        this.isShow = true
         console.log('录音给权限了')
       }, (error) => {
         console.log(`${error.name} : ${error.message}`)
@@ -134,7 +155,10 @@ export default {
         //   console.log('通知父窗体')
           this.$emit('closeAudio', this.recorder.getWAVBlob())
         }
-        else { this.$emit('closeAudio', null) }// 上滑也关闭窗口
+        else {
+          this.$emit('closeAudio', null)
+          this.stopRecoder()
+        }// 上滑也关闭窗口
         // console.log('松开>>>', this.getRecorder())
         this.nowDuration = null
         this.drawColuList = []
@@ -151,22 +175,34 @@ export default {
     },
     // 长按超过x毫秒-- 开始录音
     startRecorder() {
+      console.log('startRecorder')
       this.stopRecorder()
       this.recorder.start().then(() => {
         this.beginRecoding = true
-        // this.drawRecordWave();//开始绘制
+        // this.drawRecordWave()// 开始绘制
+        this.needCheckSlicence = true
         this.drawRecordColu() // 开始绘制
       }, (error) => {
         console.log(`${error.name} : ${error.message}`)
       })
     },
     toggleRecording() { // PC
-    //   console.log('toggleRecording')
-      if (!this.beginRecoding)
+      console.log(`toggleRecording： ${this.beginRecoding}`)
+      if (!this.beginRecoding) {
         this.startRecorder()
-
-      else
-        this.$emit('closeAudio', this.recorder.getWAVBlob())
+      }
+      else if (this.needSubmit) {
+        const duration = this.recorder.duration
+        console.log(`this.needSubmit: ${this.needSubmit} ${duration}`)
+        if (duration > 2)
+          this.$emit('closeAudio', this.recorder.getWAVBlob())
+        else
+          this.$emit('closeAudio', null)
+      }
+      else {
+        this.stopRecorder()
+        this.$emit('closeAudio', null)
+      }
 
       this.beginRecoding = !this.beginRecoding
     },
@@ -318,6 +354,7 @@ export default {
     },
     // 录音绘制柱状图
     drawRecordColu() {
+      // console.log('drawRecordColu')
       // 用requestAnimationFrame稳定60fps绘制(官方写法，录音过程中，会一直自我调用，因此能得到持续的数据，然后根据数据绘制音波图)
       this.drawRecordId = requestAnimationFrame(this.drawRecordColu)
       // 实时获取音频大小数据
@@ -337,6 +374,8 @@ export default {
         // 根据数值大小，设置音波柱状的高度
         const newDb = rstArr[i]
         let waveH = 10
+        // if (newDb >= 150)
+        //   console.log(newDb)
         if (newDb >= 128 && newDb <= 140)
           waveH = 15
         else if (newDb >= 141 && newDb <= 160)
@@ -347,11 +386,83 @@ export default {
           waveH = 30
         else if (newDb > 200)
           waveH = 35
-
+        // if (newDb >)
+        // console.log(waveH)
         this.drawColuList.push(waveH)
       }
       // console.log(this.drawColuList)
       this.$forceUpdate()
+
+      // 静音检测逻辑
+      this.checkSilence(rstArr)
+    },
+
+    // 静音检测逻辑方法
+    checkSilence(rstArr) {
+      const currentTime = Date.now()
+      const hasLoudSound = rstArr.some(db => db >= 150)
+
+      if (hasLoudSound) {
+        this.talkingDetected = true
+        this.silenceStartTime = null // 重置静音开始时间
+        if (!this.talkingStartTime)
+          this.talkingStartTime = currentTime
+      }
+      else if (!this.silenceStartTime) {
+        // if (this.talkingStartTime) {
+        //   this.talkingDuration = currentTime - this.talkingStartTime// 记录说话间隔时长
+        //   this.talkingStartTime = null
+        // }
+        this.silenceStartTime = currentTime // 首次检测到静音，记录开始时间
+      }
+
+      // 检测静音条件
+      if (this.silenceStartTime && this.needCheckSlicence) {
+        const silenceDuration = currentTime - this.silenceStartTime// 静音时长，ms
+        if ((this.talkingDetected && silenceDuration > this.silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
+          this.needCheckSlicence = false
+          // 结束录音
+          cancelAnimationFrame(this.drawRecordId) // 停止drawRecordColu的调用
+          console.log(`silenceDuration > 1.5: ${silenceDuration}`)
+          this.talkingDuration = currentTime - this.talkingStartTime - this.silenceDurationThresholdAfterTalk // 说话时长
+          console.log(`talkingDuration: ${this.talkingDuration}`)
+          // if (this.talkingDuration > this.talkDurationThreshold) { // 说话时长大于1500ms
+          this.needSubmit = true
+          // }
+          this.toggleRecording()// 结束录音，且提交
+          // 清理逻辑
+          this.cleanupAfterRecording()
+        }
+        else if (!this.talkingDetected && silenceDuration > this.silenceDurationThreshold) { // 没人说话，且静音超过5000ms
+          this.needCheckSlicence = false
+          console.log(`silenceDuration > 5: ${silenceDuration}`)
+          this.toggleRecording()// 结束录音，不提交
+          this.cleanupAfterRecording()
+        }
+      }
+    },
+
+    // 清理逻辑的实现
+    cleanupAfterRecording() {
+      this.talkingDetected = false
+      this.silenceStartTime = null
+      this.talkingStartTime = null
+      this.talkingDuration = null
+      this.drawColuList = [] // 假设这是存储音波高度的数组，清空它
+      this.needSubmit = false
+
+      // 重新开始录音
+      // this.toggleRecording()
+      // 如果有其他需要重置的属性或状态，也在这里处理
+
+      // 更新UI状态，例如重置按钮状态，清除音波图等
+      // this.$forceUpdate() // 强制Vue重新渲染组件
+
+      // 如果有打开的音频流，确保在这里关闭它
+      // this.recorder.closeAudioStream(); // 假设这是关闭音频流的方法
+
+      // 触发任何需要的事件，例如告诉外部组件录音已经结束
+      // this.$emit('recordingStopped');
     },
     // 拆分数组
     splitArr(arr, rst, idx) {
@@ -369,8 +480,10 @@ export default {
     },
     // 关闭组件
     close() {
-      if (this.beginRecoding)
+      if (this.beginRecoding) {
+        this.beginRecoding = false
         this.stopRecorder() // 停止录音
+      }
       this.$emit('closeAudio', null)
     },
     // 销毁实例
@@ -387,19 +500,19 @@ export default {
       <div class="audio-pie" @click.stop>
         <!-- 录音时显示音波图和时长 -->
         <div v-if="beginRecoding">
-          <div v-if="nowDuration" class="audio-pie_audio--times">
+          <!-- <div v-if="nowDuration" class="audio-pie_audio--times">
             {{ nowDuration }}
-          </div>
-          <div v-show="false" class="audio-pie_audio--osc">
+          </div> -->
+          <!-- <div v-show="false" class="audio-pie_audio--osc">
             <canvas id="canvas" />
-          </div>
+          </div> -->
           <div v-if="drawColuList.length > 0" class="audio-pie_audio--osc">
             <div v-for="(item, idx) in drawColuList" :key="idx" class="audio-pie_audio--osc_item" :style="{ height: `${item}px` }" />
           </div>
         </div>
 
-        <div v-if="isMobile" class="audio-pie_btn" @touchstart.prevent="touchstart" @touchend.prevent="touchend" @touchmove.prevent="touchmove">
-          <!-- PC设备的按钮内容 -->
+        <!-- 原逻辑为判断isMobile，现在统一采用PC端的处理方式 -->
+        <!-- <div v-if="isMobile" class="audio-pie_btn" @touchstart.prevent="touchstart" @touchend.prevent="touchend" @touchmove.prevent="touchmove">
           <div class="audio-pie_btn-icon">
             <template v-if="beginRecoding">
               <div class="audio-pie_btn-icon1" />
@@ -411,13 +524,8 @@ export default {
           <div class="audio-pie_txt">
             {{ beginRecoding ? '松开发送，上滑取消' : '按住说话' }}
           </div>
-        </div>
-        <div
-          v-else
-          class="audio-pie_btn"
-          @click="toggleRecording"
-        >
-          <!-- 非触摸设备的按钮内容 -->
+        </div> -->
+        <!-- <div class="audio-pie_btn" @click="toggleRecording">
           <div class="audio-pie_btn-icon">
             <template v-if="beginRecoding">
               <div class="audio-pie_btn-icon1" />
@@ -429,7 +537,7 @@ export default {
           <div class="audio-pie_txt">
             {{ beginRecoding ? '点击停止录音' : '点击开始录音' }}
           </div>
-        </div>
+        </div> -->
       </div>
     </van-overlay>
   </div>

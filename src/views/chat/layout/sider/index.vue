@@ -23,6 +23,11 @@ const show = ref(false)
 
 const collapsed = computed(() => appStore.siderCollapsed)
 
+// console.log(`isMobile: ${isMobile.value}`)
+if (isMobile.value)
+  appStore.setSiderCollapsed(true)// 手机端自动隐藏左侧菜单
+appStore.setSiderCollapsed(collapsed.value)// 设置成缓存中的是否折叠菜单
+
 // console.log(localStorage.getItem('menu'))
 const options = computed(() => JSON.parse(localStorage.getItem('menu') || ''))
 
