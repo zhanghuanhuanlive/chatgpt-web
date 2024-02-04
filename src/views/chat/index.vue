@@ -143,7 +143,9 @@ function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
   showAudioInputComponent.value = false
   if (audioBlob === null) {
-    showAudioInputComponent.value = true
+    setTimeout(() => {
+      showAudioInputComponent.value = true
+    }, 1000) // 延迟1秒
     return
   }
   handleAudioInput(audioBlob)
