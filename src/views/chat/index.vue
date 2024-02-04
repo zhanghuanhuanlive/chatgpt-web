@@ -144,7 +144,7 @@ function closeAudio(audioBlob: Blob) {
   showAudioInputComponent.value = false
   if (audioBlob === null) {
     setTimeout(() => {
-      showAudioInputComponent.value = true
+      showAudioInput()
     }, 1000) // 延迟1秒
     return
   }
@@ -427,8 +427,8 @@ async function playNextAudio() {
   }
 }
 
-const punctuationRegex = /[!！，.。;；?？\n]/
-const punctuationRegexOnly = /^[!！,，.。;；?？\n]+$/
+const punctuationRegex = /[!！，。;；?？\n]/ // 英文的句号有可能用在小数里,英文的逗号有可能用在科学计数里
+const punctuationRegexOnly = /^[!！,，。;；?？\n]+$/ // 英文的句号有可能用在小数里,英文的逗号有可能用在科学计数里
 // 截取到最后一个标点符号
 function extractLastPunctuation(str) {
   // console.log(`${str}`)
