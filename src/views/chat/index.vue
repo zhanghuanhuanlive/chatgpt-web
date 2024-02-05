@@ -384,7 +384,7 @@ let queue: Blob[] = []// 要播放音频的队列
 let currentIndex = 0 // 跟踪当前处理的音频索引
 const queueLength = ref(100)// 要播放的队列长度，因为要播放的队列长度是未知的，先设置为100
 async function enqueueAudio(message, index) {
-  // console.log(`${index} ${message} ${isPlaying.value}`)
+  console.log(`${index} ${message} ${isPlaying.value}`)
   const audioBlob = await fetchAndConvertToAudio(message)
   queue[index] = audioBlob
   // console.log(`${index} ${queueFinished.value} ${isPlaying.value}`)
@@ -545,36 +545,29 @@ async function onConversation(systemMessage: string) {
             chunk = responseText.substring(lastIndex)// 如果找到了换行符，这一行将 chunk 更新为从最后一个换行符开始到文本末尾的部分，以此来提取最后一行数据。
           try {
             const data = JSON.parse(chunk)
-            // console.log(responseText)
-            // console.log(data.text)
             // console.log(data)
 
             // 实时语音播报
             let input = data.text.substring(previousText.length)
-            // console.log(punctuationRegex.test(input))
-            // console.log(`${queueIndex} ${input} ${previousText} ${playAudio.value} ${!punctuationRegexOnly.test(input)} ${punctuationRegex.test(input)}`)
-            if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
+            // console.log(data)
+            if ((playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) || data.detail.choices[0].finish_reason === 'stop') { // 是否包含需要断句的标点符号
               let isEnqueueAudio = false
-              // console.log(11111)
-              // console.log(data.detail.choices[0].finish_reason)
-              if (punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) {
-                input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-                isEnqueueAudio = true
+              if (!punctuationRegexOnly.test(input)) { // 如果不全是标点符号
+                if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
+                  isEnqueueAudio = true
+                  updateQueueLength(queueIndex + 1)
+                }
+                else if (punctuationRegex.test(input)) { // 如果存在标点符号
+                  input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
+                  console.log(input)
+                  isEnqueueAudio = true
+                }
+                if (isEnqueueAudio) {
+                  previousText = previousText + input
+                  // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
+                  enqueueAudio(input.replace(/#/g, ''), queueIndex++)
+                }
               }
-              if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
-                isEnqueueAudio = true
-                updateQueueLength(queueIndex + 1)
-                // queueLength.value = queueIndex + 1
-                // queueFinished.value = true
-              }
-              if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
-                // queueFinished.value = false
-                previousText = previousText + input
-                // console.log(`${queueIndex} ${previousText} ${isPlaying.value} ${queueFinished.value}`)
-                enqueueAudio(input.replace(/#/g, ''), queueIndex++)
-              // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
-              }
-              // console.log(previousText)
             }
 
             updateChat(
@@ -590,9 +583,6 @@ async function onConversation(systemMessage: string) {
                 requestOptions: { prompt: message, options: { ...options } },
               },
             )
-
-            // if (!playAudio.value && data.detail.choices[0].finish_reason === 'stop')
-            // startAudioEnterRecorder()
 
             if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
               options.parentMessageId = data.id
@@ -727,35 +717,28 @@ async function onRegenerate(index: number) {
             chunk = responseText.substring(lastIndex)
           try {
             const data = JSON.parse(chunk)
-            // console.log(uuid)
             // console.log(data)
-            // console.log(uuid)
-            // console.log(lastText + (data.text ?? ''))
 
             // 实时语音播报
             let input = data.text.substring(previousText.length)
             if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
               let isEnqueueAudio = false
-              // console.log(data.detail.choices[0].finish_reason)
-              if (punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) {
-                input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-                isEnqueueAudio = true
+              if (!punctuationRegexOnly.test(input)) { // 如果不全是标点符号
+                if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
+                  isEnqueueAudio = true
+                  updateQueueLength(queueIndex + 1)
+                }
+                else if (punctuationRegex.test(input)) { // 如果存在标点符号
+                  input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
+                  console.log(input)
+                  isEnqueueAudio = true
+                }
+                if (isEnqueueAudio) {
+                  previousText = previousText + input
+                  // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
+                  enqueueAudio(input.replace(/#/g, ''), queueIndex++)
+                }
               }
-              if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
-                isEnqueueAudio = true
-                updateQueueLength(queueIndex + 1)
-                // queueLength.value = queueIndex + 1
-                console.log(`queueLength: ${queueLength.value}`)
-                // queueFinished.value = true
-              }
-              if (isEnqueueAudio && !punctuationRegexOnly.test(input)) {
-                // queueFinished.value = false
-                previousText = previousText + input
-                // console.log(`${queueIndex} ${previousText} ${isPlaying.value} ${queueFinished.value}`)
-                enqueueAudio(input.replace(/#/g, ''), queueIndex++)
-              // fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
-              }
-              // console.log(previousText)
             }
 
             updateChat(
