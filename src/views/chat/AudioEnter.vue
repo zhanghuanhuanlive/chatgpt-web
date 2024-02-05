@@ -22,7 +22,7 @@ export default {
   //   },
 
   // },
-  emits: ['closeAudio', 'hideAudioInput'],
+  emits: ['closeAudio', 'stopAudioInput'],
   data() {
     return {
       isShow: false, // 是否显示柱状音浪
@@ -114,7 +114,7 @@ export default {
         // this.stopRecorder() // 停止录音
         // this.nowDuration = null
         // this.drawColuList = []
-        // this.$emit('hideAudioInput', null)
+        // this.$emit('stopAudioInput', null)
         // 这里可以执行其他操作
       }
     },
@@ -498,7 +498,7 @@ export default {
       }
       this.nowDuration = null
       this.drawColuList = []
-      this.$emit('hideAudioInput', null)
+      this.$emit('stopAudioInput', null)
     },
     // 销毁实例
     beforeDestroy() {

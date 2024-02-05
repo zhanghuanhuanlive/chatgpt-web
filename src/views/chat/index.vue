@@ -6,7 +6,7 @@ import { storeToRefs } from 'pinia'
 import { NAlert, NAutoComplete, NButton, NGi, NGrid, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faArrowUpLong, faDownload, faFileUpload, faHistory, faMicrophoneLines, faMusic, faPaperPlane, faPauseCircle, faPlayCircle, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpLong, faDownload, faFileUpload, faHistory, faMicrophoneLines, faMicrophoneLinesSlash, faMusic, faPaperPlane, faPauseCircle, faPlayCircle, faTrashAlt, faVolumeUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -20,7 +20,7 @@ import { useChatStore, usePromptStore, useSettingStore } from '@/store'
 import { fetchAndConvertToAudio, fetchChatAPIProcess, fetchChatConfig } from '@/api'
 import { t } from '@/locales'
 
-library.add(faArrowUpLong, faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faPauseCircle, faPlayCircle, faVolumeUp, faPaperPlane)
+library.add(faArrowUpLong, faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faMicrophoneLinesSlash, faPauseCircle, faPlayCircle, faVolumeUp, faPaperPlane)
 
 let controller = new AbortController()
 
@@ -57,6 +57,7 @@ const promptStore = usePromptStore()
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
 const showAudioInputComponent = ref(false)
+const isAudioInput = ref(false)
 // const audioEnterRef = ref(null)// 引用的录音子组件
 // const audioEnterRef = ref<typeof AudioEnter | null>(null)
 
@@ -143,9 +144,11 @@ function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
   hideAudioInput()
   if (audioBlob === null) {
-    setTimeout(() => {
-      showAudioInput()
-    }, 1000) // 延迟1秒
+    if (isAudioInput.value) { // 如果开启了语音输入
+      setTimeout(() => {
+        startAudioInput()
+      }, 1000)
+    } // 延迟1秒
     return
   }
   handleAudioInput(audioBlob)
@@ -191,7 +194,8 @@ async function handleAudioInput(audioBlob: Blob) {
     const text = result.text
     // console.log(result)
     if (text.includes('停止对话') || text.includes('停止会话')) {
-      hideAudioInput()
+      // hideAudioInput()
+      stopAudioInput()
     }
     else {
       prompt.value = result.text // 更新 prompt 的值
@@ -208,12 +212,19 @@ async function handleAudioInput(audioBlob: Blob) {
 }
 // 隐藏语音对话
 function hideAudioInput() {
-  console.log('hideAudioInput')
+  // console.log('hideAudioInput')
   showAudioInputComponent.value = false
 }
-// 显示语音对话
-function showAudioInput() {
+// 开始语音对话
+function startAudioInput() {
   showAudioInputComponent.value = true
+  isAudioInput.value = true
+}
+
+// 停止语音对话
+function stopAudioInput() {
+  hideAudioInput()
+  isAudioInput.value = false
 }
 
 // 未知原因刷新页面，loading 状态不会重置，手动重置
@@ -434,7 +445,8 @@ async function playNextAudio() {
     // 如果没有更多音频并且队列已完成，重置状态
     isPlaying.value = false
     // startAudioEnterRecorder()// 子组件重新开始监听
-    showAudioInput()
+    if (isAudioInput.value)// 如果开启了语音输入
+      startAudioInput()
   }
 }
 
@@ -545,27 +557,31 @@ async function onConversation(systemMessage: string) {
             chunk = responseText.substring(lastIndex)// 如果找到了换行符，这一行将 chunk 更新为从最后一个换行符开始到文本末尾的部分，以此来提取最后一行数据。
           try {
             const data = JSON.parse(chunk)
-            // console.log(data)
 
-            // 实时语音播报
             let input = data.text.substring(previousText.length)
             // console.log(data)
-            if ((playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) || data.detail.choices[0].finish_reason === 'stop') { // 是否包含需要断句的标点符号
+            // console.log(input)
+            const isStop = data.detail.choices[0].finish_reason === 'stop'
+            if ((playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) || isStop) { // 是否包含需要断句的标点符号
               let isEnqueueAudio = false
               if (!punctuationRegexOnly.test(input)) { // 如果不全是标点符号
-                if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
+                if (isStop) { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
                   isEnqueueAudio = true
                   updateQueueLength(queueIndex + 1)
                 }
                 else if (punctuationRegex.test(input)) { // 如果存在标点符号
                   input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-                  console.log(input)
                   isEnqueueAudio = true
                 }
                 if (isEnqueueAudio) {
                   previousText = previousText + input
                   // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
                   enqueueAudio(input.replace(/#/g, ''), queueIndex++)
+                }
+              }
+              else { // glm-4以及有的模型,stop的时候input为空,需要设置播放列表的长度
+                if (isStop) { // 最后一行了
+                  updateQueueLength(queueIndex)
                 }
               }
             }
@@ -721,22 +737,27 @@ async function onRegenerate(index: number) {
 
             // 实时语音播报
             let input = data.text.substring(previousText.length)
-            if (playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) { // 是否包含需要断句的标点符号
+            const isStop = data.detail.choices[0].finish_reason === 'stop'
+            if ((playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) || isStop) { // 是否包含需要断句的标点符号
               let isEnqueueAudio = false
               if (!punctuationRegexOnly.test(input)) { // 如果不全是标点符号
-                if (data.detail.choices[0].finish_reason === 'stop') { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
+                if (isStop) { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
                   isEnqueueAudio = true
                   updateQueueLength(queueIndex + 1)
                 }
                 else if (punctuationRegex.test(input)) { // 如果存在标点符号
                   input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-                  console.log(input)
                   isEnqueueAudio = true
                 }
                 if (isEnqueueAudio) {
                   previousText = previousText + input
                   // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
                   enqueueAudio(input.replace(/#/g, ''), queueIndex++)
+                }
+              }
+              else { // glm-4以及有的模型,stop的时候input为空,需要设置播放列表的长度
+                if (isStop) { // 最后一行了
+                  updateQueueLength(queueIndex)
                 }
               }
             }
@@ -1122,13 +1143,15 @@ function togglePlay() {
                 <FontAwesomeIcon icon="fas fa-history" />
               </span>
             </HoverButton>
-            <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="语音输入" @click="showAudioInput">
-              <span class="text-xl text-[#4f555e] dark:text-white">
-                <!-- <SvgIcon icon="lets-icons:sound-max-duotone" /> -->
+            <HoverButton v-if="businessType !== 10001 && businessType !== 10002" :title="isAudioInput ? '当前已启用语音输入' : '当前禁用语音输入'">
+              <span v-if="isAudioInput" class="text-xl text-[#4b9e5f]" @click="stopAudioInput">
                 <FontAwesomeIcon icon="fas fa-microphone-lines" />
               </span>
+              <span v-else class="text-xl text-[#a8071a]" @click="startAudioInput">
+                <FontAwesomeIcon icon="fas fa-microphone-lines-slash" />
+              </span>
             </HoverButton>
-            <AudioEnter v-if="showAudioInputComponent" ref="audioEnterRef" @close-audio="closeAudio" @hide-audio-input="hideAudioInput" />
+            <AudioEnter v-if="showAudioInputComponent" ref="audioEnterRef" @close-audio="closeAudio" @stop-audio-input="stopAudioInput" />
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
               <template #default="{ handleInput, handleBlur, handleFocus }">
                 <NInput
