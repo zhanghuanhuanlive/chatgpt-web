@@ -22,7 +22,7 @@ export default {
   //   },
 
   // },
-  emits: ['closeAudio'],
+  emits: ['closeAudio', 'hideAudioInput'],
   data() {
     return {
       isShow: false, // 是否显示柱状音浪
@@ -96,6 +96,7 @@ export default {
     // this.startCanvas()
     document.addEventListener('keydown', this.handleKeyDown)// 监听按键
     // this.toggleRecording() // 页面初始化完成后，自动开始录音
+    console.log('onMounted')
     if (!this.beginRecoding)
       this.startRecorder()
   },
@@ -108,8 +109,12 @@ export default {
       if (event.key === 'Escape' || event.keyCode === 27) {
         // 当按下 ESC 键时触发的操作
         console.log('ESC 键被按下了')
-        this.beginRecoding = false
-        this.$emit('closeAudio', null)
+        this.close()
+        // this.beginRecoding = false
+        // this.stopRecorder() // 停止录音
+        // this.nowDuration = null
+        // this.drawColuList = []
+        // this.$emit('hideAudioInput', null)
         // 这里可以执行其他操作
       }
     },
@@ -394,7 +399,7 @@ export default {
           waveH = 35
         // if (newDb >)
         // console.log(waveH)
-        this.drawColuList.push(waveH)
+        this.drawColuList.push(newDb)
       }
       // console.log(this.drawColuList)
       this.$forceUpdate()
@@ -425,7 +430,7 @@ export default {
       // 检测静音条件
       if (this.silenceStartTime && this.needCheckSlicence) {
         const silenceDuration = currentTime - this.silenceStartTime// 静音时长，ms
-        if ((this.talkingDetected && silenceDuration > this.silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
+        if (this.beginRecoding && (this.talkingDetected && silenceDuration > this.silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
           this.needCheckSlicence = false
           // 结束录音
           cancelAnimationFrame(this.drawRecordId) // 停止drawRecordColu的调用
@@ -439,8 +444,9 @@ export default {
           // 清理逻辑
           this.cleanupAfterRecording()
         }
-        else if (!this.talkingDetected && silenceDuration > this.silenceDurationThreshold) { // 没人说话，且静音超过5000ms
+        else if (this.beginRecoding && !this.talkingDetected && silenceDuration > this.silenceDurationThreshold) { // 没人说话，且静音超过5000ms
           this.needCheckSlicence = false
+          console.log(`this.beginRecoding: ${this.beginRecoding}`)
           console.log(`silenceDuration > 5: ${silenceDuration}`)
           this.toggleRecording()// 结束录音，不提交
           this.cleanupAfterRecording()
@@ -490,7 +496,9 @@ export default {
         this.beginRecoding = false
         this.stopRecorder() // 停止录音
       }
-      this.$emit('closeAudio', null)
+      this.nowDuration = null
+      this.drawColuList = []
+      this.$emit('hideAudioInput', null)
     },
     // 销毁实例
     beforeDestroy() {
@@ -551,13 +559,17 @@ export default {
 
   <style scoped lang="scss">
   .audio-enter {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 100%;
     z-index: 999999999;
-    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 999999999;
+  background-color: rgba(0, 0, 0, 0.5);
 
     .custom-overlay {
       // background-color: rgba(0, 0, 0, 0.8);
@@ -565,11 +577,10 @@ export default {
 
     .audio-pie {
       z-index: 999;
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 174px;
-      text-align: center;
+      display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 
       .audio-pie_txt {
         height: 20px;
@@ -590,20 +601,20 @@ export default {
         line-height: 20px;
       }
       .audio-pie_audio--osc {
-        width: 157px;
-        height: 44px;
-  //      background: #6DD400;
-        margin: 24px auto 0;
-        display: flex;align-items: center;
+        display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 157px;
+  height: 44px;
+  margin: 0 auto;
 
         .audio-pie_audio--osc_item {
           width: 2px;
-          background-color: rgba(109, 212, 0, 1);
-          border-radius: 1000px;
-
-          &:not(:first-child) {
-            margin-left: 3px;
-          }
+    background-color: rgba(109, 212, 0, 1);
+    border-radius: 1000px;
+    &:not(:first-child) {
+      margin-left: 3px;
+    }
         }
       }
       .audio-pie_btn {

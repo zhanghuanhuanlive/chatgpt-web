@@ -208,6 +208,7 @@ async function handleAudioInput(audioBlob: Blob) {
 }
 // 隐藏语音对话
 function hideAudioInput() {
+  console.log('hideAudioInput')
   showAudioInputComponent.value = false
 }
 // 显示语音对话
@@ -1144,7 +1145,7 @@ function togglePlay() {
                 <FontAwesomeIcon icon="fas fa-microphone-lines" />
               </span>
             </HoverButton>
-            <AudioEnter v-if="showAudioInputComponent" ref="audioEnterRef" @close-audio="closeAudio" />
+            <AudioEnter v-if="showAudioInputComponent" ref="audioEnterRef" @close-audio="closeAudio" @hide-audio-input="hideAudioInput" />
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
               <template #default="{ handleInput, handleBlur, handleFocus }">
                 <NInput
