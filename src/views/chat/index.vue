@@ -141,7 +141,7 @@ function findItemsWithModel(data) {
 
 function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
-  showAudioInputComponent.value = false
+  hideAudioInput()
   if (audioBlob === null) {
     setTimeout(() => {
       showAudioInput()
@@ -188,8 +188,15 @@ async function handleAudioInput(audioBlob: Blob) {
       throw new Error(`服务器响应错误：${response.status}`)
 
     const result = await response.json()// 如果是json：response.json()
+    const text = result.text
     // console.log(result)
-    prompt.value = result.text // 更新 prompt 的值
+    if (text.includes('停止对话') || text.includes('停止会话')) {
+      hideAudioInput()
+    }
+    else {
+      prompt.value = result.text // 更新 prompt 的值
+      handleSubmit()// 自动提交转写后的内容
+    }
     // loadingBar.finish() // 完成后隐藏加载条
   }
   catch (error) {
@@ -197,13 +204,15 @@ async function handleAudioInput(audioBlob: Blob) {
   }
   finally {
     isSpinning.value = false // 加载结束，隐藏全局加载状态
-    handleSubmit()// 自动提交转写后的内容
   }
 }
-
+// 隐藏语音对话
+function hideAudioInput() {
+  showAudioInputComponent.value = false
+}
+// 显示语音对话
 function showAudioInput() {
   showAudioInputComponent.value = true
-  // console.log(showAudioInputBtn)
 }
 
 // 未知原因刷新页面，loading 状态不会重置，手动重置
@@ -305,6 +314,7 @@ async function handleUploadAudio(files: FileList | null) {
     //
     const transcription = result.text
     // console.log(transcription)
+
     const uploadedFileName = result.fileName
     // 移除 console.log，或者替换为其他日志记录方式
 
