@@ -197,6 +197,9 @@ async function handleAudioInput(audioBlob: Blob) {
       // hideAudioInput()
       stopAudioInput()
     }
+    else if (text.includes('打赏支持明镜与点点栏目')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
+      startAudioInput()
+    }
     else {
       prompt.value = result.text // 更新 prompt 的值
       handleSubmit()// 自动提交转写后的内容
