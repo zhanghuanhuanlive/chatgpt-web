@@ -3,7 +3,7 @@ import { defineAsyncComponent, ref } from 'vue'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faCog } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { HoverButton, UserAvatar } from '@/components/common'
+import { HoverButton } from '@/components/common'
 
 library.add(faCog)
 
@@ -14,13 +14,12 @@ const show = ref(false)
 
 <template>
   <footer class="flex items-center justify-between min-w-0 p-4 overflow-hidden border-t dark:border-neutral-800">
-    <div class="flex-1 flex-shrink-0 overflow-hidden">
+    <!-- <div class="flex-1 flex-shrink-0 overflow-hidden">
       <UserAvatar />
-    </div>
+    </div> -->
 
-    <HoverButton @click="show = true">
+    <HoverButton title="设置" @click="show = true">
       <span class="text-xl text-[#4f555e] dark:text-white">
-        <!-- <SvgIcon icon="ri:settings-4-line" /> -->
         <FontAwesomeIcon icon="fas fa-cog" />
       </span>
     </HoverButton>

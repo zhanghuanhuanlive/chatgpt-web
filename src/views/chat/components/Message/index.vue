@@ -1,21 +1,21 @@
 <script setup lang='ts'>
 import { computed, ref } from 'vue'
-import { NDropdown, useMessage } from 'naive-ui'
-import { faArrowRotateLeft, faCopy, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { NButton, NDropdown, useMessage } from 'naive-ui'
+import { faArrowRotateLeft, faCopy, faEllipsisVertical, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import AvatarComponent from './Avatar.vue'
 import TextComponent from './Text.vue'
 import { useIconRender } from '@/hooks/useIconRender'
-import { t } from '@/locales'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { copyToClip } from '@/utils/copy'
+import { t } from '@/locales'
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<Emit>()
 
-library.add(faArrowRotateLeft, faCopy, faEllipsisVertical)
+library.add(faArrowRotateLeft, faCopy, faEllipsisVertical, faTrashAlt)
 
 interface Props {
   dateTime?: string
@@ -42,6 +42,8 @@ const asRawText = ref(props.inversion)
 
 const messageRef = ref<HTMLElement>()
 
+const showButtons = ref(false)
+
 const options = computed(() => {
   const common = [
     {
@@ -49,20 +51,20 @@ const options = computed(() => {
       key: 'copyText',
       icon: iconRender({ icon: 'ri:file-copy-2-line' }),
     },
-    {
-      label: t('common.delete'),
-      key: 'delete',
-      icon: iconRender({ icon: 'ri:delete-bin-line' }),
-    },
+    // {
+    //   label: t('common.delete'),
+    //   key: 'delete',
+    //   icon: iconRender({ icon: 'ri:delete-bin-line' }),
+    // },
   ]
 
-  if (!props.inversion) {
-    common.unshift({
-      label: asRawText.value ? t('chat.preview') : t('chat.showRawText'),
-      key: 'toggleRenderType',
-      icon: iconRender({ icon: asRawText.value ? 'ic:outline-code-off' : 'ic:outline-code' }),
-    })
-  }
+  // if (!props.inversion) {
+  //   common.unshift({
+  //     label: asRawText.value ? t('chat.preview') : t('chat.showRawText'),
+  //     key: 'toggleRenderType',
+  //     icon: iconRender({ icon: asRawText.value ? 'ic:outline-code-off' : 'ic:outline-code' }),
+  //   })
+  // }
 
   return common
 })
@@ -80,10 +82,10 @@ function handleSelect(key: 'copyText' | 'delete' | 'toggleRenderType') {
   }
 }
 
-function handleRegenerate() {
-  messageRef.value?.scrollIntoView()
-  emit('regenerate')
-}
+// function handleRegenerate() {
+//   messageRef.value?.scrollIntoView()
+//   emit('regenerate')
+// }
 
 async function handleCopy() {
   try {
@@ -110,10 +112,25 @@ async function handleCopy() {
     >
       <AvatarComponent :image="inversion" />
     </div>
-    <div class="overflow-hidden text-sm " :class="[inversion ? 'items-end' : 'items-start']">
-      <p class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
-        {{ dateTime }}
-      </p>
+    <div
+      class="overflow-hidden text-sm " :class="[inversion ? 'items-end' : 'items-start']"
+      @mouseenter="showButtons = true"
+      @mouseleave="showButtons = false"
+    >
+      <div class="flex items-center">
+        <div class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']" style="height: 23px;line-height: 23px;">
+          <text class="mr-2">
+            {{ dateTime }}
+          </text>
+          <NButton v-show="showButtons && !inversion" quaternary size="tiny" @click="handleCopy">
+            <FontAwesomeIcon icon="fas fa-copy" />
+          </NButton>
+          <!-- <NButton v-show="showButtons" quaternary size="tiny" @click="emit('delete')">
+            <FontAwesomeIcon icon="fas fa-trash-alt" />
+          </NButton> -->
+        </div>
+      </div>
+
       <div
         class="flex items-end gap-1 mt-2"
         :class="[inversion ? 'flex-row-reverse' : 'flex-row']"
@@ -127,14 +144,15 @@ async function handleCopy() {
           :as-raw-text="asRawText"
         />
         <div class="flex flex-col">
-          <button
+          <!-- <button
             v-if="!inversion"
             class="mb-2 transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-300"
             @click="handleRegenerate"
           >
             <FontAwesomeIcon icon="fas fa-arrow-rotate-left" />
-          </button>
+          </button> -->
           <NDropdown
+            v-if="isMobile"
             :trigger="isMobile ? 'click' : 'hover'"
             :placement="!inversion ? 'right' : 'left'"
             :options="options"
