@@ -193,7 +193,7 @@ async function handleAudioInput(audioBlob: Blob) {
     const result = await response.json()// 如果是json：response.json()
     const text = result.text
     // console.log(result)
-    if (text.includes('停止对话') || text.includes('停止会话') || text.includes('结束会话') || text.includes('结束对话')) {
+    if (text.includes('停止对话') || text.includes('停止会话') || text.includes('结束会话') || text.includes('结束对话') || text.includes('再见')) {
       // hideAudioInput()
       stopAudioInput()
     }
