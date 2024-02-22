@@ -45,8 +45,8 @@ export default {
       // checkingSilence: false, // 正在监测是否静音
       // 增加静音监测相关的属性
       silenceStartTime: null, // 静音开始的时间
-      silenceDurationThresholdAfterTalk: 1500, // 静音时长的阈值，有人说过话以后，超过这个值，就会停止录音
-      silenceDurationThreshold: 5000, // 静音时长的阈值，没人说话的情况下超过这个值，，就会停止录音
+      silenceDurationThresholdAfterTalk: 2000, // 单位ms，静音时长的阈值，有人说过话以后，超过这个时长，就会停止录音
+      silenceDurationThreshold: 5000, // 静音时长的阈值，没人说话的情况下超过这个值，就会停止录音
       talkDurationThreshold: 500, // 说话时长的阈值，超过这个值，才会提交进行撰写
       talkingStartTime: null, // 监测到说话开始的时间
       talkingDuration: null, // 说话的时长

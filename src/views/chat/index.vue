@@ -200,7 +200,8 @@ async function handleAudioInput(audioBlob: Blob) {
     const result = await response.json()// 如果是json：response.json()
     const text = result.text
     // console.log(result)
-    if (text.includes('停止对话') || text.includes('停止会话') || text.includes('结束会话') || text.includes('结束对话') || text.includes('再见') || text.includes('Goodbye') || text.includes('Bye bye') || text.includes('Thank you') || text.includes('Stop')) {
+
+    if (businessType !== 9001 && (text.includes('停止对话') || text.includes('停止会话') || text.includes('结束会话') || text.includes('结束对话') || text.includes('再见') || text.includes('谢谢'))) {
       // hideAudioInput()
       stopAudioInput()
     }
@@ -402,7 +403,8 @@ function handleSubmit() {
 }
 
 // Modify enqueueAudio to accept an index
-let queue: Blob[] = []// 要播放音频的队列
+let audioBlobQueue: Blob[] = []// 要播放音频的队列
+let textQueue: str[] = []// 音频对应的文字的队列
 let currentIndex = 0 // 跟踪当前处理的音频索引
 const queueLength = ref(100)// 要播放的队列长度，因为要播放的队列长度是未知的，先设置为100
 async function enqueueAudio(message, index) {
@@ -412,7 +414,8 @@ async function enqueueAudio(message, index) {
     voice: businessType === 9001 ? 'en-US-AriaNeural' : '',
   }
   const audioBlob = await fetchAndConvertToAudio(params)
-  queue[index] = audioBlob
+  audioBlobQueue[index] = audioBlob
+  textQueue[index] = message
   // console.log(`${index} ${queueFinished.value} ${isPlaying.value}`)
 
   // If this is the first item and nothing is playing, start playback
@@ -432,11 +435,12 @@ async function playNextAudio() {
   if (currentIndex < queueLength.value) {
     isPlaying.value = true
     const index = currentIndex++
-    while (queue[index] === undefined) {
+    while (audioBlobQueue[index] === undefined) {
     // console.log(`wait: ${index} of ${queueLength.value}`)
       await new Promise(resolve => setTimeout(resolve, 50))
     }
-    const audioBlob = queue[index]
+    const audioBlob = audioBlobQueue[index]
+    const nowText = textQueue[index]
     const audioUrl = URL.createObjectURL(audioBlob)
     if (audioElement.value !== null) {
       audioElement.value.src = audioUrl
@@ -445,8 +449,12 @@ async function playNextAudio() {
         if (audioElement.value !== null) {
           audioElement.value.onended = () => {
             // isPlaying.value = false
-            console.log(`next id is: ${currentIndex} of ${queueLength.value}`)
-            playNextAudio() // 尝试播放下一个音频片段
+            // console.log(`next id is: ${currentIndex} of ${queueLength.value}`)
+            if (nowText.endsWith('See you!') || nowText.endsWith('[See you!]'))
+              stopAudioInput()
+
+            else
+              playNextAudio() // 尝试播放下一个音频片段
           }
         }
       }).catch((error) => {
@@ -552,7 +560,8 @@ async function onConversation(filePath: string) {
       // currentIndex = 0
       // queueFinished.value = false
       queueLength.value = 100
-      queue = []
+      audioBlobQueue = []
+      textQueue = []
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: postMessage,
         options,
@@ -730,7 +739,8 @@ async function onRegenerate(index: number) {
       // currentIndex = 0
       // queueFinished.value = false
       queueLength.value = 100
-      queue = []
+      audioBlobQueue = []
+      textQueue = []
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         prompt: message,
         options,
