@@ -82,8 +82,9 @@ interface ConfigState {
 }
 const config = ref<ConfigState>()
 // let keyLabelMap: Map<string, string>
-let businessType = 0
+let businessType = 0 // 对应配置文件中的key，9001是口语
 let currentBusinessType = 'ChatGLM3'
+let systemMessage = '' // 每个模型对应的系统提示词
 let affixes
 async function fetchConfig() {
   try {
@@ -99,7 +100,7 @@ async function fetchConfig() {
     // 构造新的对象数组，仅包含具有 model 值的项
     // const filteredData = jsonData.filter(item => item.model)
 
-    const models: Array<{ key: string; label: string; model: string }> = findItemsWithModel(JSON.parse(menu))
+    const models: Array<{ key: string; label: string; model: string; systemMessage: string }> = findItemsWithModel(JSON.parse(menu))
     // console.log(models)
     // keyLabelMap = createKeyLabelMap(JSON.parse(menu))
     // console.log(menu)
@@ -111,6 +112,8 @@ async function fetchConfig() {
     if (item) {
       currentBusinessType = item.label || 'ChatGLM3'
       model = item.model
+      if (item.systemMessage)
+        systemMessage = item.systemMessage
     }
     localStorage.setItem('model', model)
     localStorage.setItem('menu', menu)
@@ -123,13 +126,14 @@ async function fetchConfig() {
 
 // 递归函数，用于遍历嵌套的数据结构
 function findItemsWithModel(data) {
-  const result: Array<{ key: string; label: string; model: string }> = []
+  const result: Array<{ key: string; label: string; model: string; systemMessage: string }> = []
   for (const item of data) {
     if (item.model) {
       result.push({
         label: item.label,
         key: item.key,
         model: item.model,
+        systemMessage: item.systemMessage,
       })
     }
     if (item.children && item.children.length > 0) {
@@ -178,9 +182,9 @@ async function handleAudioInput(audioBlob: Blob) {
   // 如果是域名，则不添加端口号
     whisperApiBaseUrl = `${reverseProxy}/transcribe/transcribe/`
   }
+  if (businessType === 9001)// 9001是英语角
+    whisperApiBaseUrl = `${whisperApiBaseUrl}_en`
   try {
-    // http://172.16.1.118:7001/transcribe/
-    // http://fastgpt.learnoh.cn/transcribe
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
       body: formData,
@@ -363,7 +367,7 @@ async function handleUploadAudio(files: FileList | null) {
     // 直接向后台发送转写或总结的请求
     // console.log(uploadedFileName)
     if (undefined !== uploadedFileName && uploadedFileName !== '')
-      onConversation(uploadedFileName)// 把文件名作为systemMessage传给后台
+      onConversation(uploadedFileName)// 把文件名作为filePath传给后台
     else
       onConversation('')
   }
@@ -398,8 +402,12 @@ let queue: Blob[] = []// 要播放音频的队列
 let currentIndex = 0 // 跟踪当前处理的音频索引
 const queueLength = ref(100)// 要播放的队列长度，因为要播放的队列长度是未知的，先设置为100
 async function enqueueAudio(message, index) {
-  console.log(`${index} ${message} ${isPlaying.value}`)
-  const audioBlob = await fetchAndConvertToAudio(message)
+  // console.log(`${index} ${message} ${isPlaying.value}`)
+  const params = {
+    input: message,
+    voice: businessType === 9001 ? 'en-US-AriaNeural' : '',
+  }
+  const audioBlob = await fetchAndConvertToAudio(params)
   queue[index] = audioBlob
   // console.log(`${index} ${queueFinished.value} ${isPlaying.value}`)
 
@@ -471,11 +479,11 @@ function extractLastPunctuation(str) {
     return str
   }
 }
-// systemMessage就是上传的文件(音频、文件)在服务器的绝对路径
-async function onConversation(systemMessage: string) {
+// filePath就是上传的文件(音频、文件)在服务器的绝对路径，如果从输入框提交，filePath为空
+async function onConversation(filePath: string) {
   let message = prompt.value
-  // const postMessage = `${message}**##**${systemMessage}**##**`
-  const postMessage = systemMessage === '' ? message : `${message}**##**${systemMessage}**##**`
+  // const postMessage = `${message}**##**${filePath}**##**`
+  const postMessage = filePath === '' ? message : `${message}**##**${filePath}**##**`
   // console.log(message)
 
   if (loading.value)
@@ -545,9 +553,9 @@ async function onConversation(systemMessage: string) {
         prompt: postMessage,
         options,
         signal: controller.signal,
-        businessType,
+        businessType, // 自己加的参数，配置文件中每个模型对应的key
         // needTts,
-        systemMessage,
+        systemMessage, // 自己加的参数，配置文件中每个模型对应的系统提示词
         onDownloadProgress: ({ event }) => {
           // console.log('--------------')
           // console.log(event)

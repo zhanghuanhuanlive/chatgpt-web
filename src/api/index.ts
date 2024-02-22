@@ -56,7 +56,9 @@ export function fetchChatAPIProcess<T = any>(
       top_p,
     }
   }
+  // console.log(settingStore.systemMessage)// 在页面设置中的提示词
   data.systemMessage = (params.systemMessage !== null && params.systemMessage !== undefined && params.systemMessage !== '') ? params.systemMessage : settingStore.systemMessage
+  console.log(data)
   // if (params.)
 
   // console.log('start request 111')
