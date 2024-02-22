@@ -182,6 +182,7 @@ async function handleAudioInput(audioBlob: Blob) {
   // 如果是域名，则不添加端口号
     whisperApiBaseUrl = `${reverseProxy}/transcribe/transcribe`
   }
+  console.log(whisperApiBaseUrl)
   if (businessType === 9001)// 9001是英语角
     whisperApiBaseUrl = `${whisperApiBaseUrl}_en`
   try {

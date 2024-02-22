@@ -58,7 +58,7 @@ export function fetchChatAPIProcess<T = any>(
   }
   // console.log(settingStore.systemMessage)// 在页面设置中的提示词
   data.systemMessage = (params.systemMessage !== null && params.systemMessage !== undefined && params.systemMessage !== '') ? params.systemMessage : settingStore.systemMessage
-  console.log(data)
+  // console.log(data)
   // if (params.)
 
   // console.log('start request 111')
@@ -82,7 +82,8 @@ export function fetchChatAPIProcess<T = any>(
 }
 
 // 将文本消息转换为音频Blob
-export async function fetchAndConvertToAudio(message) {
+// params: input、voice
+export async function fetchAndConvertToAudio(params) {
   // fetch('/api/tts-process', {
   //   method: 'POST',
   //   headers: { 'Content-Type': 'application/json' },
@@ -92,15 +93,16 @@ export async function fetchAndConvertToAudio(message) {
   //     if (!response.ok)
   //       throw new Error('Failed to fetch audio')
   //     const b = response.blob()
-  //     console.log(message)
+  //     console.log(params)
   //     console.log(b)
   //     return b
   //     // return response.blob() // 将响应体转换为Blob
   //   })
+  console.log(params)
   const response = await fetch('/api/tts-process', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify(params),
   })
 
   if (!response.ok)
