@@ -184,7 +184,7 @@ async function handleAudioInput(audioBlob: Blob) {
   }
   console.log(whisperApiBaseUrl)
   if (businessType === 9001)// 9001是英语角
-    whisperApiBaseUrl = `${whisperApiBaseUrl}_en`
+    whisperApiBaseUrl = `${whisperApiBaseUrl}_en/`// 此处必须有斜线结尾
   try {
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
@@ -212,7 +212,8 @@ async function handleAudioInput(audioBlob: Blob) {
     // loadingBar.finish() // 完成后隐藏加载条
   }
   catch (error) {
-    console.error('转录失败:', error)
+    isAudioInput.value = false // 设置为未开启语音输入
+    console.error('转写失败:', error)
   }
   finally {
     isSpinning.value = false // 加载结束，隐藏全局加载状态
