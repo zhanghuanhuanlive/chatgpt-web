@@ -411,7 +411,7 @@ async function enqueueAudio(message, index) {
   // console.log(`${index} ${message} ${isPlaying.value}`)
   const params = {
     input: message,
-    voice: businessType === 9001 ? 'en-US-AriaNeural' : '',
+    voice: businessType === 9001 ? 'en-US-AriaNeural' : 'zh-CN-XiaoxiaoNeural',
   }
   const audioBlob = await fetchAndConvertToAudio(params)
   audioBlobQueue[index] = audioBlob
