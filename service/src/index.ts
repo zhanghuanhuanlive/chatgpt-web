@@ -118,8 +118,10 @@ router.post('/tts-process', auth, async (req, res) => {
     //     // return response.blob() // 将响应体转换为Blob
     //     response.body.pipe(res)
     //   })
-    const params = req.body.params
+    const params = req.body
     params.model = 'tts'
+
+    // console.log(params)
     const response = await fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
       method: 'POST',
       headers: {
@@ -132,6 +134,8 @@ router.post('/tts-process', auth, async (req, res) => {
       res.status(500).send('Error fetching audio data')
       return
     }
+
+    // console.log(res)
     response.body.pipe(res)
   }
   catch (error) {
