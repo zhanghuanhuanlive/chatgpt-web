@@ -182,9 +182,11 @@ async function handleAudioInput(audioBlob: Blob) {
   // 如果是域名，则不添加端口号
     whisperApiBaseUrl = `${reverseProxy}/transcribe/transcribe`
   }
-  console.log(whisperApiBaseUrl)
+  // console.log(whisperApiBaseUrl)
   if (businessType === 9001)// 9001是英语角
     whisperApiBaseUrl = `${whisperApiBaseUrl}_en/`// 此处必须有斜线结尾
+  else
+    whisperApiBaseUrl = `${whisperApiBaseUrl}/`
   try {
     const response = await fetch(whisperApiBaseUrl, {
       method: 'POST',
@@ -463,7 +465,7 @@ async function playNextAudio() {
   }
 }
 
-const punctuationRegex = /[!！，。;；?？\n]/ // 英文的句号有可能用在小数里,英文的逗号有可能用在科学计数里
+const punctuationRegex = businessType === 9001 ? /[!！,，。;；?？\n]/ : /[!！，。;；?？\n]/ // 英文的句号有可能用在小数里,英文的逗号有可能用在科学计数里
 const punctuationRegexOnly = /^[!！,，。;；?？\n]+$/ // 英文的句号有可能用在小数里,英文的逗号有可能用在科学计数里
 // 截取到最后一个标点符号
 function extractLastPunctuation(str) {
@@ -523,7 +525,7 @@ async function onConversation(filePath: string) {
     +uuid,
     {
       dateTime: new Date().toLocaleString(),
-      text: businessType === 10001 ? '转写中' : businessType === 10002 ? '总结中' : '思考中',
+      text: businessType === 10001 ? '转写中' : businessType === 10002 ? '总结中' : businessType === 9001 ? 'Thinking' : '思考中',
       loading: true,
       inversion: false,
       error: false,
