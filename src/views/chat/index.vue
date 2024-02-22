@@ -1080,7 +1080,7 @@ function togglePlay() {
           <template v-else> -->
             <!-- <template> -->
             <div class="flex items-center justify-center mt-4 text-center text-neutral-300">
-              <SvgIcon icon="fluent:brain-circuit-24-filled" class="mr-2 text-3xl" />
+              <!-- <SvgIcon icon="fluent:brain-circuit-24-filled" class="mr-2 text-3xl" /> -->
               <span>{{ currentBusinessType }}</span>
             </div>
             <div>
