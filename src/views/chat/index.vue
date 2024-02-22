@@ -404,7 +404,7 @@ function handleSubmit() {
 
 // Modify enqueueAudio to accept an index
 let audioBlobQueue: Blob[] = []// 要播放音频的队列
-let textQueue: str[] = []// 音频对应的文字的队列
+let textQueue: string[] = []// 音频对应的文字的队列
 let currentIndex = 0 // 跟踪当前处理的音频索引
 const queueLength = ref(100)// 要播放的队列长度，因为要播放的队列长度是未知的，先设置为100
 async function enqueueAudio(message, index) {
