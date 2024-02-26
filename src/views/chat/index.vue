@@ -210,7 +210,7 @@ async function handleAudioInput(audioBlob: Blob) {
       // hideAudioInputComponent()
       stopAudioInput()
     }
-    else if (text.includes('打赏支持明镜与点点栏目')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
+    else if (text.includes('打赏支持明镜与点点栏目') || text.includes('Thanks for watching!')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
       startAudioInput()
     }
     else {

@@ -395,27 +395,36 @@ export default {
 
       this.drawColuList = []
       for (let i = 0; i < rstArr.length; i++) {
+        if (i >= 9)
+          break
         // var v = rstArr[i] / 128.0;
         // var h = v * this.waveCanvas.height / 3;
         // this.drawColuList.push(h)
         // 根据数值大小，设置音波柱状的高度
-        const newDb = rstArr[i]
         let waveH = 10
+        const newDb = rstArr[i]
+        if (i < 4)
+          waveH = newDb - ((5 - i) * 15)
+        else if (i === 4)
+          waveH = newDb - 3 * 15
+        else if (i >= 5)
+          waveH = newDb - ((i - 3) * 15)
+
         // if (newDb >= 150)
         //   console.log(newDb)
-        if (newDb >= 128 && newDb <= 140)
-          waveH = 15
-        else if (newDb >= 141 && newDb <= 160)
-          waveH = 20
-        else if (newDb >= 161 && newDb <= 180)
-          waveH = 25
-        else if (newDb >= 181 && newDb <= 200)
-          waveH = 30
-        else if (newDb > 200)
-          waveH = 35
+        // if (newDb >= 128 && newDb <= 140)
+        //   waveH = 15
+        // else if (newDb >= 141 && newDb <= 160)
+        //   waveH = 20
+        // else if (newDb >= 161 && newDb <= 180)
+        //   waveH = 25
+        // else if (newDb >= 181 && newDb <= 200)
+        //   waveH = 30
+        // else if (newDb > 200)
+        //   waveH = 35
         // if (newDb >)
         // console.log(waveH)
-        this.drawColuList.push(newDb)
+        this.drawColuList.push(waveH)
       }
       // console.log(this.drawColuList)
       this.$forceUpdate()
@@ -574,18 +583,29 @@ export default {
 </template>
 
   <style scoped lang="scss">
+  // @keyframes voice {
+  //   0% {
+  //     height: 50px;
+  //     opacity: .35;
+  //   }
+  //   100% {
+  //     // 静态定义高度，稍后我们将讨论如何使其动态
+  //     height: 100px;
+  //     opacity: 1;
+  //   }
+  // }
   .audio-enter {
     z-index: 999999999;
     display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 100%;
-  z-index: 999999999;
-  background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 999999999;
+    background-color: rgba(0, 0, 0, 0.5);
 
     .custom-overlay {
       // background-color: rgba(0, 0, 0, 0.8);
@@ -594,9 +614,9 @@ export default {
     .audio-pie {
       z-index: 999;
       display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
 
       .audio-pie_txt {
         height: 20px;
@@ -618,19 +638,29 @@ export default {
       }
       .audio-pie_audio--osc {
         display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 157px;
-  height: 44px;
-  margin: 0 auto;
-
+        justify-content: center;
+        align-items: center;
+        width: 157px;
+        height: 44px;
+        margin: 0 auto;
         .audio-pie_audio--osc_item {
-          width: 2px;
-    background-color: rgba(109, 212, 0, 1);
-    border-radius: 1000px;
-    &:not(:first-child) {
-      margin-left: 3px;
-    }
+          width: 10px;
+          background-color: rgba(109, 212, 0, 1);
+          border-radius: 5px;
+          // animation: voice 0ms -800ms linear infinite alternate;
+          &:not(:first-child) {
+            margin-left: 5px;
+          }
+          // &:nth-child(1)  { animation-duration: 474ms; }
+          // &:nth-child(2)  { animation-duration: 433ms; }
+          // &:nth-child(3)  { animation-duration: 407ms; }
+          // &:nth-child(4)  { animation-duration: 458ms; }
+          // &:nth-child(5)  { animation-duration: 400ms; }
+          // &:nth-child(6)  { animation-duration: 427ms; }
+          // &:nth-child(7)  { animation-duration: 441ms; }
+          // &:nth-child(8)  { animation-duration: 419ms; }
+          // &:nth-child(9)  { animation-duration: 487ms; }
+          // &:nth-child(10) { animation-duration: 442ms; }
         }
       }
       .audio-pie_btn {
