@@ -53,6 +53,7 @@ export default {
       talkingDetected: false, // 是否检测到有人说话
       needSubmit: false, // 是否需要提交录音数据
       needCheckSlicence: false, // 是否需要监测静音
+      hasPermission: false, // 是否取得了录音权限
     }
   },
   // watch: {
@@ -80,8 +81,8 @@ export default {
   },
   methods: {
     initRecorder() {
-      // if (!this.hasPermission) {
-      this.getPermission().then(() => {
+      if (this.hasPermission) {
+      // this.getPermission().then(() => {
         if (!this.recorder) {
           // 创建录音实例
           this.recorder = new Recorder({
@@ -117,8 +118,8 @@ export default {
           if (!this.beginRecoding)
             this.startRecorder()
         }
-      })
-      // }
+      // })
+      }
     },
     handleKeyDown(event) {
       if (event.key === 'Escape' || event.keyCode === 27) {
