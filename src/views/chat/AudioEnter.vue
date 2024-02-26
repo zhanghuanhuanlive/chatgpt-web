@@ -104,11 +104,11 @@ export default {
         // console.log('--------------END---------------')
       }
       // this.startCanvas()
-      document.addEventListener('keydown', this.handleKeyDown)// 监听按键
-      // this.toggleRecording() // 页面初始化完成后，自动开始录音
-      if (!this.beginRecoding)
-        this.startRecorder()
     }
+    document.addEventListener('keydown', this.handleKeyDown)// 监听按键
+    // this.toggleRecording() // 页面初始化完成后，自动开始录音
+    if (!this.beginRecoding)
+      this.startRecorder()
   },
   beforeUnmount() {
     console.log('beforeUnmount')
