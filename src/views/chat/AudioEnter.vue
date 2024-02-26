@@ -193,7 +193,7 @@ export default {
     },
     // 长按超过x毫秒-- 开始录音
     startRecorder() {
-      console.log('startRecorder')
+      // console.log('startRecorder')
       this.stopRecorder()
       this.isShow = true
       this.recorder.start().then(() => {
@@ -211,11 +211,11 @@ export default {
         this.startRecorder()
       }
       else if (this.needSubmit) {
-        this.stopRecorder() // 停止录音
-        this.isShow = false
+        // this.stopRecorder() // 停止录音
         const duration = this.recorder.duration
         // console.log(`this.needSubmit: ${this.needSubmit} ${duration}`)
         if (duration > 2) {
+          this.isShow = false
           this.$emit('closeAudio', this.recorder.getWAVBlob())
         }
         else {
@@ -459,9 +459,9 @@ export default {
           this.needCheckSlicence = false
           // 结束录音
           cancelAnimationFrame(this.drawRecordId) // 停止drawRecordColu的调用
-          console.log(`silenceDuration > 1.5: ${silenceDuration}`)
+          // console.log(`silenceDuration > 1.5: ${silenceDuration}`)
           this.talkingDuration = currentTime - this.talkingStartTime - this.silenceDurationThresholdAfterTalk // 说话时长
-          console.log(`talkingDuration: ${this.talkingDuration}`)
+          // console.log(`talkingDuration: ${this.talkingDuration}`)
           // if (this.talkingDuration > this.talkDurationThreshold) { // 说话时长大于1500ms
           this.needSubmit = true
           // }
@@ -471,8 +471,8 @@ export default {
         }
         else if (this.beginRecoding && !this.talkingDetected && silenceDuration > this.silenceDurationThreshold) { // 没人说话，且静音超过5000ms
           this.needCheckSlicence = false
-          console.log(`this.beginRecoding: ${this.beginRecoding}`)
-          console.log(`silenceDuration > 5: ${silenceDuration}`)
+          // console.log(`this.beginRecoding: ${this.beginRecoding}`)
+          // console.log(`silenceDuration > 5: ${silenceDuration}`)
           this.toggleRecording()// 结束录音，不提交
           this.cleanupAfterRecording()
         }
