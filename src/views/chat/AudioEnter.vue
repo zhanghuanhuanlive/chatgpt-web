@@ -67,6 +67,7 @@ export default {
   // },
   // 父组件通过v-if控制显示与隐藏时，true会调用mounted，false会调用beforeUnmount、unMounted
   mounted() {
+    console.log('onMounted')
     if (!this.hasPermission)
       this.getPermission()// 获取录音权限
     if (!this.recorder) {
@@ -100,12 +101,12 @@ export default {
       // this.startCanvas()
       document.addEventListener('keydown', this.handleKeyDown)// 监听按键
       // this.toggleRecording() // 页面初始化完成后，自动开始录音
-      console.log('onMounted')
       if (!this.beginRecoding)
         this.startRecorder()
     }
   },
   beforeUnmount() {
+    console.log('beforeUnmount')
     // 在组件销毁前移除事件监听
     document.removeEventListener('keydown', this.handleKeyDown)
     if (this.recorder) {
