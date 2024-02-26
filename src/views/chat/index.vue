@@ -501,8 +501,8 @@ async function playNextAudio() {
     isPlaying.value = false
     // startAudioEnterRecorder()// 子组件重新开始监听
     if (isAudioInput.value) { // 如果开启了语音输入，子组件开始录音
-      // startAudioInput()
-      startRecord()
+      startAudioInput()
+      // startRecord()
     }
   }
 }
