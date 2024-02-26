@@ -871,6 +871,7 @@ async function onRegenerate(index: number) {
         requestOptions: { prompt: message, options: { ...options } },
       },
     )
+    stopAudioInput() // TODO 如果开启了语音对话，是不是也应该播放点什么
   }
   finally {
     loading.value = false
@@ -1073,7 +1074,12 @@ function togglePlay() {
       <template v-if="isSpinning">
         <NSpin :show="isSpinning" class="global-spin">
           <template #description>
-            语音转写中，请稍后
+            <text v-if="businessType === 9001">
+              Wait a moment.
+            </text>
+            <text v-else>
+              请稍后
+            </text>
           </template>
         </NSpin>
       </template>
