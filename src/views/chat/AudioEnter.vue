@@ -68,7 +68,41 @@ export default {
   // 父组件通过v-if控制显示与隐藏时，true会调用mounted，false会调用beforeUnmount、unMounted
   mounted() {
     this.getPermission()// 获取录音权限
-    this.initRecorder()
+    if (!this.recorder) {
+      // 创建录音实例
+      this.recorder = new Recorder({
+        sampleBits: 16, // 采样位数，支持 8 或 16，默认是16
+        sampleRate: 48000, // 采样率，支持 11025、16000、22050、24000、44100、48000，根据浏览器默认值
+        numChannels: 1, // 声道，支持 1 或 2， 默认是1
+        // compiling: false,(0.x版本中生效,1.x增加中)  // 是否边录边转换，默认是false
+      })
+      // 监听录音变化等
+      // 监听录音变化
+      // const vm = this
+      this.recorder.onprogress = (params) => {
+        if (Math.floor(params.duration) === this.limitDuration)
+          this.touchend()
+
+        let d = Math.floor(params.duration)
+        d = Number(d) < 10 ? `0${d}` : d
+        d = `0:${d}`
+        this.nowDuration = d // directly setting the data property
+
+        // console.log('--------------START---------------')
+        // console.log('录音时长(秒)', params.duration)
+        // console.log('录音大小(字节)', params.fileSize);
+        // if (params.vol > 15)
+        //   console.log('录音音量百分比(%)', params.vol)
+        // console.log('当前录音的总数据([DataView, DataView...])', params.data)
+        // console.log('--------------END---------------')
+      }
+      // this.startCanvas()
+      document.addEventListener('keydown', this.handleKeyDown)// 监听按键
+      // this.toggleRecording() // 页面初始化完成后，自动开始录音
+      console.log('onMounted')
+      if (!this.beginRecoding)
+        this.startRecorder()
+    }
   },
   beforeUnmount() {
     // 在组件销毁前移除事件监听
@@ -83,41 +117,7 @@ export default {
     initRecorder() {
       if (this.hasPermission) {
       // this.getPermission().then(() => {
-        if (!this.recorder) {
-          // 创建录音实例
-          this.recorder = new Recorder({
-            sampleBits: 16, // 采样位数，支持 8 或 16，默认是16
-            sampleRate: 48000, // 采样率，支持 11025、16000、22050、24000、44100、48000，根据浏览器默认值
-            numChannels: 1, // 声道，支持 1 或 2， 默认是1
-            // compiling: false,(0.x版本中生效,1.x增加中)  // 是否边录边转换，默认是false
-          })
-          // 监听录音变化等
-          // 监听录音变化
-          // const vm = this
-          this.recorder.onprogress = (params) => {
-            if (Math.floor(params.duration) === this.limitDuration)
-              this.touchend()
 
-            let d = Math.floor(params.duration)
-            d = Number(d) < 10 ? `0${d}` : d
-            d = `0:${d}`
-            this.nowDuration = d // directly setting the data property
-
-            // console.log('--------------START---------------')
-            // console.log('录音时长(秒)', params.duration)
-            // console.log('录音大小(字节)', params.fileSize);
-            // if (params.vol > 15)
-            //   console.log('录音音量百分比(%)', params.vol)
-            // console.log('当前录音的总数据([DataView, DataView...])', params.data)
-            // console.log('--------------END---------------')
-          }
-          // this.startCanvas()
-          document.addEventListener('keydown', this.handleKeyDown)// 监听按键
-          // this.toggleRecording() // 页面初始化完成后，自动开始录音
-          console.log('onMounted')
-          if (!this.beginRecoding)
-            this.startRecorder()
-        }
       // })
       }
     },
