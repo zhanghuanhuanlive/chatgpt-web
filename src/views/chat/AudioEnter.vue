@@ -195,6 +195,7 @@ export default {
     startRecorder() {
       console.log('startRecorder')
       this.stopRecorder()
+      this.isShow = true
       this.recorder.start().then(() => {
         this.beginRecoding = true
         // this.drawRecordWave()// 开始绘制
@@ -221,13 +222,13 @@ export default {
           // this.stopRecorder()
           // this.$emit('closeAudio', null)
           this.startRecorder()// 录音时间太短,重新开始录音
-          this.isShow = true
+          // this.isShow = true
         }
       }
       else { // 不需要提交，是监测到静音阈值了
-        this.stopRecorder()
+        // this.stopRecorder()
         this.startRecorder()// 没有人说话,重新开始录音
-        this.isShow = true
+        // this.isShow = true
         // this.$emit('closeAudio', null)
       }
       this.beginRecoding = !this.beginRecoding

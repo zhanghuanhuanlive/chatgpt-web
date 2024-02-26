@@ -60,6 +60,7 @@ const showAudioInputComponent = ref(false) // 是否显示语音输入组件
 const isAudioInput = ref(false) // 是否已启用了语音输入
 interface AudioEnterMethods {
   destroyRecorder: () => void
+  startRecorder: () => void
 }
 const audioEnterRef = ref<AudioEnterMethods | null>(null)
 // const audioEnterRef = ref(null)// 引用的录音子组件
@@ -245,6 +246,16 @@ function startAudioInput() {
   if (!showAudioInputComponent.value)
     showAudioInputComponent.value = true
   isAudioInput.value = true
+}
+
+// 子组件开始录音
+function startRecord() {
+  if (audioEnterRef.value) {
+    nextTick(() => {
+      if (audioEnterRef.value)
+        audioEnterRef.value.startRecorder()
+    })
+  }
 }
 
 // 停止语音对话，销毁录音组件
@@ -489,8 +500,10 @@ async function playNextAudio() {
     // 如果没有更多音频并且队列已完成，重置状态
     isPlaying.value = false
     // startAudioEnterRecorder()// 子组件重新开始监听
-    if (isAudioInput.value)// 如果开启了语音输入
-      startAudioInput()
+    if (isAudioInput.value) { // 如果开启了语音输入，子组件开始录音
+      // startAudioInput()
+      startRecord()
+    }
   }
 }
 
@@ -661,6 +674,11 @@ async function onConversation(filePath: string) {
       })
       // markQueueAsFinished()
       updateChatSome(+uuid, dataSources.value.length - 1, { loading: false })
+      if (!playAudio.value && isAudioInput.value) { // 开启语音对话的情况下播放完音频会自动开始录音
+        setTimeout(() => {
+          startRecord()
+        }, 500)
+      }
     }
 
     await fetchChatAPIOnce()
