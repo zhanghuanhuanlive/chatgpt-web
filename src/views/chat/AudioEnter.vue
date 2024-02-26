@@ -67,7 +67,8 @@ export default {
   // },
   // 父组件通过v-if控制显示与隐藏时，true会调用mounted，false会调用beforeUnmount、unMounted
   mounted() {
-    this.getPermission()// 获取录音权限
+    if (!this.hasPermission)
+      this.getPermission()// 获取录音权限
     if (!this.recorder) {
       // 创建录音实例
       this.recorder = new Recorder({
@@ -203,11 +204,13 @@ export default {
       })
     },
     toggleRecording() { // PC
-      console.log(`toggleRecording： ${this.beginRecoding}`)
+      // console.log(`toggleRecording： ${this.beginRecoding}`)
       if (!this.beginRecoding) {
         this.startRecorder()
       }
       else if (this.needSubmit) {
+        this.stopRecorder() // 停止录音
+        this.isShow = false
         const duration = this.recorder.duration
         // console.log(`this.needSubmit: ${this.needSubmit} ${duration}`)
         if (duration > 2) {
@@ -215,16 +218,16 @@ export default {
         }
         else {
           // this.stopRecorder()
-          this.$emit('closeAudio', null)
-          // this.isShow = true
-          // this.startRecorder()// 录音时间太短,重新开始录音
+          // this.$emit('closeAudio', null)
+          this.startRecorder()// 录音时间太短,重新开始录音
+          this.isShow = true
         }
       }
-      else {
-        // this.stopRecorder()
-        // this.isShow = true
-        this.$emit('closeAudio', null)
-        // this.startRecorder()// 没有人说话,重新开始录音
+      else { // 不需要提交，是监测到静音阈值了
+        this.stopRecorder()
+        this.startRecorder()// 没有人说话,重新开始录音
+        this.isShow = true
+        // this.$emit('closeAudio', null)
       }
       this.beginRecoding = !this.beginRecoding
     },

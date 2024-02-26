@@ -151,16 +151,16 @@ function findItemsWithModel(data) {
 // 子组件AudioEnter调用此方法，结束录音，并上传音频文件或者继续录音用户的说话
 function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
-  hideAudioInputComponent()
+  // hideAudioInputComponent()
   if (audioBlob === null) {
     if (isAudioInput.value) { // 如果开启了语音输入
       setTimeout(() => {
         startAudioInput()
       }, 1000)
     } // 延迟1秒
-    return
+    // return
   }
-  handleAudioInput(audioBlob)
+  else { handleAudioInput(audioBlob) }
 }
 
 function isIpAddress(value) {
@@ -242,7 +242,8 @@ function hideAudioInputComponent() {
 }
 // 开始语音对话
 function startAudioInput() {
-  showAudioInputComponent.value = true
+  if (!showAudioInputComponent.value)
+    showAudioInputComponent.value = true
   isAudioInput.value = true
 }
 
