@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import type { Ref } from 'vue'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { NAlert, NAutoComplete, NButton, NGi, NGrid, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
@@ -56,8 +56,12 @@ const promptStore = usePromptStore()
 // 使用storeToRefs，保证store修改后，联想部分能够重新渲染
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
-const showAudioInputComponent = ref(false)
-const isAudioInput = ref(false)
+const showAudioInputComponent = ref(false) // 是否显示语音输入组件
+const isAudioInput = ref(false) // 是否已启用了语音输入
+interface AudioEnterMethods {
+  destroyRecorder: () => void
+}
+const audioEnterRef = ref<AudioEnterMethods | null>(null)
 // const audioEnterRef = ref(null)// 引用的录音子组件
 // const audioEnterRef = ref<typeof AudioEnter | null>(null)
 
@@ -144,9 +148,10 @@ function findItemsWithModel(data) {
   return result
 }
 
+// 子组件AudioEnter调用此方法，结束录音，并上传音频文件或者继续录音用户的说话
 function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
-  hideAudioInput()
+  hideAudioInputComponent()
   if (audioBlob === null) {
     if (isAudioInput.value) { // 如果开启了语音输入
       setTimeout(() => {
@@ -202,7 +207,7 @@ async function handleAudioInput(audioBlob: Blob) {
     // console.log(result)
 
     if (businessType !== 9001 && (text.includes('停止对话') || text.includes('停止会话') || text.includes('结束会话') || text.includes('结束对话') || text.includes('再见') || text.includes('谢谢'))) {
-      // hideAudioInput()
+      // hideAudioInputComponent()
       stopAudioInput()
     }
     else if (text.includes('打赏支持明镜与点点栏目')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
@@ -222,10 +227,18 @@ async function handleAudioInput(audioBlob: Blob) {
     isSpinning.value = false // 加载结束，隐藏全局加载状态
   }
 }
-// 隐藏语音对话
-function hideAudioInput() {
-  // console.log('hideAudioInput')
+// 隐藏语音对话组件
+function hideAudioInputComponent() {
+  // console.log('hideAudioInputComponent')
   showAudioInputComponent.value = false
+
+  // if (audioEnterRef.value) {
+  //   nextTick(() => {
+  //     if (audioEnterRef.value)
+  //       audioEnterRef.value.destroyRecorder()
+  //     showAudioInputComponent.value = false
+  //   })
+  // }
 }
 // 开始语音对话
 function startAudioInput() {
@@ -233,9 +246,15 @@ function startAudioInput() {
   isAudioInput.value = true
 }
 
-// 停止语音对话
+// 停止语音对话，销毁录音组件
 function stopAudioInput() {
-  hideAudioInput()
+  if (audioEnterRef.value) {
+    nextTick(() => {
+      if (audioEnterRef.value)
+        audioEnterRef.value.destroyRecorder()
+    })
+  }
+  hideAudioInputComponent()
   isAudioInput.value = false
 }
 
@@ -261,6 +280,7 @@ function triggerFileInput() {
   fileInput.click()
 }
 
+// 上传音频或文件后执行转写或总结
 async function handleUploadAudio(files: FileList | null) {
   if (!files || files.length === 0) {
     ms.error('未选择文件')
