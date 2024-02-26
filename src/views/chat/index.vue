@@ -152,7 +152,7 @@ function findItemsWithModel(data) {
 // 子组件AudioEnter调用此方法，结束录音，并上传音频文件或者继续录音用户的说话
 function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
-  // hideAudioInputComponent()
+  hideAudioInputComponent()
   if (audioBlob === null) {
     if (isAudioInput.value) { // 如果开启了语音输入
       setTimeout(() => {
