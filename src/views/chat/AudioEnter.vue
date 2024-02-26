@@ -3,9 +3,11 @@ import Recorder from 'js-audio-recorder'
 // const lamejs = require('lamejs')
 import lamejs from 'lamejs'
 import { Overlay } from 'vant'
+import { useMessage } from 'naive-ui'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 
 // const { isTouchDevice } = useBasicLayout()
+const message = useMessage()
 
 /**
    * @param isShow 是否显示音频录入组件
@@ -67,10 +69,13 @@ export default {
   // },
   // 父组件通过v-if控制显示与隐藏时，true会调用mounted，false会调用beforeUnmount、unMounted
   mounted() {
-    console.log('onMounted')
+    console.log(`onMounted, hasPermission: ${this.hasPermission}`)
+    message.success(`onMounted, hasPermission: ${this.hasPermission}`)
     if (!this.hasPermission)
       this.getPermission()// 获取录音权限
     if (!this.recorder) {
+      console.log('new Recorder')
+      message.success('new Recorder')
       // 创建录音实例
       this.recorder = new Recorder({
         sampleBits: 16, // 采样位数，支持 8 或 16，默认是16
@@ -107,6 +112,7 @@ export default {
   },
   beforeUnmount() {
     console.log('beforeUnmount')
+    message.success('beforeUnmount')
     // 在组件销毁前移除事件监听
     document.removeEventListener('keydown', this.handleKeyDown)
     if (this.recorder) {
@@ -136,6 +142,7 @@ export default {
         this.isShow = true
         this.hasPermission = true
         console.log('录音权限已授权')
+        message.success('录音权限已授权')
       }, (error) => {
         console.error(`${error.name} : ${error.message}`)
       })
@@ -193,7 +200,8 @@ export default {
     },
     // 长按超过x毫秒-- 开始录音
     startRecorder() {
-      // console.log('startRecorder')
+      console.log('startRecorder')
+      message.success('startRecorder')
       this.stopRecorder()
       this.isShow = true
       this.recorder.start().then(() => {
@@ -214,6 +222,7 @@ export default {
         // this.stopRecorder() // 停止录音
         const duration = this.recorder.duration
         // console.log(`this.needSubmit: ${this.needSubmit} ${duration}`)
+        message.success(`this.needSubmit: ${this.needSubmit} ${duration}`)
         if (duration > 2) {
           this.isShow = false
           this.$emit('closeAudio', this.recorder.getWAVBlob())
@@ -269,7 +278,7 @@ export default {
     },
     // 销毁录音
     destroyRecorder() {
-    //   const vm = this
+      message.success('destroyRecorder')
       if (this.recorder) {
         this.recorder.destroy().then(() => {
           this.recorder = null
@@ -517,6 +526,7 @@ export default {
     },
     // 关闭组件
     close() {
+      message.success('close')
       if (this.beginRecoding) {
         this.beginRecoding = false
         this.stopRecorder() // 停止录音
@@ -527,6 +537,8 @@ export default {
     },
     // 销毁实例
     beforeDestroy() {
+      message.success('beforeDestroy')
+      console.log('beforeDestroy')
       this.destroyRecorder()
     },
   },
