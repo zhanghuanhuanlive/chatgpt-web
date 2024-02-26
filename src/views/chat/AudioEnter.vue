@@ -115,11 +115,11 @@ export default {
     // abc('beforeUnmount')
     // 在组件销毁前移除事件监听
     document.removeEventListener('keydown', this.handleKeyDown)
-    // if (this.recorder) {
-    // // 销毁 recorder 实例的逻辑
-    //   this.recorder.destroy() // 假设 Recorder 有一个 destroy 方法
-    //   this.recorder = null
-    // }
+    if (this.recorder) {
+    // 销毁 recorder 实例的逻辑
+      this.recorder.destroy() // 假设 Recorder 有一个 destroy 方法
+      this.recorder = null
+    }
   },
   methods: {
     initRecorder() {
