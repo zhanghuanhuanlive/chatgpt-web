@@ -166,7 +166,7 @@ const state = reactive({
   ctx: null,
   recorder: null,
   drawRecordId: null,
-  nowDuration: null,
+  // nowDuration: null,
   limitDuration: 60,
   // drawColuList: [],
   silenceStartTime: null,
@@ -201,17 +201,16 @@ function getPermission() {
 }
 
 function startRecorder() {
-  console.log('startRecorder')
+  // console.log('startRecorder')
   if (!state.hasPermission)
     getPermission()// 获取录音权限
   // abc('startRecorder')
   if (beginRecoding.value)
     stopRecorder()
   state.isShow = true
-  // if (!state.hasPermission)
-  //   getPermission()
+  document.addEventListener('keydown', handleKeyDown)// 监听按键
   // if (!state.recorder) {
-  console.log('new Recorder')
+  // console.log('new Recorder')
   // abc('new Recorder')
   // 创建录音实例
   state.recorder = new Recorder({
@@ -223,14 +222,15 @@ function startRecorder() {
   // 监听录音变化等
   // 监听录音变化
   // const vm = state
-  state.recorder.onprogress = (params) => {
+  if (state.recorder) {
+    state.recorder.onprogress = (params) => {
     // if (Math.floor(params.duration) === state.limitDuration)
     //   state.touchend()
 
-    let d = Math.floor(params.duration)
-    d = Number(d) < 10 ? `0${d}` : d
-    d = `0:${d}`
-    state.nowDuration = d // directly setting the data property
+      // let d = Math.floor(params.duration)
+      // d = Number(d) < 10 ? `0${d}` : d
+      // d = `0:${d}`
+      // state.nowDuration = d // directly setting the data property
 
     // console.log('--------------START---------------')
     // console.log('录音时长(秒)', params.duration)
@@ -239,21 +239,22 @@ function startRecorder() {
     //   console.log('录音音量百分比(%)', params.vol)
     // console.log('当前录音的总数据([DataView, DataView...])', params.data)
     // console.log('--------------END---------------')
+    }
+    // state.startCanvas()
+    // }
+
+    // state.toggleRecording() // 页面初始化完成后，自动开始录音
+    // if (!beginRecoding.value)
+    //   state.startRecorder()
+    state.recorder.start().then(() => {
+      beginRecoding.value = true
+      // state.drawRecordWave()// 开始绘制
+      state.needCheckSilence = true
+      drawRecordColu() // 开始绘制
+    }, (error) => {
+      console.log(`${error.name} : ${error.message}`)
+    })
   }
-  // state.startCanvas()
-  // }
-  document.addEventListener('keydown', handleKeyDown)// 监听按键
-  // state.toggleRecording() // 页面初始化完成后，自动开始录音
-  // if (!beginRecoding.value)
-  //   state.startRecorder()
-  state.recorder.start().then(() => {
-    beginRecoding.value = true
-    // state.drawRecordWave()// 开始绘制
-    state.needCheckSlicence = true
-    drawRecordColu() // 开始绘制
-  }, (error) => {
-    console.log(`${error.name} : ${error.message}`)
-  })
 }
 
 function toggleRecording() { // PC
@@ -261,7 +262,7 @@ function toggleRecording() { // PC
   if (!beginRecoding.value) {
     startRecorder()
   }
-  else if (state.needSubmit) {
+  else if (state.needSubmit && state.recorder) {
     // state.stopRecorder() // 停止录音
     const duration = state.recorder.duration
     // console.log(`state.needSubmit: ${state.needSubmit} ${duration}`)
@@ -288,7 +289,9 @@ function toggleRecording() { // PC
 }
 
 function stopRecorder() {
-  state.recorder.stop()
+  if (state.recorder)
+    state.recorder.stop()
+
   state.drawRecordId && cancelAnimationFrame(state.drawRecordId)
   state.drawRecordId = null
 }
@@ -310,38 +313,40 @@ function drawRecordColu() {
   // console.log('drawRecordColu')
   // 用requestAnimationFrame稳定60fps绘制(官方写法，录音过程中，会一直自我调用，因此能得到持续的数据，然后根据数据绘制音波图)
   state.drawRecordId = requestAnimationFrame(drawRecordColu)
-  // 实时获取音频大小数据
-  const dataArray = state.recorder.getRecordAnalyseData()
-  const transit = []
-  splitArr([...dataArray], transit)
+  if (state.recorder) {
+    // 实时获取音频大小数据
+    const dataArray = state.recorder.getRecordAnalyseData()
+    const transit = []
+    splitArr([...dataArray], transit, 32)
 
-  const rstArr = []
-  for (let i = 0; i < transit.length; i++)
-    rstArr.push(Math.max(...transit[i]))
+    const rstArr = []
+    for (let i = 0; i < transit.length; i++)
+      rstArr.push(Math.max(...transit[i]))
 
-  drawColuList.value = []
-  for (let i = 0; i < rstArr.length; i++) {
-    if (i >= 9)
-      break
-    // var v = rstArr[i] / 128.0;
-    // var h = v * state.waveCanvas.height / 3;
-    // drawColuList.value.push(h)
-    // 根据数值大小，设置音波柱状的高度
-    let waveH = 10
-    const newDb = rstArr[i]
-    if (i < 4)
-      waveH = newDb - ((5 - i) * 15)
-    else if (i === 4)
-      waveH = newDb - 3 * 15
-    else if (i >= 5)
-      waveH = newDb - ((i - 3) * 15)
-    drawColuList.value.push(waveH)
+    drawColuList.value = []
+    for (let i = 0; i < rstArr.length; i++) {
+      if (i >= 9)
+        break
+      // var v = rstArr[i] / 128.0;
+      // var h = v * state.waveCanvas.height / 3;
+      // drawColuList.value.push(h)
+      // 根据数值大小，设置音波柱状的高度
+      let waveH = 10
+      const newDb = rstArr[i]
+      if (i < 4)
+        waveH = newDb - ((5 - i) * 15)
+      else if (i === 4)
+        waveH = newDb - 3 * 15
+      else if (i >= 5)
+        waveH = newDb - ((i - 3) * 15)
+      drawColuList.value.push(waveH)
+    }
+    // console.log(drawColuList.value)
+    // this.$forceUpdate()
+
+    // 静音检测逻辑
+    checkSilence(rstArr)
   }
-  // console.log(drawColuList.value)
-  // this.$forceUpdate()
-
-  // 静音检测逻辑
-  checkSilence(rstArr)
 }
 
 // 静音检测逻辑方法
@@ -364,10 +369,10 @@ function checkSilence(rstArr) {
   }
 
   // 检测静音条件
-  if (state.silenceStartTime && state.needCheckSlicence) {
+  if (state.silenceStartTime && state.needCheckSilence) {
     const silenceDuration = currentTime - state.silenceStartTime// 静音时长，ms
     if (beginRecoding.value && (state.talkingDetected && silenceDuration > state.silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
-      state.needCheckSlicence = false
+      state.needCheckSilence = false
       // 结束录音
       cancelAnimationFrame(state.drawRecordId) // 停止drawRecordColu的调用
       // console.log(`silenceDuration > 1.5: ${silenceDuration}`)
@@ -381,7 +386,7 @@ function checkSilence(rstArr) {
       cleanupAfterRecording()
     }
     else if (beginRecoding.value && !state.talkingDetected && silenceDuration > state.silenceDurationThreshold) { // 没人说话，且静音超过5000ms
-      state.needCheckSlicence = false
+      state.needCheckSilence = false
       // console.log(`beginRecoding.value: ${beginRecoding.value}`)
       // console.log(`silenceDuration > 5: ${silenceDuration}`)
       toggleRecording()// 结束录音，不提交
