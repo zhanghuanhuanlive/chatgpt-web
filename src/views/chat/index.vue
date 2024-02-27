@@ -223,14 +223,14 @@ function startRecorder() {
   // 监听录音变化
   // const vm = state
   if (state.recorder) {
-    state.recorder.onprogress = (params) => {
+    // state.recorder.onprogress = (params) => {
     // if (Math.floor(params.duration) === state.limitDuration)
     //   state.touchend()
 
-      // let d = Math.floor(params.duration)
-      // d = Number(d) < 10 ? `0${d}` : d
-      // d = `0:${d}`
-      // state.nowDuration = d // directly setting the data property
+    // let d = Math.floor(params.duration)
+    // d = Number(d) < 10 ? `0${d}` : d
+    // d = `0:${d}`
+    // state.nowDuration = d // directly setting the data property
 
     // console.log('--------------START---------------')
     // console.log('录音时长(秒)', params.duration)
@@ -239,13 +239,14 @@ function startRecorder() {
     //   console.log('录音音量百分比(%)', params.vol)
     // console.log('当前录音的总数据([DataView, DataView...])', params.data)
     // console.log('--------------END---------------')
-    }
+    // }
     // state.startCanvas()
     // }
 
     // state.toggleRecording() // 页面初始化完成后，自动开始录音
     // if (!beginRecoding.value)
     //   state.startRecorder()
+    // @ts-expect-error  Recorder type is not correctly inferred
     state.recorder.start().then(() => {
       beginRecoding.value = true
       // state.drawRecordWave()// 开始绘制
@@ -264,12 +265,14 @@ function toggleRecording() { // PC
   }
   else if (state.needSubmit && state.recorder) {
     // state.stopRecorder() // 停止录音
+
     const duration = state.recorder.duration
     // console.log(`state.needSubmit: ${state.needSubmit} ${duration}`)
     // abc(`state.needSubmit: ${state.needSubmit} ${duration}`)
     if (duration > 2) {
       // state.isShow = false
       // state.$emit('closeAudio', state.recorder.getWAVBlob())
+
       closeAudio(state.recorder.getWAVBlob())
     }
     else {
