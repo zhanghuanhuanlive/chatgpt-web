@@ -169,12 +169,12 @@ const state = reactive({
   // nowDuration: null,
   limitDuration: 60,
   // drawColuList: [],
-  silenceStartTime: null,
+  silenceStartTime: number | null,
   silenceDurationThresholdAfterTalk: 2000,
   silenceDurationThreshold: 5000,
   talkDurationThreshold: 500,
-  talkingStartTime: null,
-  talkingDuration: null,
+  talkingStartTime: number | null,
+  talkingDuration: number | null,
   talkingDetected: false,
   needSubmit: false,
   needCheckSilence: false,
@@ -417,7 +417,7 @@ function splitArr(arr, rst, idx) {
     return
 
   rst.push(arr.splice(0, idx || 32))
-  splitArr(arr, rst)
+  splitArr(arr, rst, 32)
 }
 
 // 销毁实例
