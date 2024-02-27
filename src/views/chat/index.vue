@@ -265,14 +265,14 @@ function toggleRecording() { // PC
   }
   else if (state.needSubmit && state.recorder) {
     // state.stopRecorder() // 停止录音
-
+    // @ts-expect-error  Recorder type is not correctly inferred
     const duration = state.recorder.duration
     // console.log(`state.needSubmit: ${state.needSubmit} ${duration}`)
     // abc(`state.needSubmit: ${state.needSubmit} ${duration}`)
     if (duration > 2) {
       // state.isShow = false
       // state.$emit('closeAudio', state.recorder.getWAVBlob())
-
+      // @ts-expect-error  Recorder type is not correctly inferred
       closeAudio(state.recorder.getWAVBlob())
     }
     else {
@@ -293,6 +293,7 @@ function toggleRecording() { // PC
 
 function stopRecorder() {
   if (state.recorder)
+    // @ts-expect-error  Recorder type is not correctly inferred
     state.recorder.stop()
 
   state.drawRecordId && cancelAnimationFrame(state.drawRecordId)
@@ -303,6 +304,7 @@ function destroyRecorder() {
   console.log('destroyRecorder')
   // abc('destroyRecorder')
   if (state.recorder) {
+    // @ts-expect-error  Recorder type is not correctly inferred
     state.recorder.destroy().then(() => {
       state.recorder = null
       state.drawRecordId && cancelAnimationFrame(state.drawRecordId)
@@ -318,6 +320,7 @@ function drawRecordColu() {
   state.drawRecordId = requestAnimationFrame(drawRecordColu)
   if (state.recorder) {
     // 实时获取音频大小数据
+    // @ts-expect-error  Recorder type is not correctly inferred
     const dataArray = state.recorder.getRecordAnalyseData()
     const transit = []
     splitArr([...dataArray], transit, 32)
@@ -374,7 +377,7 @@ function checkSilence(rstArr) {
   // 检测静音条件
   if (state.silenceStartTime && state.needCheckSilence) {
     const silenceDuration = currentTime - state.silenceStartTime// 静音时长，ms
-    if (beginRecoding.value && (state.talkingDetected && silenceDuration > state.silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
+    if (state.talkingStartTime && beginRecoding.value && (state.talkingDetected && silenceDuration > state.silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
       state.needCheckSilence = false
       // 结束录音
       cancelAnimationFrame(state.drawRecordId) // 停止drawRecordColu的调用
