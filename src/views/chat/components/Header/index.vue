@@ -32,9 +32,9 @@ function onScrollToTop() {
     nextTick(() => scrollRef.scrollTop = 0)
 }
 
-function handleExport() {
-  emit('export')
-}
+// function handleExport() {
+//   emit('export')
+// }
 
 function handleClear() {
   emit('handleClear')
@@ -56,17 +56,17 @@ function handleClear() {
         </button>
       </div>
       <h1
-        class="flex-1 px-4 pr-6 overflow-hidden cursor-pointer select-none text-ellipsis whitespace-nowrap"
+        class="flex-1 px-4 pr-6 overflow-hidden cursor-pointer select-none text-ellipsis whitespace-nowrap text-center"
         @dblclick="onScrollToTop"
       >
-        {{ currentChatHistory?.title ?? '' }}
+        {{ currentChatHistory?.businessName ?? '' }}
       </h1>
       <div class="flex items-center space-x-2">
-        <HoverButton @click="handleExport">
+        <!-- <HoverButton @click="handleExport">
           <span class="text-xl text-[#4f555e] dark:text-white">
             <SvgIcon icon="ri:download-2-line" />
           </span>
-        </HoverButton>
+        </HoverButton> -->
         <HoverButton @click="handleClear">
           <span class="text-xl text-[#4f555e] dark:text-white">
             <SvgIcon icon="ri:delete-bin-line" />

@@ -1,7 +1,9 @@
 <script setup lang='ts'>
 import type { Ref } from 'vue'
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+// import { Overlay } from 'vant'
 import { useRoute } from 'vue-router'
+import Recorder from 'js-audio-recorder'
 import { storeToRefs } from 'pinia'
 import { NAlert, NAutoComplete, NButton, NGi, NGrid, NInput, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
@@ -13,7 +15,6 @@ import { useScroll } from './hooks/useScroll'
 import { useChat } from './hooks/useChat'
 import { useUsingContext } from './hooks/useUsingContext'
 import HeaderComponent from './components/Header/index.vue'
-import AudioEnter from './AudioEnter.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore, useSettingStore } from '@/store'
@@ -58,11 +59,12 @@ const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
 const showAudioInputComponent = ref(false) // 是否显示语音输入组件
 const isAudioInput = ref(false) // 是否已启用了语音输入
-interface AudioEnterMethods {
-  destroyRecorder: () => void
-  startRecorder: () => void
-}
-const audioEnterRef = ref<AudioEnterMethods | null>(null)
+// interface AudioEnterMethods {
+//   destroyRecorder: () => void
+//   startRecorder: () => void
+//   hide: () => void
+// }
+// const audioEnterRef = ref<AudioEnterMethods | null>(null)
 // const audioEnterRef = ref(null)// 引用的录音子组件
 // const audioEnterRef = ref<typeof AudioEnter | null>(null)
 
@@ -149,6 +151,284 @@ function findItemsWithModel(data) {
   return result
 }
 
+/**  Audio Input */
+
+const beginRecoding = ref(false)
+const drawColuList = ref([])
+
+const state = reactive({
+  isShow: false,
+  // beginRecoding: false,
+  blackBoxSpeak: false,
+  startY: 0,
+  timeOutEvent: 0,
+  waveCanvas: null,
+  ctx: null,
+  recorder: null,
+  drawRecordId: null,
+  nowDuration: null,
+  limitDuration: 60,
+  // drawColuList: [],
+  silenceStartTime: null,
+  silenceDurationThresholdAfterTalk: 2000,
+  silenceDurationThreshold: 5000,
+  talkDurationThreshold: 500,
+  talkingStartTime: null,
+  talkingDuration: null,
+  talkingDetected: false,
+  needSubmit: false,
+  needCheckSilence: false,
+  hasPermission: false,
+})
+
+function handleKeyDown(event) {
+  if (event.key === 'Escape' || event.keyCode === 27) {
+    console.log('ESC 键被按下了')
+    showAudioInputComponent.value = false
+  }
+}
+
+// 获取麦克风权限
+function getPermission() {
+  return Recorder.getPermission().then(() => {
+    state.isShow = true
+    state.hasPermission = true
+    console.log('录音权限已授权')
+    // abc('录音权限已授权')
+  }, (error) => {
+    console.error(`${error.name} : ${error.message}`)
+  })
+}
+
+function startRecorder() {
+  console.log('startRecorder')
+  if (!state.hasPermission)
+    getPermission()// 获取录音权限
+  // abc('startRecorder')
+  if (beginRecoding.value)
+    stopRecorder()
+  state.isShow = true
+  // if (!state.hasPermission)
+  //   getPermission()
+  // if (!state.recorder) {
+  console.log('new Recorder')
+  // abc('new Recorder')
+  // 创建录音实例
+  state.recorder = new Recorder({
+    sampleBits: 16, // 采样位数，支持 8 或 16，默认是16
+    sampleRate: 48000, // 采样率，支持 11025、16000、22050、24000、44100、48000，根据浏览器默认值
+    numChannels: 1, // 声道，支持 1 或 2， 默认是1
+    // compiling: false,(0.x版本中生效,1.x增加中)  // 是否边录边转换，默认是false
+  })
+  // 监听录音变化等
+  // 监听录音变化
+  // const vm = state
+  state.recorder.onprogress = (params) => {
+    // if (Math.floor(params.duration) === state.limitDuration)
+    //   state.touchend()
+
+    let d = Math.floor(params.duration)
+    d = Number(d) < 10 ? `0${d}` : d
+    d = `0:${d}`
+    state.nowDuration = d // directly setting the data property
+
+    // console.log('--------------START---------------')
+    // console.log('录音时长(秒)', params.duration)
+    // console.log('录音大小(字节)', params.fileSize);
+    // if (params.vol > 15)
+    //   console.log('录音音量百分比(%)', params.vol)
+    // console.log('当前录音的总数据([DataView, DataView...])', params.data)
+    // console.log('--------------END---------------')
+  }
+  // state.startCanvas()
+  // }
+  document.addEventListener('keydown', handleKeyDown)// 监听按键
+  // state.toggleRecording() // 页面初始化完成后，自动开始录音
+  // if (!beginRecoding.value)
+  //   state.startRecorder()
+  state.recorder.start().then(() => {
+    beginRecoding.value = true
+    // state.drawRecordWave()// 开始绘制
+    state.needCheckSlicence = true
+    drawRecordColu() // 开始绘制
+  }, (error) => {
+    console.log(`${error.name} : ${error.message}`)
+  })
+}
+
+function toggleRecording() { // PC
+  // console.log(`toggleRecording： ${beginRecoding.value}`)
+  if (!beginRecoding.value) {
+    startRecorder()
+  }
+  else if (state.needSubmit) {
+    // state.stopRecorder() // 停止录音
+    const duration = state.recorder.duration
+    // console.log(`state.needSubmit: ${state.needSubmit} ${duration}`)
+    // abc(`state.needSubmit: ${state.needSubmit} ${duration}`)
+    if (duration > 2) {
+      // state.isShow = false
+      // state.$emit('closeAudio', state.recorder.getWAVBlob())
+      closeAudio(state.recorder.getWAVBlob())
+    }
+    else {
+      // state.stopRecorder()
+      // state.$emit('closeAudio', null)
+      startRecorder()// 录音时间太短,重新开始录音
+      // state.isShow = true
+    }
+  }
+  else { // 不需要提交，是监测到静音阈值了
+    // state.stopRecorder()
+    startRecorder()// 没有人说话,重新开始录音
+    // state.isShow = true
+    // state.$emit('closeAudio', null)
+  }
+  beginRecoding.value = !beginRecoding.value
+}
+
+function stopRecorder() {
+  state.recorder.stop()
+  state.drawRecordId && cancelAnimationFrame(state.drawRecordId)
+  state.drawRecordId = null
+}
+
+function destroyRecorder() {
+  console.log('destroyRecorder')
+  // abc('destroyRecorder')
+  if (state.recorder) {
+    state.recorder.destroy().then(() => {
+      state.recorder = null
+      state.drawRecordId && cancelAnimationFrame(state.drawRecordId)
+      state.drawRecordId = null
+    })
+  }
+}
+
+// 录音绘制柱状图
+function drawRecordColu() {
+  // console.log('drawRecordColu')
+  // 用requestAnimationFrame稳定60fps绘制(官方写法，录音过程中，会一直自我调用，因此能得到持续的数据，然后根据数据绘制音波图)
+  state.drawRecordId = requestAnimationFrame(drawRecordColu)
+  // 实时获取音频大小数据
+  const dataArray = state.recorder.getRecordAnalyseData()
+  const transit = []
+  splitArr([...dataArray], transit)
+
+  const rstArr = []
+  for (let i = 0; i < transit.length; i++)
+    rstArr.push(Math.max(...transit[i]))
+
+  drawColuList.value = []
+  for (let i = 0; i < rstArr.length; i++) {
+    if (i >= 9)
+      break
+    // var v = rstArr[i] / 128.0;
+    // var h = v * state.waveCanvas.height / 3;
+    // drawColuList.value.push(h)
+    // 根据数值大小，设置音波柱状的高度
+    let waveH = 10
+    const newDb = rstArr[i]
+    if (i < 4)
+      waveH = newDb - ((5 - i) * 15)
+    else if (i === 4)
+      waveH = newDb - 3 * 15
+    else if (i >= 5)
+      waveH = newDb - ((i - 3) * 15)
+    drawColuList.value.push(waveH)
+  }
+  // console.log(drawColuList.value)
+  // this.$forceUpdate()
+
+  // 静音检测逻辑
+  checkSilence(rstArr)
+}
+
+// 静音检测逻辑方法
+function checkSilence(rstArr) {
+  const currentTime = Date.now()
+  const hasLoudSound = rstArr.some(db => db >= 150)
+
+  if (hasLoudSound) {
+    state.talkingDetected = true
+    state.silenceStartTime = null // 重置静音开始时间
+    if (!state.talkingStartTime)
+      state.talkingStartTime = currentTime
+  }
+  else if (!state.silenceStartTime) {
+    // if (state.talkingStartTime) {
+    //   state.talkingDuration = currentTime - state.talkingStartTime// 记录说话间隔时长
+    //   state.talkingStartTime = null
+    // }
+    state.silenceStartTime = currentTime // 首次检测到静音，记录开始时间
+  }
+
+  // 检测静音条件
+  if (state.silenceStartTime && state.needCheckSlicence) {
+    const silenceDuration = currentTime - state.silenceStartTime// 静音时长，ms
+    if (beginRecoding.value && (state.talkingDetected && silenceDuration > state.silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
+      state.needCheckSlicence = false
+      // 结束录音
+      cancelAnimationFrame(state.drawRecordId) // 停止drawRecordColu的调用
+      // console.log(`silenceDuration > 1.5: ${silenceDuration}`)
+      state.talkingDuration = currentTime - state.talkingStartTime - state.silenceDurationThresholdAfterTalk // 说话时长
+      // console.log(`talkingDuration: ${state.talkingDuration}`)
+      // if (state.talkingDuration > state.talkDurationThreshold) { // 说话时长大于1500ms
+      state.needSubmit = true
+      // }
+      toggleRecording()// 结束录音，且提交
+      // 清理逻辑
+      cleanupAfterRecording()
+    }
+    else if (beginRecoding.value && !state.talkingDetected && silenceDuration > state.silenceDurationThreshold) { // 没人说话，且静音超过5000ms
+      state.needCheckSlicence = false
+      // console.log(`beginRecoding.value: ${beginRecoding.value}`)
+      // console.log(`silenceDuration > 5: ${silenceDuration}`)
+      toggleRecording()// 结束录音，不提交
+      cleanupAfterRecording()
+    }
+  }
+}
+
+// 清理逻辑的实现
+function cleanupAfterRecording() {
+  state.talkingDetected = false
+  state.silenceStartTime = null
+  state.talkingStartTime = null
+  state.talkingDuration = null
+  drawColuList.value = [] // 假设这是存储音波高度的数组，清空它
+  state.needSubmit = false
+}
+
+// 拆分数组
+function splitArr(arr, rst, idx) {
+  if (!arr || arr.length === 0)
+    return
+
+  rst.push(arr.splice(0, idx || 32))
+  splitArr(arr, rst)
+}
+
+// 销毁实例
+// function beforeDestroy() {
+//   console.log('beforeDestroy')
+//   destroyRecorder()
+// }
+
+function handleVisibilityChange() {
+  console.log('handleVisibilityChange')
+  if (document.hidden) {
+    hideAudioInputComponent()
+    isAudioInput.value = false
+    destroyRecorder()
+  }
+  else {
+    // 页面再次可见时的逻辑
+  }
+}
+
+/**  Audio Input */
+
 // 子组件AudioEnter调用此方法，结束录音，并上传音频文件或者继续录音用户的说话
 function closeAudio(audioBlob: Blob) {
   // console.log('closeAudioInput')
@@ -156,8 +436,9 @@ function closeAudio(audioBlob: Blob) {
   if (audioBlob === null) {
     if (isAudioInput.value) { // 如果开启了语音输入
       setTimeout(() => {
-        startAudioInput()
-      }, 1000)
+        // startAudioInput()
+        startRecord()
+      }, 500)
     } // 延迟1秒
     // return
   }
@@ -212,7 +493,8 @@ async function handleAudioInput(audioBlob: Blob) {
       stopAudioInput()
     }
     else if (text.includes('打赏支持明镜与点点栏目') || text.includes('Thanks for watching!')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
-      startAudioInput()
+      // startAudioInput()
+      startRecord()
     }
     else {
       prompt.value = result.text // 更新 prompt 的值
@@ -230,8 +512,15 @@ async function handleAudioInput(audioBlob: Blob) {
 }
 // 隐藏语音对话组件
 function hideAudioInputComponent() {
-  // console.log('hideAudioInputComponent')
+  console.log('hideAudioInputComponent')
   showAudioInputComponent.value = false
+  // nextTick(() => {
+  //   if (audioEnterRef.value)
+  //     audioEnterRef.value.hide()
+  // })
+  // nextTick(() => {
+  //   console.log(showAudioInputComponent.value)
+  // })
 
   // if (audioEnterRef.value) {
   //   nextTick(() => {
@@ -242,30 +531,35 @@ function hideAudioInputComponent() {
   // }
 }
 // 开始语音对话
-function startAudioInput() {
-  if (!showAudioInputComponent.value)
-    showAudioInputComponent.value = true
-  isAudioInput.value = true
-}
+// function startAudioInput() {
+//   // console.log('startAudioInput')
+//   // if (!showAudioInputComponent.value)
+//   showAudioInputComponent.value = true
+//   isAudioInput.value = true
+// }
 
 // 子组件开始录音
 function startRecord() {
-  if (audioEnterRef.value) {
-    nextTick(() => {
-      if (audioEnterRef.value)
-        audioEnterRef.value.startRecorder()
-    })
-  }
+  showAudioInputComponent.value = true
+  isAudioInput.value = true
+  startRecorder()
+  // nextTick(() => {
+  //   if (audioEnterRef.value)
+  //     audioEnterRef.value.startRecorder()
+  // })
 }
 
 // 停止语音对话，销毁录音组件
 function stopAudioInput() {
-  if (audioEnterRef.value) {
-    nextTick(() => {
-      if (audioEnterRef.value)
-        audioEnterRef.value.destroyRecorder()
-    })
-  }
+  console.log('stopAudioInput')
+  // console.log(audioEnterRef.value)
+  // if (audioEnterRef.value) {
+  //   nextTick(() => {
+  //     // console.log(audioEnterRef.value)
+  //     if (audioEnterRef.value)
+  //       audioEnterRef.value.destroyRecorder()
+  //   })
+  // }
   hideAudioInputComponent()
   isAudioInput.value = false
 }
@@ -450,7 +744,7 @@ async function enqueueAudio(message, index) {
   textQueue[index] = message
   // console.log(`${index} ${queueFinished.value} ${isPlaying.value}`)
 
-  // If this is the first item and nothing is playing, start playback
+  // If state is the first item and nothing is playing, start playback
   if (index === 0) {
     currentIndex = 0
     // queueLength.value = 100
@@ -501,8 +795,8 @@ async function playNextAudio() {
     isPlaying.value = false
     // startAudioEnterRecorder()// 子组件重新开始监听
     if (isAudioInput.value) { // 如果开启了语音输入，子组件开始录音
-      startAudioInput()
-      // startRecord()
+      // startAudioInput()
+      startRecord()
     }
   }
 }
@@ -677,7 +971,8 @@ async function onConversation(filePath: string) {
       if (!playAudio.value && isAudioInput.value) { // 开启语音对话的情况下播放完音频会自动开始录音
         setTimeout(() => {
           startRecord()
-        }, 500)
+          // startAudioInput()
+        }, 1000)
       }
     }
 
@@ -727,6 +1022,9 @@ async function onConversation(filePath: string) {
       },
     )
     scrollToBottomIfAtBottom()
+
+    console.log(errorMessage)
+    hideAudioInputComponent()
   }
   finally {
     loading.value = false
@@ -1039,7 +1337,7 @@ const buttonDisabled = computed(() => {
 const footerClass = computed(() => {
   let classes = ['p-4']
   if (isMobile.value)
-    classes = ['sticky', 'left-0', 'bottom-0', 'right-0', 'p-2', 'pr-3', 'overflow-hidden']
+    classes = ['sticky', 'left-0', 'bottom-0', 'right-0', 'p-0', 'pb-3', 'pr-1', 'overflow-hidden']
   return classes
 })
 
@@ -1048,11 +1346,14 @@ onMounted(() => {
   if (inputRef.value && !isMobile.value)
     inputRef.value?.focus()
   fetchConfig()
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 onUnmounted(() => {
   if (loading.value)
     controller.abort()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  destroyRecorder()
 })
 
 function togglePlay() {
@@ -1124,7 +1425,7 @@ function togglePlay() {
           </template>
           <template v-else> -->
             <!-- <template> -->
-            <div class="flex items-center justify-center mt-4 text-center text-neutral-300">
+            <div v-if="!isMobile" class="flex items-center justify-center mt-4 text-center text-neutral-300">
               <!-- <SvgIcon icon="fluent:brain-circuit-24-filled" class="mr-2 text-3xl" /> -->
               <span>{{ currentBusinessType }}</span>
             </div>
@@ -1184,7 +1485,7 @@ function togglePlay() {
               </NGrid>
             </div>
           </template>
-          <div class="flex items-center justify-between space-x-2">
+          <div class="flex items-center justify-between">
             <HoverButton v-if="!isMobile && (businessType === 10001 || businessType === 10002)" :title="businessType === 10001 ? '音频转写文字' : businessType === 10002 ? '文档总结' : ''" @click="triggerFileInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <!-- <SvgIcon :icon="businessType === 10001 ? 'fe:file-audio' : businessType === 10002 ? 'ic:twotone-upload-file' : ''" /> -->
@@ -1217,11 +1518,11 @@ function togglePlay() {
               <span v-if="isAudioInput" class="text-xl text-[#4b9e5f]" @click="stopAudioInput">
                 <FontAwesomeIcon icon="fas fa-microphone-lines" />
               </span>
-              <span v-else class="text-xl text-[#a8071a]" @click="startAudioInput">
+              <span v-else class="text-xl text-[#a8071a]" @click="startRecord">
                 <FontAwesomeIcon icon="fas fa-microphone-lines-slash" />
               </span>
             </HoverButton>
-            <AudioEnter v-if="showAudioInputComponent" ref="audioEnterRef" @close-audio="closeAudio" @stop-audio-input="stopAudioInput" />
+            <!-- <AudioEnter v-show="showAudioInputComponent" ref="audioEnterRef" @close-audio="closeAudio" @stop-audio-input="stopAudioInput" /> -->
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
               <template #default="{ handleInput, handleBlur, handleFocus }">
                 <NInput
@@ -1251,7 +1552,59 @@ function togglePlay() {
       </footer>
     </div>
   </Suspense>
+
+  <div v-show="showAudioInputComponent" class="audio-enter">
+    <div :show="showAudioInputComponent">
+      <div class="audio-pie" @click.stop>
+        <!-- 录音时显示音波图和时长 -->
+        <div v-if="beginRecoding">
+          <div v-if="drawColuList.length > 0" class="audio-pie_audio--osc">
+            <div v-for="(item, idx) in drawColuList" :key="idx" class="audio-pie_audio--osc_item" :style="{ height: `${item}px` }" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
+<style scoped lang="scss">
+  .audio-enter {
+    z-index: 999999999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 999999999;
+    background-color: rgba(0, 0, 0, 0.5);
+    .audio-pie {
+      z-index: 999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      .audio-pie_audio--osc {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 157px;
+        height: 44px;
+        margin: 0 auto;
+        .audio-pie_audio--osc_item {
+          width: 10px;
+          background-color: rgba(109, 212, 0, 1);
+          border-radius: 5px;
+          &:not(:first-child) {
+            margin-left: 5px;
+          }
+        }
+      }
+    }
+  }
+  </style>
 
 <style scoped>
 .affix {

@@ -1,14 +1,13 @@
 {
-  "name": "chatgpt-web",
+  "name": "AI-Web",
   "version": "2.11.1",
   "private": false,
-  "description": "ChatGPT Web",
-  "author": "ChenZhaoYu <chenzhaoyu1994@gmail.com>",
+  "description": "AI Web",
+  "author": "",
   "keywords": [
-    "chatgpt-web",
+    "AI Web",
     "chatgpt",
-    "chatbot",
-    "vue"
+    "chatbot"
   ],
   "scripts": {
     "dev": "vite",
