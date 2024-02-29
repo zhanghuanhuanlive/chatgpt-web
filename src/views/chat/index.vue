@@ -156,7 +156,14 @@ function findItemsWithModel(data) {
 const beginRecoding = ref(false)
 const drawColuList = ref([])
 
-const state = reactive({
+interface State {
+  drawRecordId: number | null
+  silenceStartTime: number | null
+  talkingStartTime: number | null
+  talkingDuration: number | null
+}
+
+const state: State = reactive({
   isShow: false,
   // beginRecoding: false,
   blackBoxSpeak: false,
@@ -169,12 +176,12 @@ const state = reactive({
   // nowDuration: null,
   limitDuration: 60,
   // drawColuList: [],
-  silenceStartTime: number | null,
+  silenceStartTime: null,
   silenceDurationThresholdAfterTalk: 2000,
   silenceDurationThreshold: 5000,
   talkDurationThreshold: 500,
-  talkingStartTime: number | null,
-  talkingDuration: number | null,
+  talkingStartTime: null,
+  talkingDuration: null,
   talkingDetected: false,
   needSubmit: false,
   needCheckSilence: false,
