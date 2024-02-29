@@ -157,10 +157,25 @@ const beginRecoding = ref(false)
 const drawColuList = ref([])
 
 interface State {
+  isShow: boolean
+  blackBoxSpeak: boolean
+  startY: number
+  timeOutEvent: number
+  waveCanvas: HTMLCanvasElement | null
+  ctx: CanvasRenderingContext2D | null
+  recorder: any
   drawRecordId: number | null
+  limitDuration: number
   silenceStartTime: number | null
+  silenceDurationThresholdAfterTalk: number
+  silenceDurationThreshold: number
+  talkDurationThreshold: number
   talkingStartTime: number | null
   talkingDuration: number | null
+  talkingDetected: boolean
+  needSubmit: boolean
+  needCheckSilence: boolean
+  hasPermission: boolean
 }
 
 const state: State = reactive({
