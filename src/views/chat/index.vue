@@ -154,7 +154,7 @@ function findItemsWithModel(data) {
 /**  Audio Input */
 
 const beginRecoding = ref(false)
-const drawColuList = ref([])
+const drawColuList = ref<number[]>([])
 
 interface State {
   isShow: boolean
@@ -268,8 +268,7 @@ function startRecorder() {
     // state.toggleRecording() // 页面初始化完成后，自动开始录音
     // if (!beginRecoding.value)
     //   state.startRecorder()
-    // @ts-expect-error  Recorder type is not correctly inferred
-    state.recorder.start().then(() => {
+    (state.recorder as any).start().then(() => {
       beginRecoding.value = true
       // state.drawRecordWave()// 开始绘制
       state.needCheckSilence = true
@@ -287,15 +286,13 @@ function toggleRecording() { // PC
   }
   else if (state.needSubmit && state.recorder) {
     // state.stopRecorder() // 停止录音
-    // @ts-expect-error  Recorder type is not correctly inferred
     const duration = state.recorder.duration
     // console.log(`state.needSubmit: ${state.needSubmit} ${duration}`)
     // abc(`state.needSubmit: ${state.needSubmit} ${duration}`)
     if (duration > 2) {
       // state.isShow = false
       // state.$emit('closeAudio', state.recorder.getWAVBlob())
-      // @ts-expect-error  Recorder type is not correctly inferred
-      closeAudio(state.recorder.getWAVBlob())
+      closeAudio((state.recorder as any).getWAVBlob())
     }
     else {
       // state.stopRecorder()
@@ -315,7 +312,6 @@ function toggleRecording() { // PC
 
 function stopRecorder() {
   if (state.recorder)
-    // @ts-expect-error  Recorder type is not correctly inferred
     state.recorder.stop()
 
   state.drawRecordId && cancelAnimationFrame(state.drawRecordId)
@@ -326,7 +322,6 @@ function destroyRecorder() {
   console.log('destroyRecorder')
   // abc('destroyRecorder')
   if (state.recorder) {
-    // @ts-expect-error  Recorder type is not correctly inferred
     state.recorder.destroy().then(() => {
       state.recorder = null
       state.drawRecordId && cancelAnimationFrame(state.drawRecordId)
@@ -342,12 +337,11 @@ function drawRecordColu() {
   state.drawRecordId = requestAnimationFrame(drawRecordColu)
   if (state.recorder) {
     // 实时获取音频大小数据
-    // @ts-expect-error  Recorder type is not correctly inferred
     const dataArray = state.recorder.getRecordAnalyseData()
-    const transit = []
+    const transit: number[][] = []
     splitArr([...dataArray], transit, 32)
 
-    const rstArr = []
+    const rstArr: number[] = []
     for (let i = 0; i < transit.length; i++)
       rstArr.push(Math.max(...transit[i]))
 
@@ -402,7 +396,9 @@ function checkSilence(rstArr) {
     if (state.talkingStartTime && beginRecoding.value && (state.talkingDetected && silenceDuration > state.silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
       state.needCheckSilence = false
       // 结束录音
-      cancelAnimationFrame(state.drawRecordId) // 停止drawRecordColu的调用
+      if (state.drawRecordId !== null)
+        cancelAnimationFrame(state.drawRecordId)
+      // 停止drawRecordColu的调用
       // console.log(`silenceDuration > 1.5: ${silenceDuration}`)
       state.talkingDuration = currentTime - state.talkingStartTime - state.silenceDurationThresholdAfterTalk // 说话时长
       // console.log(`talkingDuration: ${state.talkingDuration}`)
