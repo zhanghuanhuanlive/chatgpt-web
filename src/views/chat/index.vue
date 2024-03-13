@@ -84,7 +84,7 @@ interface ConfigState {
   httpsProxy?: string
   usage?: string
   menu?: string
-  affixes?: string
+  // affixes?: string
   openai_api_model?: string
 }
 const config = ref<ConfigState>()
@@ -92,22 +92,21 @@ const config = ref<ConfigState>()
 let businessType = 0 // 对应配置文件中的key，9001是口语
 let currentBusinessType = 'ChatGLM3'
 let systemMessage = '' // 每个模型对应的系统提示词
-let affixes
+let faqs: string[] = []
 async function fetchConfig() {
   try {
     loading.value = true
     const { data } = await fetchChatConfig<ConfigState>()
     config.value = data
     const menu = config.value?.menu || '[]'
-    let model = config.value?.menu || 'chatglm3-6b'
-    const tmp = config.value?.affixes// 固定的快捷菜单
-    if (tmp)
-      affixes = tmp.split(',')
+    // let model = config.value?.menu || 'chatglm3-6b'
+    // const tmp = config.value?.affixes// 固定的快捷菜单
+
     // const jsonData = JSON.parse(menu)
     // 构造新的对象数组，仅包含具有 model 值的项
     // const filteredData = jsonData.filter(item => item.model)
 
-    const models: Array<{ key: string; label: string; model: string; systemMessage: string }> = findItemsWithModel(JSON.parse(menu))
+    const models: Array<{ key: string; label: string; model: string; systemMessage: string; faq: string }> = findItemsWithModel(JSON.parse(menu))
     // console.log(models)
     // keyLabelMap = createKeyLabelMap(JSON.parse(menu))
     // console.log(menu)
@@ -118,11 +117,16 @@ async function fetchConfig() {
 
     if (item) {
       currentBusinessType = item.label || 'ChatGLM3'
-      model = item.model
+      // model = item.model
       if (item.systemMessage)
         systemMessage = item.systemMessage
+      if (item.faq) {
+        const tmp = item.faq// 固定的快捷菜单
+        if (tmp)
+          faqs = tmp.split('||||')
+      }
     }
-    localStorage.setItem('model', model)
+    // localStorage.setItem('model', model)
     localStorage.setItem('menu', menu)
     localStorage.setItem('models', JSON.stringify(Array.from(models)))
   }
@@ -133,7 +137,7 @@ async function fetchConfig() {
 
 // 递归函数，用于遍历嵌套的数据结构
 function findItemsWithModel(data) {
-  const result: Array<{ key: string; label: string; model: string; systemMessage: string }> = []
+  const result: Array<{ key: string; label: string; model: string; systemMessage: string; faq: string }> = []
   for (const item of data) {
     if (item.model) {
       result.push({
@@ -141,6 +145,7 @@ function findItemsWithModel(data) {
         key: item.key,
         model: item.model,
         systemMessage: item.systemMessage,
+        faq: item.faq,
       })
     }
     if (item.children && item.children.length > 0) {
@@ -887,7 +892,7 @@ async function onConversation(filePath: string) {
     options = { ...lastContext }
 
   addChat(
-    +uuid,
+    +uuid, // +表示将其后的变量转换成一个数字
     {
       dateTime: new Date().toLocaleString(),
       text: businessType === 10001 ? '转写中' : businessType === 10002 ? '总结中' : businessType === 9001 ? 'Thinking' : '思考中',
@@ -925,6 +930,7 @@ async function onConversation(filePath: string) {
         signal: controller.signal,
         businessType, // 自己加的参数，配置文件中每个模型对应的key
         // needTts,
+        // chatId: +uuid,
         systemMessage, // 自己加的参数，配置文件中每个模型对应的系统提示词
         onDownloadProgress: ({ event }) => {
           // console.log('--------------')
@@ -1496,11 +1502,11 @@ function togglePlay() {
             </div>
           </template>
           <!-- 数据分析的四个快捷按钮 -->
-          <template v-if="!isMobile && businessType === 1001">
+          <template v-if="!isMobile && faqs.length > 0">
             <div class="flex items-center justify-between space-x-2" style="margin-bottom: 8px;">
               <NGrid x-gap="12" :cols="4">
                 <NGi
-                  v-for="(item, index) of affixes" :key="index" class="affix"
+                  v-for="(item, index) of faqs" :key="index" class="affix"
                   :class="{ 'hovered-grid': activeIndex === index }"
                   @click="handleAffixClick(item)"
                   @mouseover="setActiveIndex(index)"

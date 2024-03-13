@@ -33,7 +33,7 @@ if (!isNotEmptyString(process.env.OPENAI_API_KEY) && !isNotEmptyString(process.e
 
 let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
 let menu: string
-declare let fetch: any
+// declare let fetch: any
 // let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
 
 const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
@@ -126,14 +126,17 @@ async function chatReplyProcess(options: RequestOptions) {
     const item = models.find(item => item.key === String(businessType))
 
     console.log(item.model)
-    if (item)
+    if (item && item.model) {
       options.completionParams.model = item.model || 'chatglm3-6b'
+      const top_p = options.completionParams.top_p
+      options.completionParams.top_p = (top_p === 1 && (item.model.startsWith('chatglm_') || item.model.startsWith('glm-4'))) ? 0.9 : top_p
+    }
 
-    options.completionParams.max_tokens = 2000
+    // options.completionParams.max_tokens = 2000
 
     // console.log(message)
 
-    // console.log(options)
+    console.log(options)
     // let response
 
     // if (!needTts) {

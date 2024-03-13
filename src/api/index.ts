@@ -29,6 +29,7 @@ export function fetchChatAPIProcess<T = any>(
     signal?: GenericAbortSignal
     businessType: number
     // needTts: boolean
+    // chatId: number
     systemMessage: string
     onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void },
 ) {
@@ -45,15 +46,16 @@ export function fetchChatAPIProcess<T = any>(
   }
 
   // console.log(params.options)
-  const model: string = localStorage.getItem('model') || 'chatglm3-6b'
-  const top_p = (model.startsWith('chatglm_') || model.startsWith('glm-4')) ? 0.9 : settingStore.top_p
+  // const model: string = localStorage.getItem('model') || 'chatglm3-6b'
+  // const top_p = (model.startsWith('chatglm_') || model.startsWith('glm-4')) ? 0.9 : settingStore.top_p
   if (authStore.isChatGPTAPI) {
     data = {
       ...data,
       // systemMessage: settingStore.systemMessage,
       // systemMessage: 'hahaha',
       temperature: settingStore.temperature,
-      top_p,
+      top_p: settingStore.top_p,
+      // top_p,
     }
   }
   // console.log(settingStore.systemMessage)// 在页面设置中的提示词
