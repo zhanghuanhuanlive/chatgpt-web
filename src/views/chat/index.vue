@@ -1063,6 +1063,7 @@ async function onConversation(filePath: string) {
   }
   finally {
     loading.value = false
+    addClickOnRelatedQuestion() // 给你可能想问的问题增加点击事件
   }
 }
 
@@ -1324,6 +1325,21 @@ function handleStop() {
   }
 }
 
+function addClickOnRelatedQuestion() {
+  document.querySelectorAll('a[title="******"]').forEach((link) => {
+    console.log(link)
+    link.addEventListener('click', (event) => {
+      // 阻止<a>标签的默认行为
+      event.preventDefault()
+
+      // 调用 handleAffixClick 函数，传递链接的文本内容
+      console.log(event.target)
+      if (event.target && event.target instanceof HTMLElement)
+        handleAffixClick(event.target.textContent || event.target.innerText)
+    })
+  })
+}
+
 function handleAffixClick(item) {
   prompt.value = item
   handleSubmit()
@@ -1376,12 +1392,20 @@ const footerClass = computed(() => {
   return classes
 })
 
+function handleScroll() {
+  addClickOnRelatedQuestion()
+}
+
 onMounted(() => {
   scrollToBottom()
   if (inputRef.value && !isMobile.value)
     inputRef.value?.focus()
   fetchConfig()
   document.addEventListener('visibilitychange', handleVisibilityChange)
+  // document.addEventListener('DOMContentLoaded', (event) => {
+  addClickOnRelatedQuestion() // 给你可能想问的问题增加点击事件
+  window.addEventListener('scroll', handleScroll)
+  // })
 })
 
 onUnmounted(() => {
