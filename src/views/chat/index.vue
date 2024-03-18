@@ -45,8 +45,9 @@ const { usingContext, toggleUsingContext } = useUsingContext()
 const { uuid } = route.params as { uuid: string }
 
 const dataSources = computed(() => chatStore.getChatByUuid(+uuid))
+// console.log(dataSources.value)
 const conversationList = computed(() => dataSources.value.filter(item => (!item.inversion && !!item.conversationOptions)))
-
+// console.log(conversationList.value)
 const prompt = ref<string>('')
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
@@ -87,12 +88,26 @@ interface ConfigState {
   // affixes?: string
   openai_api_model?: string
 }
+interface SayHello {
+  text: string
+  audio?: string
+}
+interface Model {
+  key: string
+  label: string
+  model: string
+  sayHello?: SayHello
+  systemMessage?: string // 每个模型对应的系统提示词
+  faq?: string
+  faqs?: string[]
+}
 const config = ref<ConfigState>()
 // let keyLabelMap: Map<string, string>
 let businessType = 0 // 对应配置文件中的key，9001是口语
-let currentBusinessType = 'ChatGLM3'
-let systemMessage = '' // 每个模型对应的系统提示词
-let faqs: string[] = []
+let currentBusinessTypeName = 'ChatGLM3'
+// let systemMessage = '' // 每个模型对应的系统提示词
+// const faqs: string[] = []
+let currentModel: Model | undefined // 当前使用的模型以及配置的参数
 async function fetchConfig() {
   try {
     loading.value = true
@@ -102,28 +117,43 @@ async function fetchConfig() {
     // let model = config.value?.menu || 'chatglm3-6b'
     // const tmp = config.value?.affixes// 固定的快捷菜单
 
-    // const jsonData = JSON.parse(menu)
-    // 构造新的对象数组，仅包含具有 model 值的项
-    // const filteredData = jsonData.filter(item => item.model)
-
-    const models: Array<{ key: string; label: string; model: string; systemMessage: string; faq: string }> = findItemsWithModel(JSON.parse(menu))
+    const models: Array<Model> = findItemsWithModel(JSON.parse(menu))
     // console.log(models)
     // keyLabelMap = createKeyLabelMap(JSON.parse(menu))
     // console.log(menu)
     const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
     if (undefined !== currentHistory)
       businessType = currentHistory.businessType
-    const item = models.find(item => item.key === String(businessType))
+    currentModel = models.find(item => item.key === String(businessType))
 
-    if (item) {
-      currentBusinessType = item.label || 'ChatGLM3'
+    if (currentModel) {
+      currentBusinessTypeName = currentModel.label || 'ChatGLM3'
       // model = item.model
-      if (item.systemMessage)
-        systemMessage = item.systemMessage
-      if (item.faq) {
-        const tmp = item.faq// 固定的快捷菜单
-        if (tmp)
-          faqs = tmp.split('||||')
+      // if (currentModel.systemMessage)
+      //   systemMessage = currentModel.systemMessage
+      if (currentModel.faq) { // 固定的快捷菜单，也可能时常见问题
+        currentModel.faqs = currentModel.faq.split('||||')
+      }
+      if (dataSources.value.length === 0 && currentModel.sayHello) { // 如果是新的对话，并且配置了sayHello
+        console.log(currentModel.sayHello)
+        const sayHelloText = currentModel.sayHello.text
+        if (sayHelloText) { // 插入sayHello到历史记录
+          addChat(
+            +uuid,
+            {
+              dateTime: new Date().toLocaleString(),
+              text: currentModel.sayHello.text,
+              inversion: false,
+              error: false,
+              conversationOptions: null,
+              requestOptions: { prompt: '', options: null }, // 使用空字符串和null作为默认值
+            },
+          )
+          if (playAudio.value) {
+            enqueueAudio(sayHelloText, 0)
+            updateQueueLength(1)
+          }
+        }
       }
     }
     // localStorage.setItem('model', model)
@@ -137,7 +167,7 @@ async function fetchConfig() {
 
 // 递归函数，用于遍历嵌套的数据结构
 function findItemsWithModel(data) {
-  const result: Array<{ key: string; label: string; model: string; systemMessage: string; faq: string }> = []
+  const result: Array<Model> = []
   for (const item of data) {
     if (item.model) {
       result.push({
@@ -145,6 +175,7 @@ function findItemsWithModel(data) {
         key: item.key,
         model: item.model,
         systemMessage: item.systemMessage,
+        sayHello: item.sayHello,
         faq: item.faq,
       })
     }
@@ -324,9 +355,9 @@ function stopRecorder() {
 }
 
 function destroyRecorder() {
-  console.log('destroyRecorder')
   // abc('destroyRecorder')
   if (state.recorder) {
+    console.log('destroyRecorder')
     state.recorder.destroy().then(() => {
       state.recorder = null
       state.drawRecordId && cancelAnimationFrame(state.drawRecordId)
@@ -931,7 +962,7 @@ async function onConversation(filePath: string) {
         businessType, // 自己加的参数，配置文件中每个模型对应的key
         // needTts,
         // chatId: +uuid,
-        systemMessage, // 自己加的参数，配置文件中每个模型对应的系统提示词
+        systemMessage: (currentModel && currentModel.systemMessage) ? currentModel.systemMessage : '', // 自己加的参数，配置文件中每个模型对应的系统提示词
         onDownloadProgress: ({ event }) => {
           // console.log('--------------')
           // console.log(event)
@@ -1496,7 +1527,7 @@ function togglePlay() {
             <!-- <template> -->
             <div v-if="!isMobile" class="flex items-center justify-center mt-4 text-center text-neutral-300">
               <!-- <SvgIcon icon="fluent:brain-circuit-24-filled" class="mr-2 text-3xl" /> -->
-              <span>{{ currentBusinessType }}</span>
+              <span>{{ currentBusinessTypeName }}</span>
             </div>
             <div>
               <Message
@@ -1536,11 +1567,11 @@ function togglePlay() {
             </div>
           </template>
           <!-- 数据分析的四个快捷按钮 -->
-          <template v-if="!isMobile && faqs.length > 0">
+          <template v-if="!isMobile && currentModel && currentModel.faqs && currentModel.faqs.length > 0">
             <div class="flex items-center justify-between space-x-2" style="margin-bottom: 8px;">
               <NGrid x-gap="12" :cols="4">
                 <NGi
-                  v-for="(item, index) of faqs" :key="index" class="affix"
+                  v-for="(item, index) of currentModel.faqs" :key="index" class="affix"
                   :class="{ 'hovered-grid': activeIndex === index }"
                   @click="handleAffixClick(item)"
                   @mouseover="setActiveIndex(index)"
