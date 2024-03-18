@@ -1326,14 +1326,24 @@ function handleStop() {
 }
 
 function addClickOnRelatedQuestion() {
-  document.querySelectorAll('a[title="******"]').forEach((link) => {
-    console.log(link)
+  document.querySelectorAll('a[title="******"]').forEach((link) => { // 正常的话您可能还想问的关联问题的title为******
+    // console.log(link)
     link.addEventListener('click', (event) => {
       // 阻止<a>标签的默认行为
       event.preventDefault()
 
       // 调用 handleAffixClick 函数，传递链接的文本内容
       console.log(event.target)
+      if (event.target && event.target instanceof HTMLElement)
+        handleAffixClick(event.target.textContent || event.target.innerText)
+    })
+  })
+
+  document.querySelectorAll('.markdown-body a[href="#"]').forEach((link) => { // 有时候LLM不会将title设置为******，此时选择href=#
+    link.addEventListener('click', (event) => {
+      // 阻止默认行为
+      event.preventDefault()
+      // 调用 handleAffixClick 函数，传递链接的文本内容
       if (event.target && event.target instanceof HTMLElement)
         handleAffixClick(event.target.textContent || event.target.innerText)
     })
