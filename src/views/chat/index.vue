@@ -242,7 +242,9 @@ const state: State = reactive({
 function handleKeyDown(event) {
   if (event.key === 'Escape' || event.keyCode === 27) {
     console.log('ESC 键被按下了')
-    showAudioInputComponent.value = false
+    // showAudioInputComponent.value = false
+    // hideAudioInputComponent()
+    stopAudioInput()
   }
 }
 
@@ -557,7 +559,7 @@ async function handleAudioInput(audioBlob: Blob) {
       // hideAudioInputComponent()
       stopAudioInput()
     }
-    else if (text.includes('打赏支持明镜与点点栏目') || text.includes('Thanks for watching!')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
+    else if (text.includes('打赏支持明镜与点点栏目') || text.includes('Thanks for watching!') || text.includes('使用简体中文')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
       // startAudioInput()
       startRecord()
     }
@@ -579,6 +581,7 @@ async function handleAudioInput(audioBlob: Blob) {
 function hideAudioInputComponent() {
   console.log('hideAudioInputComponent')
   showAudioInputComponent.value = false
+  // isAudioInput.value = false
   // nextTick(() => {
   //   if (audioEnterRef.value)
   //     audioEnterRef.value.hide()
