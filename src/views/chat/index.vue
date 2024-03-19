@@ -559,7 +559,7 @@ async function handleAudioInput(audioBlob: Blob) {
       // hideAudioInputComponent()
       stopAudioInput()
     }
-    else if (text.includes('打赏支持明镜与点点栏目') || text.includes('Thanks for watching!') || text.includes('使用简体中文')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
+    else if (text.includes('打赏支持明镜与点点栏目') || text.includes('Thanks for watching!') || text.includes('使用简体中文') || text.includes('用简单的手机可以使用')) { // 如果语音转写的结果是这种莫名其妙的字，则继续监听语音
       // startAudioInput()
       startRecord()
     }
@@ -804,7 +804,7 @@ const queueLength = ref(100)// 要播放的队列长度，因为要播放的队�
 async function enqueueAudio(message, index) {
   // console.log(`${index} ${message} ${isPlaying.value}`)
   const params = {
-    input: message,
+    input: message.replace(/\*{6}/g, ''), // 去掉您可能还想问的问题中的******
     voice: businessType === 9001 ? 'en-US-AriaNeural' : 'zh-CN-XiaoxiaoNeural',
   }
   const audioBlob = await fetchAndConvertToAudio(params)
