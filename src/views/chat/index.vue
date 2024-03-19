@@ -803,8 +803,9 @@ let currentIndex = 0 // 跟踪当前处理的音频索引
 const queueLength = ref(100)// 要播放的队列长度，因为要播放的队列长度是未知的，先设置为100
 async function enqueueAudio(message, index) {
   // console.log(`${index} ${message} ${isPlaying.value}`)
+  const urlRegex = /https?:\/\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+/g // 语音播报不播报网址
   const params = {
-    input: message.replace(/\*{6}/g, ''), // 去掉您可能还想问的问题中的******
+    input: message.replace(/\*{6}/g, '').replace(urlRegex, ''), // 去掉您可能还想问的问题中的******
     voice: businessType === 9001 ? 'en-US-AriaNeural' : 'zh-CN-XiaoxiaoNeural',
   }
   const audioBlob = await fetchAndConvertToAudio(params)
