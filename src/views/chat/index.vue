@@ -818,7 +818,12 @@ async function enqueueAudio(message, index) {
     currentIndex = 0
     // queueLength.value = 100
     // console.log(222)
-    playNextAudio()
+    if (audioElement.value !== null) { // 先停止播放之前有可能正在播放的
+      audioElement.value.pause()
+      setTimeout(() => {
+        playNextAudio()
+      }, 100)
+    }
   }
 }
 
@@ -1361,31 +1366,36 @@ function handleStop() {
 }
 
 function addClickOnRelatedQuestion() {
-  document.querySelectorAll('a[title="******"]').forEach((link) => { // 正常的话您可能还想问的关联问题的title为******
-    // console.log(link)
-    link.addEventListener('click', (event) => {
-      // 阻止<a>标签的默认行为
-      event.preventDefault()
+  // document.querySelectorAll('a[title="******"]').forEach((link) => { // 正常的话您可能还想问的关联问题的title为******
+  //   // console.log(link)
+  //   link.addEventListener('click', (event) => {
+  //     // 阻止<a>标签的默认行为
+  //     event.preventDefault()
 
-      // 调用 handleAffixClick 函数，传递链接的文本内容
-      console.log(event.target)
-      if (event.target && event.target instanceof HTMLElement)
-        handleAffixClick(event.target.textContent || event.target.innerText)
-    })
-  })
+  //     // 调用 handleAffixClick 函数，传递链接的文本内容
+  //     // console.log(event.target)
+  //     if (event.target && event.target instanceof HTMLElement)
+  //       handleAffixClick(event.target.textContent || event.target.innerText)
+  //   })
+  // })
 
   document.querySelectorAll('.markdown-body a[href="#"]').forEach((link) => { // 有时候LLM不会将title设置为******，此时选择href=#
-    link.addEventListener('click', (event) => {
-      // 阻止默认行为
-      event.preventDefault()
-      // 调用 handleAffixClick 函数，传递链接的文本内容
-      if (event.target && event.target instanceof HTMLElement)
-        handleAffixClick(event.target.textContent || event.target.innerText)
-    })
+    // 移除之前可能添加的监听器，以防它已经被添加
+    link.removeEventListener('click', handleClickEvent)
+    // 添加新的事件监听器
+    link.addEventListener('click', handleClickEvent)
   })
 }
 
+function handleClickEvent(event) {
+  event.preventDefault()
+  // 调用 handleAffixClick 函数，传递链接的文本内容
+  if (event.target && event.target instanceof HTMLElement)
+    handleAffixClick(event.target.textContent || event.target.innerText)
+}
+
 function handleAffixClick(item) {
+  console.log(`onclick ${item}`)
   prompt.value = item
   handleSubmit()
 }
