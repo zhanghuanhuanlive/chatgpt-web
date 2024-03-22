@@ -30,6 +30,7 @@ appStore.setSiderCollapsed(collapsed.value)// 设置成缓存中的是否折叠�
 
 // console.log(localStorage.getItem('menu'))
 const options = computed(() => JSON.parse(localStorage.getItem('menu') || ''))
+console.log(options)
 
 // console.log(options.value)
 // [
@@ -219,14 +220,14 @@ const mobileSafeArea = computed(() => {
     <div class="flex flex-col h-full" :style="mobileSafeArea">
       <main class="flex flex-col flex-1 min-h-0">
         <div class="p-4">
-          <NDropdown trigger="hover" size="huge" :options="options" :show-arrow="true" @select="handleSelectModal">
+          <NDropdown v-if="options.length > 1" trigger="hover" size="huge" :options="options" :show-arrow="true" @select="handleSelectModal">
             <NButton type="primary" dashed block strong>
               +    {{ $t('chat.newChatButton') }}
             </NButton>
           </NDropdown>
-          <!-- <NButton dashed block @click="openChooseModel">
-            {{ $t('chat.newChatButton') }}
-          </NButton> -->
+          <NButton v-else type="primary" dashed block strong @click="handleSelectModal(options.key)">
+            +    {{ $t('chat.newChatButton') }}
+          </NButton>
         </div>
         <div class="flex-1 min-h-0 pb-4 overflow-hidden">
           <List />
