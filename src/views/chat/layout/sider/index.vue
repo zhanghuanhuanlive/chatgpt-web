@@ -30,7 +30,7 @@ appStore.setSiderCollapsed(collapsed.value)// 设置成缓存中的是否折叠�
 
 // console.log(localStorage.getItem('menu'))
 const options = computed(() => JSON.parse(localStorage.getItem('menu') || ''))
-console.log(options)
+// console.log(options)
 
 // console.log(options.value)
 // [

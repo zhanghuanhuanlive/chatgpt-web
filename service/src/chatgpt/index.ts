@@ -84,6 +84,8 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // 递归函数，用于遍历嵌套的数据结构
 function findItemsWithModel(data) {
+  if (!Array.isArray(data)) // 处理只有一个模型的情况
+    return [data]
   const result = []
   for (const item of data) {
     if (item.model) {
