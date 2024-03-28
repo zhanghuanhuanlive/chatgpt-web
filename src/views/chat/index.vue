@@ -1377,39 +1377,32 @@ function handleStop() {
   if (loading.value) {
     controller.abort()
     loading.value = false
+    // 停止播放
+    if (audioElement.value)
+      audioElement.value.pause()
   }
 }
 
+// 给所有您可能还想问的链接增加事件
 function addClickOnRelatedQuestion() {
-  // document.querySelectorAll('a[title="******"]').forEach((link) => { // 正常的话您可能还想问的关联问题的title为******
-  //   // console.log(link)
-  //   link.addEventListener('click', (event) => {
-  //     // 阻止<a>标签的默认行为
-  //     event.preventDefault()
-
-  //     // 调用 handleAffixClick 函数，传递链接的文本内容
-  //     // console.log(event.target)
-  //     if (event.target && event.target instanceof HTMLElement)
-  //       handleAffixClick(event.target.textContent || event.target.innerText)
-  //   })
-  // })
-
   document.querySelectorAll('.markdown-body a[href="#"]').forEach((link) => { // 有时候LLM不会将title设置为******，此时选择href=#
     // 移除之前可能添加的监听器，以防它已经被添加
-    link.removeEventListener('click', handleClickEvent)
+    link.removeEventListener('click', handleClickRelatedQuestionEvent)
     // 添加新的事件监听器
-    link.addEventListener('click', handleClickEvent)
+    link.addEventListener('click', handleClickRelatedQuestionEvent)
   })
 }
 
-function handleClickEvent(event) {
+// 点击您可能还想问的问题链接的事件
+function handleClickRelatedQuestionEvent(event) {
   event.preventDefault()
   // 调用 handleAffixClick 函数，传递链接的文本内容
   if (event.target && event.target instanceof HTMLElement)
-    handleAffixClick(event.target.textContent || event.target.innerText)
+    handleRelatedQuestionClick(event.target.textContent || event.target.innerText)
 }
 
-function handleAffixClick(item) {
+// 把您可能想问的问题填入输入框，并提交
+function handleRelatedQuestionClick(item) {
   // console.log(`onclick ${item}`)
   prompt.value = item
   handleSubmit()
@@ -1471,7 +1464,7 @@ onMounted(() => {
   if (inputRef.value && !isMobile.value)
     inputRef.value?.focus()
   fetchConfig()
-  document.addEventListener('visibilitychange', handleVisibilityChange)
+  document.addEventListener('visibilitychange', handleVisibilityChange)// 增加页面可见和不可见的事件，不可见的场景：浏览器被切换到后台，不在当前显示桌面
   // document.addEventListener('DOMContentLoaded', (event) => {
   addClickOnRelatedQuestion() // 给你可能想问的问题增加点击事件
   window.addEventListener('scroll', handleScroll)
@@ -1492,8 +1485,12 @@ function togglePlay() {
     if (audioElement.value.src)
       audioElement.value.play()
   }
-  else {
-    audioElement.value.pause()
+  else { // 如果正在播放
+    audioElement.value.pause() // 停止播放
+    // 如果开启了语音输入
+    if (isAudioInput.value) { // 如果开启了语音输入
+      startRecord()
+    } // 延迟1秒
   }
 }
 
@@ -1602,7 +1599,7 @@ function togglePlay() {
                 <NGi
                   v-for="(item, index) of currentModel.faqs" :key="index" class="affix"
                   :class="{ 'hovered-grid': activeIndex === index }"
-                  @click="handleAffixClick(item)"
+                  @click="handleRelatedQuestionClick(item)"
                   @mouseover="setActiveIndex(index)"
                   @mouseout="setActiveIndex(null)"
                 >
