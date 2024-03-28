@@ -276,7 +276,7 @@ function getPermission() {
 }
 
 function startRecorder() {
-  // console.log('startRecorder')
+  console.log('startRecorder')
   if (!state.hasPermission)
     getPermission()// 获取录音权限
   // abc('startRecorder')
@@ -623,6 +623,7 @@ function hideAudioInputComponent() {
 
 // 子组件开始录音
 function startRecord() {
+  console.log(111111111111111)
   showAudioInputComponent.value = true
   isAudioInput.value = true
   startRecorder()
