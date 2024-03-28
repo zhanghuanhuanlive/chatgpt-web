@@ -149,7 +149,7 @@ function handleSelectModal(key: string) {
   // message.info(String(key))
 }
 
-function proceedToAddHistory(businessType: number) {
+function proceedToAddHistory(businessType: string) {
   chatStore.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false, businessType })
   if (isMobile.value)
     appStore.setSiderCollapsed(true)
