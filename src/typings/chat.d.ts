@@ -8,7 +8,6 @@ declare namespace Chat {
 		loading?: boolean
 		conversationOptions?: ConversationRequest | null
 		requestOptions: { prompt: string; options?: ConversationRequest | null }
-		// businessType: number
 	}
 
 	interface History {
@@ -23,7 +22,6 @@ declare namespace Chat {
 		active: number | null
 		usingContext: boolean;
 		history: History[]
-		// businessType: string
 		chat: { uuid: number; data: Chat[]; businessType: string }[]
 	}
 

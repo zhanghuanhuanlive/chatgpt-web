@@ -129,15 +129,15 @@ async function fetchConfig() {
     const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
     if (undefined !== currentHistory)
       businessType = currentHistory.businessType
-    console.log(currentHistory)
-    console.log(businessType)
+    // console.log(currentHistory)
+    // console.log(businessType)
     if (models.length === 1) {
       currentModel = models[0]
       businessType = currentModel.key
     }
     else { currentModel = models.find(item => item.key === String(businessType)) }
-    console.log(businessType)
-    console.log(currentModel)
+    // console.log(businessType)
+    // console.log(currentModel)
     if (currentModel) {
       currentBusinessTypeName = currentModel.label || 'ChatGLM3'
       // model = item.model
@@ -147,7 +147,7 @@ async function fetchConfig() {
         currentModel.faqs = currentModel.faq.split('||||')
       }
       if (dataSources.value.length === 0 && currentModel.sayHello) { // 如果是新的对话，并且配置了sayHello
-        console.log(currentModel.sayHello)
+        // console.log(currentModel.sayHello)
         const sayHelloText = currentModel.sayHello.text
         if (sayHelloText) { // 插入sayHello到历史记录
           addChat(
@@ -183,7 +183,7 @@ function findItemsWithModel(data) {
     return [data]
   const result: Array<Model> = []
   for (const item of data) {
-    console.log(item)
+    // console.log(item)
     if (item.model) {
       result.push({
         label: item.label,
@@ -256,7 +256,7 @@ const state: State = reactive({
 
 function handleKeyDown(event) {
   if (event.key === 'Escape' || event.keyCode === 27) {
-    console.log('ESC 键被按下了')
+    // console.log('ESC 键被按下了')
     // showAudioInputComponent.value = false
     // hideAudioInputComponent()
     stopAudioInput()
@@ -623,7 +623,7 @@ function hideAudioInputComponent() {
 
 // 子组件开始录音
 function startRecord() {
-  console.log(111111111111111)
+  // console.log(111111111111111)
   showAudioInputComponent.value = true
   isAudioInput.value = true
   startRecorder()
@@ -644,6 +644,7 @@ function stopAudioInput() {
   //       audioEnterRef.value.destroyRecorder()
   //   })
   // }
+  stopRecorder()
   hideAudioInputComponent()
   isAudioInput.value = false
 }
@@ -821,7 +822,7 @@ async function enqueueAudio(message, index) {
   // console.log(`${index} ${message} ${isPlaying.value}`)
   const urlRegex = /https?:\/\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+/g // 语音播报不播报网址
   const params = {
-    input: message.replace(/\*{6}/g, '').replace(urlRegex, ''), // 去掉您可能还想问的问题中的******
+    input: message.replace(/\*/g, '').replace(urlRegex, ''), // 去掉您可能还想问的问题中的******
     voice: businessType === ENGLISH_CORNER ? 'en-US-AriaNeural' : 'zh-CN-XiaoxiaoNeural',
   }
   const audioBlob = await fetchAndConvertToAudio(params)
@@ -1680,9 +1681,9 @@ function togglePlay() {
     </div>
   </Suspense>
 
-  <div v-show="showAudioInputComponent" class="audio-enter">
+  <div v-show="showAudioInputComponent" class="audio-enter" @click="stopAudioInput">
     <div :show="showAudioInputComponent">
-      <div class="audio-pie" @click.stop>
+      <div class="audio-pie">
         <!-- 录音时显示音波图和时长 -->
         <div v-if="beginRecoding">
           <div v-if="drawColuList.length > 0" class="audio-pie_audio--osc">
