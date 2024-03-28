@@ -145,7 +145,7 @@ const options = computed(() => JSON.parse(localStorage.getItem('menu') || ''))
 // showDropdown = showDropdownRef,
 
 function handleSelectModal(key: string) {
-  proceedToAddHistory(parseInt(key))
+  proceedToAddHistory(key)
   // message.info(String(key))
 }
 
