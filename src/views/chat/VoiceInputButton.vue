@@ -16,19 +16,19 @@ const dataSources = computed(() => {
   // console.log(chatStore.history)
   chatStore.history.forEach((history) => {
     const businessType = history.businessType
-    if (businessType === 10)
+    if (businessType === '10')
       history.businessName = '百度文心一言'
-    else if (businessType === 20)
+    else if (businessType === '20')
       history.businessName = '科大讯飞星火认知V3.0'
-    else if (businessType === 30)
+    else if (businessType === '30')
       history.businessName = '阿里通义千问'
-    else if (businessType === 90)
+    else if (businessType === '90')
       history.businessName = 'GPT3.5'
-    else if (businessType === 100)
+    else if (businessType === '100')
       history.businessName = '政策事项知识库'
-    else if (businessType === 108)
+    else if (businessType === '108')
       history.businessName = '招商政策知识库'
-    else if (businessType === 101)
+    else if (businessType === '101')
       history.businessName = '民法典'
     else
       history.businessName = 'ChatGLM3'
