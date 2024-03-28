@@ -88,6 +88,7 @@ function findItemsWithModel(data) {
     return [data]
   const result = []
   for (const item of data) {
+    console.log(item)
     if (item.model) {
       result.push({
         label: item.label,
@@ -125,7 +126,7 @@ async function chatReplyProcess(options: RequestOptions) {
     // const needTts = lastContext.needTts
 
     const models = findItemsWithModel(JSON.parse(menu))// key: businessType,value: model的map
-    const item = models.find(item => item.key === String(businessType))
+    const item = models.find(item => item.key === businessType)
 
     console.log(item.model)
     if (item && item.model) {

@@ -27,7 +27,7 @@ export function fetchChatAPIProcess<T = any>(
     prompt: string
     options?: { conversationId?: string; parentMessageId?: string }
     signal?: GenericAbortSignal
-    businessType: number
+    businessType: string
     // needTts: boolean
     // chatId: number
     systemMessage: string

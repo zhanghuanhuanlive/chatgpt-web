@@ -4,7 +4,7 @@ const LOCAL_NAME = 'chatStorage'
 
 export function defaultState(): Chat.ChatState {
   const uuid = 1002
-  const businessType = 0
+  const businessType = '0'
   return {
     active: uuid,
     usingContext: true,

@@ -7,13 +7,13 @@ export interface RequestProps {
   temperature?: number
   top_p?: number
   // 这里是因为/service/arc/index.ts需要才加的
-  businessType: number
+  businessType: string
 }
 
 export interface ChatContext {
   conversationId?: string
   parentMessageId?: string
-  businessType: number
+  businessType: string
   // needTts: boolean
 }
 

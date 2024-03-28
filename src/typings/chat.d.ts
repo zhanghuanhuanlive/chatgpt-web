@@ -15,7 +15,7 @@ declare namespace Chat {
 		title: string
 		isEdit: boolean
 		uuid: number
-		businessType: number
+		businessType: string
 		businessName?: string//非必填
 	}
 
@@ -24,7 +24,7 @@ declare namespace Chat {
 		usingContext: boolean;
 		history: History[]
 		// businessType: string
-		chat: { uuid: number; data: Chat[]; businessType: number }[]
+		chat: { uuid: number; data: Chat[]; businessType: string }[]
 	}
 
 	interface ConversationRequest {

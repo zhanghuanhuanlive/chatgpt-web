@@ -39,56 +39,25 @@ const dataSources = computed(() => {
 
   // console.log(keyLabelMap)
   const models = computed(() => JSON.parse(localStorage.getItem('models') || ''))
+  console.log(chatStore.history)
   // console.log(models.value)
   chatStore.history.forEach((history) => {
-    const businessType = history.businessType as number | undefined
-    const bType = typeof businessType === 'number' ? businessType : 0
-    const bTypeStr = String(bType)
-    const item = models.value.find(item => item.key === bTypeStr)
+    let businessType = history.businessType as string | undefined // 第一次打开时businessType为undefined
+    console.log(businessType)
+    let model
+    if (models.value.length === 1) {
+      model = models.value[0]
+      businessType = model.key
+    }
+    else { model = models.value.find(item => item.key === businessType) }
+    // const bType = typeof businessType === 'string' ? businessType : '0'
+    // const bTypeStr = String(bType)
+    // const item = models.value.find(item => item.key === businessType)
     // if (keyLabelMap)
     // currentBusinessType = item.label || 'ChatGLM3'
     // console.log(bTypeStr)
     // console.log(item)
-    history.businessName = item ? item.label : 'ChatGLM3' as string | undefined
-
-    // let businessType = 0
-    // const businessType: number | undefined = history.businessType as number | undefined
-    // const businessType: number | undefined = history.businessType as number | undefined
-
-    // const businessType: number = history.businessType || 0 as number
-    // const businessType = history.businessType as number | undefined
-    // const businessType = history.businessType as string
-
-    // let bType = 0
-    // if (typeof businessType === 'number' || businessType === undefined)
-    // bType = businessType || 0
-    // const bTypeStr = String(bType)
-    // history.businessName = keyLabelMap.get(businessType)
-    // console.log(bType)
-    // console.log(typeof businessType)
-    // if (businessType)
-    // if (businessType === 10)
-    //   history.businessName = '百度文心一言'
-    // else if (businessType === 20)
-    //   history.businessName = '科大讯飞星火认知V3.0'
-    // else if (businessType === 30)
-    //   history.businessName = '阿里通义千问'
-    // else if (businessType === 90)
-    //   history.businessName = 'GPT3.5'
-    // else if (businessType === 100)
-    //   history.businessName = '政策事项知识库'
-    // else if (businessType === 108)
-    //   history.businessName = '招商政策知识库'
-    // else if (businessType === 101)
-    //   history.businessName = '民法典'
-    // else if (businessType === 1001)
-    //   history.businessName = '数据分析'
-    // else if (businessType === 10001)
-    //   history.businessName = '语音转写'
-    // else if (businessType === 10002)
-    //   history.businessName = '文档分析'
-    // else
-    //   history.businessName = 'ChatGLM3'
+    history.businessName = model ? model.label : 'ChatGLM3' as string | undefined
   })
   return chatStore.history
 })

@@ -52,6 +52,11 @@ const prompt = ref<string>('')
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
 
+/** 特殊的businessType */
+const ENGLISH_CORNER = '9001' // 英语角
+const STT = '10001' // 语音转写
+const FILE_SUMMARY = '10002' // 文件总结
+
 // 添加PromptStore
 const promptStore = usePromptStore()
 
@@ -94,7 +99,7 @@ interface SayHello {
 }
 interface Model {
   key: string
-  label: string
+  label?: string
   model: string
   sayHello?: SayHello
   systemMessage?: string // 每个模型对应的系统提示词
@@ -103,8 +108,8 @@ interface Model {
 }
 const config = ref<ConfigState>()
 // let keyLabelMap: Map<string, string>
-let businessType = 0 // 对应配置文件中的key，9001是口语
-let currentBusinessTypeName = 'ChatGLM3'
+let businessType = '0' // 对应配置文件中的key，9001是口语
+let currentBusinessTypeName = ''// 这里定义的名字会在页面初始化时显示
 // let systemMessage = '' // 每个模型对应的系统提示词
 // const faqs: string[] = []
 let currentModel: Model | undefined // 当前使用的模型以及配置的参数
@@ -124,8 +129,15 @@ async function fetchConfig() {
     const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
     if (undefined !== currentHistory)
       businessType = currentHistory.businessType
-    currentModel = models.find(item => item.key === String(businessType))
-
+    console.log(currentHistory)
+    console.log(businessType)
+    if (models.length === 1) {
+      currentModel = models[0]
+      businessType = currentModel.key
+    }
+    else { currentModel = models.find(item => item.key === String(businessType)) }
+    console.log(businessType)
+    console.log(currentModel)
     if (currentModel) {
       currentBusinessTypeName = currentModel.label || 'ChatGLM3'
       // model = item.model
@@ -171,6 +183,7 @@ function findItemsWithModel(data) {
     return [data]
   const result: Array<Model> = []
   for (const item of data) {
+    console.log(item)
     if (item.model) {
       result.push({
         label: item.label,
@@ -485,7 +498,7 @@ function splitArr(arr, rst, idx) {
 // }
 
 function handleVisibilityChange() {
-  console.log('handleVisibilityChange')
+  // console.log('handleVisibilityChange')
   if (document.hidden) {
     hideAudioInputComponent()
     isAudioInput.value = false
@@ -539,7 +552,7 @@ async function handleAudioInput(audioBlob: Blob) {
     whisperApiBaseUrl = `${reverseProxy}/transcribe/transcribe`
   }
   // console.log(whisperApiBaseUrl)
-  if (businessType === 9001)// 9001是英语角
+  if (businessType === ENGLISH_CORNER)// 9001是英语角
     whisperApiBaseUrl = `${whisperApiBaseUrl}_en/`// 此处必须有斜线结尾
   else
     whisperApiBaseUrl = `${whisperApiBaseUrl}/`
@@ -557,7 +570,7 @@ async function handleAudioInput(audioBlob: Blob) {
     const text = result.text
     // console.log(result)
 
-    if (businessType !== 9001 && (text.includes('停止对话') || text.includes('停止会话') || text.includes('结束会话') || text.includes('结束对话') || text.includes('再见') || text.includes('谢谢'))) {
+    if (businessType !== ENGLISH_CORNER && (text.includes('停止对话') || text.includes('停止会话') || text.includes('结束会话') || text.includes('结束对话') || text.includes('再见') || text.includes('谢谢'))) {
       // hideAudioInputComponent()
       stopAudioInput()
     }
@@ -581,7 +594,7 @@ async function handleAudioInput(audioBlob: Blob) {
 }
 // 隐藏语音对话组件
 function hideAudioInputComponent() {
-  console.log('hideAudioInputComponent')
+  // console.log('hideAudioInputComponent')
   showAudioInputComponent.value = false
   // isAudioInput.value = false
   // nextTick(() => {
@@ -644,9 +657,9 @@ dataSources.value.forEach((item, index) => {
 function triggerFileInput() {
   const fileInput = document.createElement('input')
   fileInput.type = 'file'
-  if (businessType === 10001)
+  if (businessType === STT)
     fileInput.accept = '.mp3,.wav'
-  else if (businessType === 10002)
+  else if (businessType === FILE_SUMMARY)
     fileInput.accept = '.doc,.docx,.pdf,.xls,.xlsx'
   // fileInput.accept = 'audio/*'
   fileInput.onchange = (event) => {
@@ -808,7 +821,7 @@ async function enqueueAudio(message, index) {
   const urlRegex = /https?:\/\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+/g // 语音播报不播报网址
   const params = {
     input: message.replace(/\*{6}/g, '').replace(urlRegex, ''), // 去掉您可能还想问的问题中的******
-    voice: businessType === 9001 ? 'en-US-AriaNeural' : 'zh-CN-XiaoxiaoNeural',
+    voice: businessType === ENGLISH_CORNER ? 'en-US-AriaNeural' : 'zh-CN-XiaoxiaoNeural',
   }
   const audioBlob = await fetchAndConvertToAudio(params)
   audioBlobQueue[index] = audioBlob
@@ -877,7 +890,7 @@ async function playNextAudio() {
   }
 }
 
-const punctuationRegex = businessType === 9001 ? /[!！,，。;；?？\n]/ : /[!！，。;；?？\n]/ // 英文的句号有可能用在小数里,英文的逗号有可能用在科学计数里
+const punctuationRegex = businessType === ENGLISH_CORNER ? /[!！,，。;；?？\n]/ : /[!！，。;；?？\n]/ // 英文的句号有可能用在小数里,英文的逗号有可能用在科学计数里
 const punctuationRegexOnly = /^[!！,，。;；?？\n]+$/ // 英文的句号有可能用在小数里,英文的逗号有可能用在科学计数里
 // 截取到最后一个标点符号
 function extractLastPunctuation(str) {
@@ -937,7 +950,7 @@ async function onConversation(filePath: string) {
     +uuid, // +表示将其后的变量转换成一个数字
     {
       dateTime: new Date().toLocaleString(),
-      text: businessType === 10001 ? '转写中' : businessType === 10002 ? '总结中' : businessType === 9001 ? 'Thinking' : '思考中',
+      text: businessType === STT ? '转写中' : businessType === FILE_SUMMARY ? '总结中' : businessType === ENGLISH_CORNER ? 'Thinking' : '思考中',
       loading: true,
       inversion: false,
       error: false,
@@ -951,12 +964,12 @@ async function onConversation(filePath: string) {
     let lastText = ''
     // const audioQueue = new AudioPlayQueue()
     const fetchChatAPIOnce = async () => {
-      console.log(message)
+      // console.log(message)
       // console.log(options)
-      const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-      let businessType = 0
-      if (undefined !== currentHistory)
-        businessType = currentHistory.businessType
+      // const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
+      // let businessType = 0
+      // if (undefined !== currentHistory)
+      //   businessType = currentHistory.businessType
       // console.log('--------------0')
       // let needTts = false
       let previousText = ''
@@ -1145,10 +1158,10 @@ async function onRegenerate(index: number) {
     // const needTts = false
     const fetchChatAPIOnce = async () => {
       console.log(message)
-      const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-      let businessType = 0
-      if (undefined !== currentHistory)
-        businessType = currentHistory.businessType
+      // const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
+      // let businessType = 0
+      // if (undefined !== currentHistory)
+      //   businessType = currentHistory.businessType
       let previousText = ''
       let queueIndex = 0
       // currentIndex = 0
@@ -1397,7 +1410,7 @@ function handleClickEvent(event) {
 }
 
 function handleAffixClick(item) {
-  console.log(`onclick ${item}`)
+  // console.log(`onclick ${item}`)
   prompt.value = item
   handleSubmit()
 }
@@ -1510,7 +1523,7 @@ function togglePlay() {
       <template v-if="isSpinning">
         <NSpin :show="isSpinning" class="global-spin">
           <template #description>
-            <text v-if="businessType === 9001">
+            <text v-if="businessType === ENGLISH_CORNER">
               Wait a moment.
             </text>
             <text v-else>
@@ -1602,10 +1615,10 @@ function togglePlay() {
             </div>
           </template>
           <div class="flex items-center justify-between">
-            <HoverButton v-if="!isMobile && (businessType === 10001 || businessType === 10002)" :title="businessType === 10001 ? '音频转写文字' : businessType === 10002 ? '文档总结' : ''" @click="triggerFileInput">
+            <HoverButton v-if="!isMobile && (businessType === STT || businessType === FILE_SUMMARY)" :title="businessType === STT ? '音频转写文字' : businessType === FILE_SUMMARY ? '文档总结' : ''" @click="triggerFileInput">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <!-- <SvgIcon :icon="businessType === 10001 ? 'fe:file-audio' : businessType === 10002 ? 'ic:twotone-upload-file' : ''" /> -->
-                <FontAwesomeIcon :icon="businessType === 10001 ? 'fas fa-file-upload' : businessType === 10002 ? 'fas fa-file-upload' : ''" />
+                <!-- <SvgIcon :icon="businessType === STT ? 'fe:file-audio' : businessType === FILE_SUMMARY ? 'ic:twotone-upload-file' : ''" /> -->
+                <FontAwesomeIcon :icon="businessType === STT ? 'fas fa-file-upload' : businessType === FILE_SUMMARY ? 'fas fa-file-upload' : ''" />
               </span>
             </HoverButton>
             <HoverButton v-if="playAudio && isPlaying" @click="togglePlay">
@@ -1624,13 +1637,13 @@ function togglePlay() {
                 <FontAwesomeIcon icon="fas fa-download" />
               </span>
             </HoverButton> -->
-            <HoverButton v-if="businessType !== 10001 && businessType !== 10002" title="不携带历史记录" @click="toggleUsingContext">
+            <HoverButton v-if="businessType !== STT && businessType !== FILE_SUMMARY" title="不携带历史记录" @click="toggleUsingContext">
               <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
                 <!-- <SvgIcon icon="ri:chat-history-line" /> -->
                 <FontAwesomeIcon icon="fas fa-history" />
               </span>
             </HoverButton>
-            <HoverButton v-if="businessType !== 10001 && businessType !== 10002" :title="isAudioInput ? '当前已启用语音输入' : '当前禁用语音输入'">
+            <HoverButton v-if="businessType !== STT && businessType !== FILE_SUMMARY" :title="isAudioInput ? '当前已启用语音输入' : '当前禁用语音输入'">
               <span v-if="isAudioInput" class="text-xl text-[#4b9e5f]" @click="stopAudioInput">
                 <FontAwesomeIcon icon="fas fa-microphone-lines" />
               </span>
@@ -1647,7 +1660,7 @@ function togglePlay() {
                   type="textarea"
                   :placeholder="placeholder"
                   :autosize="{ minRows: 1, maxRows: isMobile ? 4 : 8 }"
-                  :disabled="businessType === 10001"
+                  :disabled="businessType === STT"
                   @input="handleInput"
                   @focus="handleFocus"
                   @blur="handleBlur"

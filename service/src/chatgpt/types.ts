@@ -3,7 +3,7 @@ import type fetch from 'node-fetch'
 
 export interface RequestOptions {
   message: string
-  lastContext?: { conversationId?: string; parentMessageId?: string; businessType?: number }
+  lastContext?: { conversationId?: string; parentMessageId?: string; businessType?: string }
   process?: (chat: ChatMessage) => void
   systemMessage?: string
   temperature?: number
