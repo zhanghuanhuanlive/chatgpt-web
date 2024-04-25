@@ -60,8 +60,8 @@ export default {
     avatarLink: '头像链接',
     name: '名称',
     description: '描述',
-    role: '角色设定',
-    temperature: 'Temperature',
+    role: '系统提示词',
+    temperature: '回答严谨',
     top_p: 'Top_p',
     resetUserInfo: '重置用户信息',
     chatHistory: '聊天记录',
@@ -75,6 +75,7 @@ export default {
     balance: 'API余额',
     monthlyUsage: '本月使用量',
     playAudio: '语音播报',
+    temperatureMax: '发散',
   },
   store: {
     siderButton: '提示词库',
