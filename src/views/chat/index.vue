@@ -77,7 +77,7 @@ const isAudioInput = ref(false) // 是否已启用了语音输入
 const isSpinning = ref(false)
 
 // const showArrowIcon = ref(false)
-const activeIndex = ref(null)
+const activeIndex = ref(-1)
 
 const isPlaying = ref(false)
 const audioElement = ref<HTMLAudioElement | null>(null)
@@ -1406,6 +1406,7 @@ function handleClickRelatedQuestionEvent(event) {
 // 把您可能想问的问题填入输入框，并提交
 function handleRelatedQuestionClick(item) {
   // console.log(`onclick ${item}`)
+  // console.log(item)
   prompt.value = item
   handleSubmit()
 }
@@ -1534,8 +1535,12 @@ function togglePlay() {
       <HeaderComponent
         v-if="isMobile"
         :using-context="usingContext"
+        :faqs="(currentModel !== undefined && currentModel.faqs !== undefined) ? currentModel.faqs.join('||||') : ''"
+        :active-index="activeIndex"
         @export="handleExport"
         @handle-clear="handleClear"
+        @handle-related-question-click="handleRelatedQuestionClick"
+        @set-active-index="setActiveIndex"
       />
       <main class="flex-1 overflow-hidden">
         <div id="scrollRef" ref="scrollRef" class="h-full overflow-hidden overflow-y-auto">
