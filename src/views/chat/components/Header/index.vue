@@ -47,11 +47,9 @@ function handleClear() {
   emit('handleClear')
 }
 function handleRelatedQuestionClick(item: string) {
-  // console.log(item)
   emit('handleRelatedQuestionClick', item)
 }
 function setActiveIndex(index: number) {
-  // console.log(index)
   emit('setActiveIndex', index)
 }
 </script>
@@ -125,8 +123,13 @@ function setActiveIndex(index: number) {
 </template>
 
 <style scoped lang="scss">
+  .hovered-grid {
+    background-color: #333;
+  }
+  .n-alert {
     .n-alert-body {
       padding-bottom: 8px;
       padding-top: 8px;
     }
+  }
 </style>
