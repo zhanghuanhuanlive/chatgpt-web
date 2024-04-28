@@ -110,7 +110,7 @@ function setActiveIndex(index: number) {
           @mouseover="setActiveIndex(index)"
           @mouseout="setActiveIndex(-1)"
         >
-          <NAlert title="" :show-icon="false">
+          <NAlert title="" class="myAlert" :show-icon="false" :bordered="true">
             <NEllipsis :line-clamp="1">
               {{ item }}
             </NEllipsis>
@@ -122,14 +122,12 @@ function setActiveIndex(index: number) {
   </header>
 </template>
 
-<style scoped lang="scss">
-  .hovered-grid {
-    background-color: #333;
-  }
-  .n-alert {
-    .n-alert-body {
-      padding-bottom: 8px;
-      padding-top: 8px;
-    }
-  }
+<style>
+.hovered-grid {
+  background-color: #333;
+}
+
+.myAlert .n-alert-body {
+  --n-padding: 5px 10px; /* 重写 --n-padding 变量的值 */
+}
 </style>
