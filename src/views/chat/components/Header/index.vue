@@ -126,8 +126,16 @@ function setActiveIndex(index: number) {
 .hovered-grid {
   background-color: #333;
 }
-
+.n-alert {
+  font-size: 85%;
+  /* line-height: 30px; */
+  /* height: 30px; */
+  /* display: flex;
+  align-items: center;
+  justify-content: center; */
+}
 .myAlert .n-alert-body {
-  --n-padding: 5px 10px; /* 重写 --n-padding 变量的值 */
+  --n-font-size: 12px;
+  --n-padding: 5px 10px 0px 10px; /* 重写 --n-padding 变量的值 */
 }
 </style>
