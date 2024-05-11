@@ -1290,6 +1290,15 @@ function togglePlay() {
         @handle-related-question-click="handleRelatedQuestionClick"
         @set-active-index="setActiveIndex"
       />
+      <RecorderComponent
+        v-show="showAudioInputComponent" ref="recordRef"
+        :whisper-model="whisperModel ? whisperModel : ''"
+        :accent="accent ? accent : 'mandarin'"
+        @upload-audio="uploadAudio"
+        @stop-audio-input="stopAudioInput"
+        @handle-related-question-click="handleRelatedQuestionClick"
+        @hide-audio-input-component="hideAudioInputComponent"
+      />
       <main class="flex-1 overflow-hidden">
         <div id="scrollRef" ref="scrollRef" class="h-full overflow-hidden overflow-y-auto">
           <div
@@ -1404,15 +1413,7 @@ function togglePlay() {
               </span>
             </HoverButton>
             <!-- <AudioEnter v-show="showAudioInputComponent" ref="audioEnterRef" @upload-audio="uploadAudio" @stop-audio-input="stopAudioInput" /> -->
-            <RecorderComponent
-              v-show="showAudioInputComponent" ref="recordRef"
-              :whisper-model="whisperModel ? whisperModel : ''"
-              :accent="accent ? accent : 'mandarin'"
-              @upload-audio="uploadAudio"
-              @stop-audio-input="stopAudioInput"
-              @handle-related-question-click="handleRelatedQuestionClick"
-              @hide-audio-input-component="hideAudioInputComponent"
-            />
+
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
               <template #default="{ handleInput, handleBlur, handleFocus }">
                 <NInput

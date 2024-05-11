@@ -644,7 +644,7 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .container {
   /* z-index: 999999999;
   width: 100%;
@@ -689,7 +689,7 @@ a:hover{
   /* box-shadow: 2px 2px 3px #aaa; */
 }
 
-.btns button{
+/* .btns button{
   display: inline-block;
   cursor: pointer;
   border: none;
@@ -717,5 +717,5 @@ a:hover{
   font-size:14px;
   padding:2px 8px;
   border-radius: 99px;
-}
+} */
 </style>
