@@ -321,7 +321,7 @@ const recStart = async () => {
   isShowWave.value = true
   // if (rec)
   //   rec.close()
-  console.log(`rec: ${rec}`)
+  // console.log(`rec: ${rec}`)
   if (!rec) {
     console.log('new Recorder')
     rec = new Recorder({
@@ -369,7 +369,7 @@ const recStart = async () => {
     wave.input(mockAudioBuffer, 5, sampleRate)
     if (talkingDetected) {
       // clearInterval(interval1)
-      console.log('clearInterval')
+      // console.log('clearInterval')
     }
   }, 100)
 
@@ -440,7 +440,7 @@ function checkSilence(powerLevel) {
   // console.log(`talkingDetected: ${talkingDetected} | silenceStartTime: ${silenceStartTime} | talkingStartTime: ${talkingStartTime}`)
 
   if (powerLevel > powerLevelThreshold) { // 有人在说话：音量超过阈值
-    console.log(powerLevel)
+    // console.log(powerLevel)
     console.log('talkingDetected')
     talkingDetected = true
     silenceStartTime = 0 // 重置静音开始时间

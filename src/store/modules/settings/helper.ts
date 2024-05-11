@@ -6,8 +6,8 @@ export interface SettingsState {
   systemMessage: string
   temperature: number
   top_p: number
-  playAudio: boolean// 是否播放音频你
-  typingSound: boolean
+  playAudio: boolean// 是否播放音频
+  typingSound: boolean // 是否播放打字效果音效
 }
 
 export function defaultSetting(): SettingsState {
