@@ -5,7 +5,6 @@ import { NModal, NTabPane, NTabs } from 'naive-ui'
 import Advanced from './Advanced.vue'
 // import About from './About.vue'
 import { useAuthStore } from '@/store'
-import { SvgIcon } from '@/components/common'
 
 interface Props {
   visible: boolean
@@ -50,8 +49,8 @@ const show = computed({
         </NTabPane> -->
         <NTabPane v-if="isChatGPTAPI" name="Advanced" tab="Advanced">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:equalizer-line" />
-            <span class="ml-2">{{ $t('setting.advanced') }}</span>
+            <!-- <SvgIcon class="text-lg" icon="ri:equalizer-line" /> -->
+            <!-- <span class="ml-2">{{ $t('setting.advanced') }}</span> -->
           </template>
           <div class="min-h-[100px]">
             <Advanced />

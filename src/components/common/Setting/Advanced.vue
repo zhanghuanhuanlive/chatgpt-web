@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { computed, watch } from 'vue'
-import { NButton, NInput, NSlider, NSwitch, useMessage } from 'naive-ui'
+import { NInput, NSlider, NSwitch, useMessage } from 'naive-ui'
 import { useSettingStore } from '@/store'
-import { t } from '@/locales'
 
 const settingStore = useSettingStore()
 
@@ -64,11 +63,11 @@ watch(typingSound, (newVal, oldVal) => {
 //   ms.success(t('common.success'))
 // }
 
-function handleReset() {
-  settingStore.resetSetting()
-  ms.success(t('common.success'))
-  window.location.reload()
-}
+// function handleReset() {
+//   settingStore.resetSetting()
+//   ms.success(t('common.success'))
+//   window.location.reload()
+// }
 </script>
 
 <template>
@@ -125,12 +124,12 @@ function handleReset() {
           {{ $t('common.save') }}
         </NButton>
       </div> -->
-      <div class="flex items-center space-x-4">
+      <!-- <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">&nbsp;</span>
         <NButton size="small" @click="handleReset">
           {{ $t('common.reset') }}
         </NButton>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
