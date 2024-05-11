@@ -10,4 +10,5 @@ export default defineConfig({
   minify: false,
   shims: true,
   dts: false,
+  external: ['crypto-js'], // 将 'crypto-js' 添加为外部模块
 })
