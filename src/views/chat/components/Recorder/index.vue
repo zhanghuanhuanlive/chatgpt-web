@@ -26,6 +26,8 @@ const mockAudioBuffer = [0, 2816, 5549, 8117, 10427, 12348, 13852, 14919, 15534,
   -9187, -6570, -3785, -877, 2046, 4929, 7741, 10427, 12837, 14919, 16524, 17614,
   18157, 18137, 17550, 16405]
 
+let drawWaveInterval // 绘制音浪的interval
+
 let ws: WebSocket
 let appId = ''
 interface Props {
@@ -33,8 +35,9 @@ interface Props {
   // activeIndex: number
 }
 interface Emit {
-  (ev: 'uploadAudio', blob: Blob): void
+  (ev: 'uploadAudio', blob: Blob | null): void
   (ev: 'stopAudioInput'): void
+  (ev: 'hideAudioInputComponent'): void
   (ev: 'handleRelatedQuestionClick', fullTranscription: string): void
 }
 
@@ -77,12 +80,12 @@ interface XunfeiRequestParams {
 }
 
 // 监测静音相关
-const powerLevelThreshold = 15 // 超过这个设定的阈值代表有人在说话
-let silenceStartTime: number // 静音开始的时间
+const powerLevelThreshold = 25 // 超过这个设定的阈值代表有人在说话
+let silenceStartTime = 0 // 静音开始的时间
 const silenceDurationThresholdAfterTalk = 3000 // 单位ms，静音时长的阈值，有人说过话以后，超过这个时长，就会停止录音
-const silenceDurationThreshold = 10000 // 静音时长的阈值，没人说话的情况下超过这个值，就会停止录音
+const silenceDurationThreshold = 8000 // 静音时长的阈值，没人说话的情况下超过这个值，就会停止录音
 // let talkDurationThreshold = 500 // 说话时长的阈值，超过这个值，才会提交进行撰写
-let talkingStartTime: number // 监测到说话开始的时间
+let talkingStartTime = 0 // 监测到说话开始的时间
 // let talkingDuration = null // 说话的时长
 let talkingDetected = false // 是否检测到有人说话
 // let needSubmit = false // 是否需要提交录音数据
@@ -157,73 +160,6 @@ const RealTimeSendTryReset = function () {
   realTimeSendTryChunks = null
 }
 
-async function initWebSocket() {
-  try {
-    const data = await fetchWebSocketUrl()// 获得讯飞的WebSocket Url
-    // console.log(data)
-    const wssUrl = data.wssUrl
-    appId = data.appId
-    // console.log(appId)
-    ws = new WebSocket(wssUrl)
-
-    ws.onopen = function () {
-      console.log('WebSocket连接已打开')
-    // WebSocket连接成功后的逻辑，例如可以通知用户或开始发送数据
-    }
-
-    ws.onmessage = function (event) {
-      console.log('接收到消息：', event.data)
-      // 根据服务器返回的消息进行处理，比如更新UI等
-      const response = JSON.parse(event.data)
-      if (response.code === 0 && response.data && response.data.result) {
-        const results = response.data.result.ws
-        const textPieces = results.map(ws => ws.cw.map(cw => cw.w).join(''))
-        const newText = textPieces.join('')
-
-        // 根据返回的状态更新完整文本
-        if (response.data.status === 0) {
-          // 新会话，重置文本
-          fullTranscription = newText
-        }
-        else {
-          // 累加到已有文本
-          fullTranscription += newText
-        }
-        if (fullTranscription === '谢谢' || fullTranscription === '再见') {
-          fullTranscription = ''
-          emit('stopAudioInput')
-          return
-        }
-
-        emit('handleRelatedQuestionClick', fullTranscription)
-        fullTranscription = ''
-
-        // 如果是最后一块结果，可能需要做些额外的事情
-        // if (response.data.status === 2)
-        //   console.log('Final transcription:', fullTranscription)
-        // 可以在这里执行其他操作，例如关闭WebSocket连接或通知用户等
-      }
-      else {
-        console.error('Error receiving transcription:', response.message)
-      }
-    }
-
-    ws.onerror = function (event) {
-      console.error('WebSocket出错:', event)
-    // 出错处理逻辑，可以尝试重新连接或通知用户
-    }
-
-    ws.onclose = function (event) {
-      console.log('WebSocket连接已关闭:', event)
-    // 连接关闭后的处理逻辑，例如清理资源或重连
-    }
-  }
-  catch (error) {
-    console.error('Error initializing WebSocket:', error)
-    // 在这里添加错误处理逻辑，例如显示错误消息，重试连接等
-  }
-}
-
 function arrayBufferToBase64(buffer) {
   let binary = ''
   const bytes = new Uint8Array(buffer)
@@ -239,7 +175,7 @@ const TransferUpload = async function (number, blobOrNull, duration, blobRec, is
   transferUploadNumberMax = Math.max(transferUploadNumberMax, number)
   if (!ws || ws.readyState !== WebSocket.OPEN) {
     console.log('WebSocket未连接或连接已关闭')
-    console.log(blobOrNull)
+    // console.log(blobOrNull)
     await initWebSocket()
   }
   if (blobOrNull) {
@@ -266,8 +202,8 @@ const TransferUpload = async function (number, blobOrNull, duration, blobRec, is
     ws.send(JSON.stringify(params))
 
     // 日志输出，用于调试
-    const logMsg = `No.${number < 100 ? (`000${number}`).substr(-3) : number}`
-    console.log(`${logMsg} 发送成功`)
+    // const logMsg = `No.${number < 100 ? (`000${number}`).substr(-3) : number}`
+    // console.log(`${logMsg} 发送成功`)
   }
 
   if (isClose) {
@@ -364,29 +300,7 @@ const RealTimeSendTry = function (buffers, bufferSampleRate, isClose) {
   TransferUpload(0, pcmArrayBuffer, duration, null, false)
 }
 
-// =====pcm文件合并核心函数==========
-Recorder.PCMMerge = function (fileBytesList, bitRate, sampleRate, True, False) {
-  // 计算所有文件总长度
-  let size = 0
-  for (let i = 0; i < fileBytesList.length; i++)
-    size += fileBytesList[i].byteLength
-
-  // 全部直接拼接到一起
-  const fileBytes = new Uint8Array(size)
-  let pos = 0
-  for (let i = 0; i < fileBytesList.length; i++) {
-    const bytes = fileBytesList[i]
-    fileBytes.set(bytes, pos)
-    pos += bytes.byteLength
-  }
-
-  // 计算合并后的总时长
-  const duration = Math.round(size * 8 / bitRate / sampleRate * 1000)
-
-  True(fileBytes, duration, { bitRate, sampleRate })
-}
-
-// 调用录音
+// 录音开启
 let rec
 const recStart = async () => {
   if (props.whisperModel === 'whisper' || props.whisperModel === '') {
@@ -447,10 +361,12 @@ const recStart = async () => {
   //   }
   // }, 100) // 每100毫秒检查一次
 
-  const interval1 = setInterval(() => { // 没监测到人说话前,先展示音浪
+  drawWaveInterval = setInterval(() => { // 没监测到人说话前,先展示音浪
     wave.input(mockAudioBuffer, 5, sampleRate)
-    if (talkingDetected)
-      clearInterval(interval1)
+    if (talkingDetected) {
+      // clearInterval(interval1)
+      console.log('clearInterval')
+    }
   }, 100)
 
   // if (Recorder.WaveView)
@@ -466,6 +382,7 @@ const recClose = () => {
   // isShowWave.value = false
   if (rec) {
     console.log('need close')
+    // emit('stopAudioInput')// 要释放资源,并停止语音输入
     rec.close()// 释放录音资源，当然可以不释放，后面可以连续调用start；但不释放时系统或浏览器会一直提示在录音，最佳操作是录完就close掉
     rec = null
   }
@@ -479,11 +396,11 @@ const recStop = (needSubmit: boolean, needClose: boolean) => {
 
   if (rec) {
     rec.stop((blob, duration) => {
-    // 简单利用URL生成本地文件地址，注意不用了时需要revokeObjectURL，否则霸占内存
-    // 此地址只能本地使用，比如赋值给audio.src进行播放，赋值给a.href然后a.click()进行下载（a需提供download="xxx.mp3"属性）
       if ((props.whisperModel === 'whisper' || props.whisperModel === '') && needSubmit) { // 不是讯飞,默认为空的情况下,上传wav
         emit('uploadAudio', blob)
       // 以下代码可以用来测试播放录好的文件
+      // 简单利用URL生成本地文件地址，注意不用了时需要revokeObjectURL，否则霸占内存
+      // 此地址只能本地使用，比如赋值给audio.src进行播放，赋值给a.href然后a.click()进行下载（a需提供download="xxx.mp3"属性）
       // const localUrl = (window.URL || webkitURL).createObjectURL(blob)
       // console.log(blob, localUrl, `时长:${duration}ms`)
       // const audio = document.createElement('audio')
@@ -492,7 +409,9 @@ const recStop = (needSubmit: boolean, needClose: boolean) => {
       // audio.src = localUrl
       // audio.play()
       }
-      // else { emit('stopAudioInput') }
+      // else if (needClose) {
+      //   // emit('hideAudioInputComponent')
+      // }
 
       if (needClose)
         recClose()
@@ -514,9 +433,11 @@ function checkSilence(powerLevel) {
   // console.log(talkingDetected)
   const currentTime = Date.now()
   // const hasLoudSound = rstArr.some(db => db >= 150)
+  // console.log(`talkingDetected: ${talkingDetected} | silenceStartTime: ${silenceStartTime} | talkingStartTime: ${talkingStartTime}`)
 
   if (powerLevel > powerLevelThreshold) { // 有人在说话：音量超过阈值
-    // console.log(powerLevel)
+    console.log(powerLevel)
+    console.log('talkingDetected')
     talkingDetected = true
     silenceStartTime = 0 // 重置静音开始时间
     if (talkingStartTime === 0)
@@ -527,32 +448,116 @@ function checkSilence(powerLevel) {
   }
 
   // 检测静音条件
-  if (silenceStartTime > 0) {
+  else if (silenceStartTime > 0) {
     const silenceDuration = currentTime - silenceStartTime// 静音时长，ms
-    if ((talkingDetected && silenceDuration > silenceDurationThresholdAfterTalk)) { // 有人说话，且静音超过1500ms
+    if ((props.whisperModel !== 'xunfei' && talkingDetected && silenceDuration > silenceDurationThresholdAfterTalk)) { // 不使用讯飞的情况下:有人说话，且静音超过1500ms
       // needCheckSlicence = false
       // 结束录音
       // if (talkingDuration > talkDurationThreshold) { // 说话时长大于1500ms
       // needSubmit = true
       // }
-      console.log('有人说话，且静音超过1500ms')
+      console.log(`talkingDetected: ${talkingDetected}`)
+      console.log(`silenceDuration: ${silenceDuration}`)
+      console.log('有人说话，且静音超过阈值')
       recStop(true, false)// 结束录音，且提交，且不释放资源
-      talkingDetected = false
-      silenceStartTime = 0
-      talkingStartTime = 0
+      // talkingDetected = false
+      // silenceStartTime = 0
+      // talkingStartTime = 0
       // 清理逻辑
-      // cleanupAfterRecording()
+      cleanupAfterRecording()
     }
     else if (!talkingDetected && silenceDuration > silenceDurationThreshold) { // 静音超过阈值，一直都没人说话，关掉录音
       // needCheckSlicence = false
       // console.log(`beginRecoding: ${beginRecoding}`)
       // console.log(`silenceDuration > 5: ${silenceDuration}`)
       console.log('一直都没人说话')
-      recStop(false, true)// 结束录音，且不提交，且释放资源
-      talkingDetected = false
-      silenceStartTime = 0
-      talkingStartTime = 0
+      // talkingDetected = false
+      // silenceStartTime = 0
+      // talkingStartTime = 0
+      cleanupAfterRecording()
+      emit('stopAudioInput')
+      // recStop(false, true)// 结束录音，且不提交，且释放资源
+      // silenceDuration = 0
     }
+  }
+}
+
+function cleanupAfterRecording() {
+  talkingDetected = false
+  silenceStartTime = 0
+  talkingStartTime = 0
+  clearInterval(drawWaveInterval)
+  console.log(`talkingDetected: ${talkingDetected}`)
+  // talkingDuration = null
+}
+
+async function initWebSocket() {
+  try {
+    const data = await fetchWebSocketUrl()// 获得讯飞的WebSocket Url
+    // console.log(data)
+    const wssUrl = data.wssUrl
+    appId = data.appId
+    // console.log(appId)
+    ws = new WebSocket(wssUrl)
+
+    ws.onopen = function () {
+      console.log('WebSocket连接已打开')
+    // WebSocket连接成功后的逻辑，例如可以通知用户或开始发送数据
+    }
+
+    ws.onmessage = function (event) {
+      console.log('接收到消息：', event.data)
+      // 根据服务器返回的消息进行处理，比如更新UI等
+      const response = JSON.parse(event.data)
+      if (response.code === 0 && response.data && response.data.result) {
+        const results = response.data.result.ws
+        const textPieces = results.map(ws => ws.cw.map(cw => cw.w).join(''))
+        const newText = textPieces.join('')
+
+        // 根据返回的状态更新完整文本
+        if (response.data.status === 0) {
+          // 新会话，重置文本
+          fullTranscription = newText
+        }
+        else {
+          // 累加到已有文本
+          fullTranscription += newText
+        }
+        if (fullTranscriptiontext.includes('谢谢') || fullTranscription.includes('再见')) {
+          fullTranscription = ''
+          cleanupAfterRecording()
+          emit('stopAudioInput')
+          return
+        }
+
+        recStop(true, false)// 结束录音，且提交，且不释放资源
+        cleanupAfterRecording()
+        emit('handleRelatedQuestionClick', fullTranscription)
+        fullTranscription = ''
+
+        // 如果是最后一块结果，可能需要做些额外的事情
+        // if (response.data.status === 2)
+        //   console.log('Final transcription:', fullTranscription)
+        // 可以在这里执行其他操作，例如关闭WebSocket连接或通知用户等
+      }
+      else {
+        console.error('Error receiving transcription:', response.message)
+      }
+    }
+
+    ws.onerror = function (event) {
+      console.error('WebSocket出错:', event)
+    // 出错处理逻辑，可以尝试重新连接或通知用户
+    }
+
+    ws.onclose = function (event) {
+      console.log('WebSocket连接已关闭:', event)
+    // 连接关闭后的处理逻辑，例如清理资源或重连
+    }
+  }
+  catch (error) {
+    console.error('Error initializing WebSocket:', error)
+    // 在这里添加错误处理逻辑，例如显示错误消息，重试连接等
   }
 }
 

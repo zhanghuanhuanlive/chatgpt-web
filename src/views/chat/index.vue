@@ -1402,7 +1402,7 @@ function togglePlay() {
               </span>
             </HoverButton>
             <!-- <AudioEnter v-show="showAudioInputComponent" ref="audioEnterRef" @upload-audio="uploadAudio" @stop-audio-input="stopAudioInput" /> -->
-            <RecorderComponent v-show="showAudioInputComponent" ref="recordRef" :whisper-model="whisperModel ? whisperModel : ''" @upload-audio="uploadAudio" @stop-audio-input="stopAudioInput" @handle-related-question-click="handleRelatedQuestionClick" />
+            <RecorderComponent v-show="showAudioInputComponent" ref="recordRef" :whisper-model="whisperModel ? whisperModel : ''" @upload-audio="uploadAudio" @stop-audio-input="stopAudioInput" @handle-related-question-click="handleRelatedQuestionClick" @hide-audio-input-component="hideAudioInputComponent" />
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
               <template #default="{ handleInput, handleBlur, handleFocus }">
                 <NInput
