@@ -15,7 +15,8 @@
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "allowJs": true,
+    "allowJs": true, // 允许编译器编译JavaScript文件
+    "checkJs": false, // 如果您不希望对JS文件进行类型检查，则设置为false
     "paths": {
       "@/*": ["./src/*"]
     },

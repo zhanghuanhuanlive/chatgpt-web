@@ -42,7 +42,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
 
   menu = process.env.MENU
-  if (isNotEmptyString(process.env.OPENAI_API_KEY)) {
+  if (isNotEmptyString(OPENAI_API_KEY)) {
     const options: ChatGPTAPIOptions = {
       apiKey: process.env.OPENAI_API_KEY,
       completionParams: { model },

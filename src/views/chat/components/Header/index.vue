@@ -127,7 +127,7 @@ function setActiveIndex(index: number) {
   background-color: #333;
 }
 .n-alert {
-  font-size: 85%;
+  /* font-size: 85%; */
   /* line-height: 30px; */
   /* height: 30px; */
   /* display: flex;
@@ -136,6 +136,10 @@ function setActiveIndex(index: number) {
 }
 .myAlert .n-alert-body {
   --n-font-size: 12px;
-  --n-padding: 5px 10px 0px 10px; /* 重写 --n-padding 变量的值 */
+  /* height: 30px;
+  display: flex;
+  align-items: center; */
+  /* justify-content: center; */
+  --n-padding: 5px 10px 0px 10px;
 }
 </style>

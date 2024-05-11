@@ -127,8 +127,9 @@ function isActive(uuid: number) {
               />
               <!-- <span v-else>{{ item.title }}{{ item.businessName }}</span> -->
               <template v-else>
-                <div>{{ item.title }}</div>
-                <div :style="{ color: '#bbb', fontSize: '70%' }">{{ item.businessName }}</div>
+                <!-- <div>{{ item.title }}</div> -->
+                <!-- <div :style="{ color: '#bbb', fontSize: '70%' }">{{ item.businessName }}</div> -->
+                <div>{{ item.businessName }}</div>
               </template>
             </div>
             <div v-if="isActive(item.uuid)" class="absolute z-10 flex visible right-1">

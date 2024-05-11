@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv'
 import express from 'express'
 import fetch from 'node-fetch'
+import CryptoJS from 'crypto-js'
 import type { ChatContext, RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
 import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
@@ -8,11 +9,29 @@ import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
 import { isNotEmptyString } from './utils/is'
 
+// import CryptoJSNew from './utils/xunfei/HmacSHA1'
+
 dotenv.config()
 const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+// const XUNFEI_API_ID = process.env.OPENAI_API_KEY
+// const XUNFEI_API_KEY = process.env.OPENAI_API_KEY
 const app = express()
 const router = express.Router()
+
+const config = {
+  // 请求地址
+  hostUrl: 'wss://iat-api.xfyun.cn/v2/iat',
+  host: 'iat-api.xfyun.cn',
+  // 在控制台-我的应用-语音听写（流式版）获取
+  appId: process.env.XUNFEI_API_ID,
+  // 在控制台-我的应用-语音听写（流式版）获取
+  apiSecret: process.env.XUNFEI_API_SECRET,
+  // 在控制台-我的应用-语音听写（流式版）获取
+  apiKey: process.env.XUNFEI_API_KEY,
+  uri: '/v2/iat',
+  highWaterMark: 1280,
+}
 
 // declare let fetch: any
 
@@ -29,27 +48,16 @@ app.all('*', (_, res, next) => {
 router.post('/chat-process', [auth, limiter], async (req, res) => {
   res.setHeader('Content-type', 'application/octet-stream')
   // console.log('/chat-process started')
-  // console.log(`req.body${req.body}`)
-  // console.log(req.body)
-  // const businessType = req.body.businessType
   // console.log(businessType)
   try {
     const { prompt, options = {} as ChatContext, systemMessage, temperature, top_p } = req.body as RequestProps
     let firstChunk = true
 
     options.businessType = req.body.businessType// 这个值将传到/service/src/chatgpt/index.ts用
-    // const needTts: boolean = req.body.needTts === false// 是否需要tts
-    // options.needTts = req.body.needTts// 这个值将传到/service/src/chatgpt/index.ts用
-
-    // console.log('req.body')
     // console.log(req.body)
-    // console.log(`needTts: ${req.body.needTts}`)
     // console.log(`prompt: ${prompt}`)
-
     // console.log(options)
-    // console.log('111111111111111111')
     // 接下来调用/services/chatgpt/index.ts的chatReplyProcess
-    // if (!req.body.needTts) {
     await chatReplyProcess({
       message: prompt,
       lastContext: options,
@@ -61,32 +69,6 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       temperature,
       top_p,
     })
-    // }
-    // else { // 需要tts
-    //   // console.log(`prompt: ${prompt}， OPENAI_API_BASE_URL： ${OPENAI_API_BASE_URL}`)
-    //   // const messageBody = `{"model": "tts", "input": "${prompt}"}`
-    //   // console.log(messageBody)
-    //   const response = await fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       'Authorization': `Bearer ${OPENAI_API_KEY}`,
-    //     },
-    //     body: `{"model": "tts", "input": "${prompt}"}`,
-    //   })
-    //   console.log('response')
-    //   // console.log(response)
-    //   // console.log(response.status)
-    //   // console.log(response.headers)
-    //   const contentType = response.headers.get('content-type')
-    //   // console.log(contentType)
-    //   if (response.status === 200) {
-    //     // 检查内容类型是否为 JSON
-    //     if (contentType && contentType.includes('audio/mpeg'))
-    //       return response.blob()
-    //   }
-    //   return response.text()
-    // }
   }
   catch (error) {
     res.write(JSON.stringify(error))
@@ -97,31 +79,10 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
 })
 
 router.post('/tts-process', auth, async (req, res) => {
-  // const { prompt } = req.body
-  // let firstChunk = true
-  // console.log('tts-process')
-  // console.log(req.body)
   res.setHeader('Content-Type', 'audio/mpeg')
   try {
-    // fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${OPENAI_API_KEY}`,
-    //   },
-    //   body: JSON.stringify({ model: 'tts', input: req.body.message }),
-    // })
-    //   .then((response) => {
-    //     if (!response.ok)
-    //       throw new Error('Error fetching audio data')
-
-    //     // return response.blob() // 将响应体转换为Blob
-    //     response.body.pipe(res)
-    //   })
     const params = req.body
     params.model = 'tts'
-
-    // console.log(params)
     const response = await fetch(`${OPENAI_API_BASE_URL}/v1/audio/speech`, {
       method: 'POST',
       headers: {
@@ -141,6 +102,18 @@ router.post('/tts-process', auth, async (req, res) => {
   catch (error) {
     res.send(error)
   }
+})
+
+router.post('/getXunfeiWebSocketUrl', auth, async (req, res) => {
+  const date = new Date().toUTCString()
+  const signatureOrigin = `host: ${config.host}\ndate: ${date}\nGET ${config.uri} HTTP/1.1`
+  const signatureSha = CryptoJS.HmacSHA256(signatureOrigin, config.apiSecret)
+  const signature = CryptoJS.enc.Base64.stringify(signatureSha)
+  const authorizationOrigin = `api_key="${config.apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`
+  const authStr = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(authorizationOrigin))
+  const wssUrl = `${config.hostUrl}?authorization=${authStr}` + `&date=${date}&host=${config.host}`
+  // console.log(wssUrl)
+  res.json({ wssUrl, appId: config.appId })
 })
 
 router.post('/config', auth, async (req, res) => {

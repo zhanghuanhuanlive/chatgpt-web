@@ -27,7 +27,7 @@ export default {
   //   },
 
   // },
-  emits: ['closeAudio', 'stopAudioInput'],
+  emits: ['uploadAudio', 'stopAudioInput'],
   data() {
     return {
       isShow: false, // 是否显示柱状音浪
@@ -146,10 +146,10 @@ export default {
         // 长按结束调用保存录音或者返回录音数据
         if (this.blackBoxSpeak) { // 未上滑取消
         //   console.log('通知父窗体')
-          this.$emit('closeAudio', this.recorder.getWAVBlob())
+          this.$emit('uploadAudio', this.recorder.getWAVBlob())
         }
         else {
-          this.$emit('closeAudio', null)
+          this.$emit('uploadAudio', null)
           this.stopRecoder()
         }// 上滑也关闭窗口
         // console.log('松开>>>', this.getRecorder())
@@ -232,11 +232,11 @@ export default {
         // abc(`this.needSubmit: ${this.needSubmit} ${duration}`)
         if (duration > 2) {
           // this.isShow = false
-          this.$emit('closeAudio', this.recorder.getWAVBlob())
+          this.$emit('uploadAudio', this.recorder.getWAVBlob())
         }
         else {
           // this.stopRecorder()
-          // this.$emit('closeAudio', null)
+          // this.$emit('uploadAudio', null)
           this.startRecorder()// 录音时间太短,重新开始录音
           // this.isShow = true
         }
@@ -245,7 +245,7 @@ export default {
         // this.stopRecorder()
         this.startRecorder()// 没有人说话,重新开始录音
         // this.isShow = true
-        // this.$emit('closeAudio', null)
+        // this.$emit('uploadAudio', null)
       }
       this.beginRecoding = !this.beginRecoding
     },
@@ -513,7 +513,7 @@ export default {
       // this.$forceUpdate() // 强制Vue重新渲染组件
 
       // 如果有打开的音频流，确保在这里关闭它
-      // this.recorder.closeAudioStream(); // 假设这是关闭音频流的方法
+      // this.recorder.uploadAudioStream(); // 假设这是关闭音频流的方法
 
       // 触发任何需要的事件，例如告诉外部组件录音已经结束
       // this.$emit('recordingStopped');
