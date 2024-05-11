@@ -20,6 +20,7 @@ import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useChatStore, usePromptStore, useSettingStore } from '@/store'
 import { fetchAndConvertToAudio, fetchChatAPIProcess, fetchChatConfig } from '@/api'
+import typeSound from '@/assets/typing.mp3'
 import { t } from '@/locales'
 
 library.add(faArrowUpLong, faTrashAlt, faFileUpload, faMusic, faDownload, faHistory, faMicrophoneLines, faMicrophoneLinesSlash, faPauseCircle, faPlayCircle, faVolumeUp, faPaperPlane)
@@ -37,6 +38,7 @@ const settingStore = useSettingStore()
 
 // const playAudio = ref(settingStore.playAudio ?? false)
 const playAudio = computed(() => settingStore.playAudio)
+const typingSound = computed(() => settingStore.typingSound)
 
 const { isMobile } = useBasicLayout()
 const { addChat, updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
@@ -44,6 +46,8 @@ const { scrollRef, scrollToBottom, scrollToBottomIfAtBottom } = useScroll()
 const { usingContext, toggleUsingContext } = useUsingContext()
 
 const { uuid } = route.params as { uuid: string }
+
+const sessionId = ref('')
 
 const dataSources = computed(() => chatStore.getChatByUuid(+uuid))
 // console.log(dataSources.value)
@@ -83,7 +87,9 @@ const isSpinning = ref(false)
 const activeIndex = ref(-1)
 
 const isPlaying = ref(false)
-const audioElement = ref<HTMLAudioElement | null>(null)
+const audioElement = ref<HTMLAudioElement | null>(null) // 语音播报
+const audio = new Audio(typeSound)
+// const typingAudioElement = ref<HTMLAudioElement | null>(null) // 打字效果音效的元素
 
 interface ConfigState {
   timeoutMs?: number
@@ -739,6 +745,8 @@ async function onConversation(filePath: string) {
             chunk = responseText.substring(lastIndex)// 如果找到了换行符，这一行将 chunk 更新为从最后一个换行符开始到文本末尾的部分，以此来提取最后一行数据。
           try {
             const data = JSON.parse(chunk)
+            if (typingSound.value) // 播放打字音效
+              audio.play().catch(error => console.error('Error playing the audio:', error))
 
             let input = data.text.substring(previousText.length)
             // console.log(data)
@@ -765,6 +773,12 @@ async function onConversation(filePath: string) {
                 if (isStop) { // 最后一行了
                   updateQueueLength(queueIndex)
                 }
+              }
+            }
+            if (isStop) { // 最后一行了
+              if (typingSound.value) {
+                audio.pause()
+                audio.currentTime = 0
               }
             }
 
@@ -1217,6 +1231,14 @@ onMounted(() => {
   // document.addEventListener('DOMContentLoaded', (event) => {
   addClickOnRelatedQuestion() // 给你可能想问的问题增加点击事件
   window.addEventListener('scroll', handleScroll)
+
+  const hash = window.location.hash
+  const queryString = hash.slice(hash.indexOf('?') + 1)
+  const params = new URLSearchParams(queryString)
+  sessionId.value = params.get('sessionId') || ''
+  console.log(`sessionId: ${sessionId.value}`)
+  console.log(uuid)
+  console.log(route.params)
   // })
 })
 
@@ -1226,6 +1248,8 @@ onUnmounted(() => {
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   window.removeEventListener('keydown', handleKeyDown)
   stopAudioInput()
+  audio.pause()
+  audio.currentTime = 0
   // destroyRecorder()
 })
 

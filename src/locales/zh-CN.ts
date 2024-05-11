@@ -75,6 +75,7 @@ export default {
     balance: 'API余额',
     monthlyUsage: '本月使用量',
     playAudio: '语音播报',
+    typingSound: '打字音效',
     temperatureMax: '发散',
   },
   store: {

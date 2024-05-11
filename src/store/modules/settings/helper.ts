@@ -7,6 +7,7 @@ export interface SettingsState {
   temperature: number
   top_p: number
   playAudio: boolean// 是否播放音频你
+  typingSound: boolean
 }
 
 export function defaultSetting(): SettingsState {
@@ -16,6 +17,7 @@ export function defaultSetting(): SettingsState {
     temperature: 0.0,
     top_p: 1,
     playAudio: false,
+    typingSound: false,
   }
 }
 
