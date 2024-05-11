@@ -1,8 +1,9 @@
+import { createHmac } from 'crypto'
 import * as dotenv from 'dotenv'
 import express from 'express'
 import fetch from 'node-fetch'
 // import CryptoJS from 'crypto-js'
-import * as CryptoJS from 'crypto-js'
+// import * as CryptoJS from 'crypto-js'
 import type { ChatContext, RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
 import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
@@ -107,11 +108,22 @@ router.post('/tts-process', auth, async (req, res) => {
 
 router.post('/getXunfeiWebSocketUrl', auth, async (req, res) => {
   const date = new Date().toUTCString()
+  // const signatureOrigin = `host: ${config.host}\ndate: ${date}\nGET ${config.uri} HTTP/1.1`
+  // const signatureSha = CryptoJS.HmacSHA256(signatureOrigin, config.apiSecret)
+  // const signature = CryptoJS.enc.Base64.stringify(signatureSha)
+  // const authorizationOrigin = `api_key="${config.apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`
+  // const authStr = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(authorizationOrigin))
+  // const wssUrl = `${config.hostUrl}?authorization=${authStr}` + `&date=${date}&host=${config.host}`
+
   const signatureOrigin = `host: ${config.host}\ndate: ${date}\nGET ${config.uri} HTTP/1.1`
-  const signatureSha = CryptoJS.HmacSHA256(signatureOrigin, config.apiSecret)
-  const signature = CryptoJS.enc.Base64.stringify(signatureSha)
-  const authorizationOrigin = `api_key="${config.apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`
-  const authStr = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(authorizationOrigin))
+  // 使用 Node.js 的 crypto 模块生成 HMAC SHA256
+  const signatureSha = createHmac('sha256', config.apiSecret)
+    .update(signatureOrigin)
+    .digest('base64') // 直接输出为 Base64
+  const authorizationOrigin = `api_key="${config.apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signatureSha}"`
+  // 将字符串编码为 Base64
+  const authStr = Buffer.from(authorizationOrigin).toString('base64')
+
   const wssUrl = `${config.hostUrl}?authorization=${authStr}` + `&date=${date}&host=${config.host}`
   // console.log(wssUrl)
   res.json({ wssUrl, appId: config.appId })
