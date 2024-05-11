@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { computed, watch } from 'vue'
-import { NInput, NSlider, NSwitch, useMessage } from 'naive-ui'
+import { NInput, NSlider, NSwitch } from 'naive-ui'
 import { useSettingStore } from '@/store'
 
 const settingStore = useSettingStore()
 
-const ms = useMessage()
+// const ms = useMessage()
 
 // const systemMessage = ref(settingStore.systemMessage ?? '')
 
