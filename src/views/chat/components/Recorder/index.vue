@@ -523,7 +523,7 @@ async function initWebSocket() {
           // 累加到已有文本
           fullTranscription += newText
         }
-        if (fullTranscriptiontext.includes('谢谢') || fullTranscription.includes('再见')) {
+        if (fullTranscription.includes('谢谢') || fullTranscription.includes('再见')) {
           fullTranscription = ''
           cleanupAfterRecording()
           emit('stopAudioInput')
