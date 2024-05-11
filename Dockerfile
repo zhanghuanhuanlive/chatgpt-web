@@ -11,7 +11,7 @@ FROM base as frontend
 
 WORKDIR /app
 COPY ./package.json  ./pnpm-lock.yaml ./
-RUN pnpm install
+RUN pnpm install && ls node_modules
 COPY . .
 RUN pnpm run build
 
@@ -31,7 +31,7 @@ WORKDIR /app
 COPY --from=frontend /app/dist /app/public
 COPY --from=backend /app/build /app/build
 COPY /service/package.json /service/pnpm-lock.yaml ./
-RUN pnpm install --production && rm -rf /root/.npm /root/.pnpm-store /usr/local/share/.cache /tmp/*
+RUN pnpm install --production && rm -rf /root/.npm /root/.pnpm-store /usr/local/share/.cache /tmp/* 
 COPY /service .
 
 EXPOSE 3002
