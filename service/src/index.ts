@@ -33,6 +33,7 @@ const config = {
   apiKey: process.env.XUNFEI_API_KEY,
   uri: '/v2/iat',
   highWaterMark: 1280,
+  // accent: 'XUNFEI_ACCENT', // 讯飞的方言
 }
 
 // declare let fetch: any
@@ -126,7 +127,7 @@ router.post('/getXunfeiWebSocketUrl', auth, async (req, res) => {
 
   const wssUrl = `${config.hostUrl}?authorization=${authStr}` + `&date=${date}&host=${config.host}`
   // console.log(wssUrl)
-  res.json({ wssUrl, appId: config.appId })
+  res.json({ wssUrl, appId: config.appId, accent: config.accent })
 })
 
 router.post('/config', auth, async (req, res) => {

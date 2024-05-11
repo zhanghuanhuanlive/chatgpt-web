@@ -107,6 +107,7 @@ interface Model {
   sayHello?: SayHello
   systemMessage?: string // 每个模型对应的系统提示词
   whisperModel?: string
+  accent?: string
   faq?: string
   faqs?: string[]
 }
@@ -117,8 +118,8 @@ let currentBusinessTypeName = ''// 这里定义的名字会在页面初始化时
 // let systemMessage = '' // 每个模型对应的系统提示词
 // const faqs: string[] = []
 let currentModel: Model | undefined // 当前使用的模型以及配置的参数
-// const whisperModel = computed(() => currentModel.whisperModel)
 const whisperModel = ref('')
+const accent = ref('mandarin')
 async function fetchConfig() {
   try {
     loading.value = true
@@ -147,7 +148,7 @@ async function fetchConfig() {
     if (currentModel) {
       currentBusinessTypeName = currentModel.label || 'ChatGLM3'
       whisperModel.value = currentModel.whisperModel ? currentModel.whisperModel : ''
-      // console.log(whisperModel.value)
+      accent.value = currentModel.accent ? currentModel.accent : 'mandarin'
       // model = item.model
       // if (currentModel.systemMessage)
       //   systemMessage = currentModel.systemMessage
@@ -201,6 +202,7 @@ function findItemsWithModel(data) {
         sayHello: item.sayHello,
         faq: item.faq,
         whisperModel: item.whisperModel ? item.whisperModel : '',
+        accent: item.accent ? item.accent : 'mandarin',
       })
     }
     if (item.children && item.children.length > 0) {
@@ -1402,7 +1404,15 @@ function togglePlay() {
               </span>
             </HoverButton>
             <!-- <AudioEnter v-show="showAudioInputComponent" ref="audioEnterRef" @upload-audio="uploadAudio" @stop-audio-input="stopAudioInput" /> -->
-            <RecorderComponent v-show="showAudioInputComponent" ref="recordRef" :whisper-model="whisperModel ? whisperModel : ''" @upload-audio="uploadAudio" @stop-audio-input="stopAudioInput" @handle-related-question-click="handleRelatedQuestionClick" @hide-audio-input-component="hideAudioInputComponent" />
+            <RecorderComponent
+              v-show="showAudioInputComponent" ref="recordRef"
+              :whisper-model="whisperModel ? whisperModel : ''"
+              :accent="accent ? accent : 'mandarin'"
+              @upload-audio="uploadAudio"
+              @stop-audio-input="stopAudioInput"
+              @handle-related-question-click="handleRelatedQuestionClick"
+              @hide-audio-input-component="hideAudioInputComponent"
+            />
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
               <template #default="{ handleInput, handleBlur, handleFocus }">
                 <NInput

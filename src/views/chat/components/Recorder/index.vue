@@ -16,6 +16,7 @@ import 'recorder-core/src/extensions/lib.fft'
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 let type = 'wav'
+let accent = 'mandarin' // 讯飞的方言
 let fullTranscription = ''
 const bitRate = 16
 const sampleRate = 16000
@@ -31,7 +32,8 @@ let drawWaveInterval // 绘制音浪的interval
 let ws: WebSocket
 let appId = ''
 interface Props {
-  whisperModel: String
+  whisperModel: string
+  accent: string
   // activeIndex: number
 }
 interface Emit {
@@ -186,7 +188,7 @@ const TransferUpload = async function (number, blobOrNull, duration, blobRec, is
       business: {
         language: 'zh_cn',
         domain: 'iat', // gov-seat-assistant
-        accent: 'mandarin',
+        accent, // 方言,默认普通话mandarin
         vad_eos: silenceDurationThresholdAfterTalk,
         // dwa: 'wpgs',// 动态修正
       },
@@ -313,6 +315,8 @@ const recStart = async () => {
       await initWebSocket()
     }
   }
+  if (props.accent)
+    accent = props.accent
   // console.log(type)
   isShowWave.value = true
   // if (rec)
@@ -497,6 +501,7 @@ async function initWebSocket() {
     // console.log(data)
     const wssUrl = data.wssUrl
     appId = data.appId
+    // accent = data.accent
     // console.log(appId)
     ws = new WebSocket(wssUrl)
 

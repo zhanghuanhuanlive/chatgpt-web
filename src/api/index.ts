@@ -4,7 +4,8 @@ import { useAuthStore, useSettingStore } from '@/store'
 
 interface WebSocketUrlResponse {
   appId: string
-  wssUrl: string // 假设返回的 JSON 包含一个 wssUrl 字段
+  wssUrl: string //
+  // accent: string // 讯飞的方言
 }
 
 export function fetchChatAPI<T = any>(
