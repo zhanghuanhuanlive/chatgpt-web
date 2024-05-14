@@ -592,7 +592,7 @@ async function handleVisibilityChange() {
 onMounted(async () => {
   document.addEventListener('visibilitychange', handleVisibilityChange)// 增加页面可见和不可见的事件，不可见的场景：浏览器被切换到后台，不在当前显示桌面
 
-  console.log(`onMounted, hasPermission: ${props.whisperModel}`) // 注意这里对 this 的用法在 Composition API 中是不正确的
+  // console.log(`onMounted, hasPermission: ${props.whisperModel}`) // 注意这里对 this 的用法在 Composition API 中是不正确的
 })
 
 onUnmounted(() => {

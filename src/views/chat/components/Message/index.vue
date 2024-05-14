@@ -23,6 +23,7 @@ interface Props {
   inversion?: boolean
   error?: boolean
   loading?: boolean
+  isAgent?: boolean
 }
 
 // interface Emit {
@@ -39,6 +40,8 @@ const message = useMessage()
 const textRef = ref<HTMLElement>()
 
 const asRawText = ref(props.inversion)
+
+const isAgent = ref(props.isAgent)
 
 const messageRef = ref<HTMLElement>()
 
@@ -142,6 +145,7 @@ async function handleCopy() {
           :text="text"
           :loading="loading"
           :as-raw-text="asRawText"
+          :is-agent="isAgent"
         />
         <!-- <div class="flex flex-col">
           <button

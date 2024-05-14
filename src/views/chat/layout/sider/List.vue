@@ -39,11 +39,11 @@ const dataSources = computed(() => {
 
   // console.log(keyLabelMap)
   const models = computed(() => JSON.parse(localStorage.getItem('models') || ''))
-  console.log(chatStore.history)
+  // console.log(chatStore.history)
   // console.log(models.value)
   chatStore.history.forEach((history) => {
     let businessType = history.businessType as string | undefined // 第一次打开时businessType为undefined
-    console.log(businessType)
+    // console.log(businessType)
     let model
     if (models.value.length === 1) {
       model = models.value[0]

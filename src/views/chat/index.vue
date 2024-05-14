@@ -114,6 +114,7 @@ interface Model {
   systemMessage?: string // 每个模型对应的系统提示词
   whisperModel?: string
   accent?: string
+  isAgent?: boolean // 是否智能体
   faq?: string
   faqs?: string[]
 }
@@ -126,6 +127,7 @@ let currentBusinessTypeName = ''// 这里定义的名字会在页面初始化时
 let currentModel: Model | undefined // 当前使用的模型以及配置的参数
 const whisperModel = ref('')
 const accent = ref('mandarin')
+const isAgent = ref(false)
 async function fetchConfig() {
   try {
     loading.value = true
@@ -155,6 +157,8 @@ async function fetchConfig() {
       currentBusinessTypeName = currentModel.label || 'ChatGLM3'
       whisperModel.value = currentModel.whisperModel ? currentModel.whisperModel : ''
       accent.value = currentModel.accent ? currentModel.accent : 'mandarin'
+      isAgent.value = currentModel.isAgent ? currentModel.isAgent : false
+      // console.log(`111111111 ${currentModel.isAgent}`)
       // model = item.model
       // if (currentModel.systemMessage)
       //   systemMessage = currentModel.systemMessage
@@ -176,6 +180,7 @@ async function fetchConfig() {
               requestOptions: { prompt: '', options: null }, // 使用空字符串和null作为默认值
             },
           )
+          console.log(playAudio.value)
           if (playAudio.value) {
             enqueueAudio(sayHelloText, 0)
             updateQueueLength(1)
@@ -189,6 +194,7 @@ async function fetchConfig() {
   }
   finally {
     loading.value = false
+    scrollToBottom()
   }
 }
 
@@ -209,6 +215,7 @@ function findItemsWithModel(data) {
         faq: item.faq,
         whisperModel: item.whisperModel ? item.whisperModel : '',
         accent: item.accent ? item.accent : 'mandarin',
+        isAgent: item.isAgent ? item.isAgent : false,
       })
     }
     if (item.children && item.children.length > 0) {
@@ -563,6 +570,8 @@ let textQueue: string[] = []// 音频对应的文字的队列
 let currentIndex = 0 // 跟踪当前处理的音频索引
 const queueLength = ref(100)// 要播放的队列长度，因为要播放的队列长度是未知的，先设置为100
 async function enqueueAudio(message, index) {
+  if (!playAudio.value)
+    return
   // console.log(`${index} ${message} ${isPlaying.value}`)
   const urlRegex = /https?:\/\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+/g // 语音播报不播报网址
   const params = {
@@ -1239,6 +1248,7 @@ onMounted(() => {
   console.log(`sessionId: ${sessionId.value}`)
   console.log(uuid)
   console.log(route.params)
+  scrollToBottom()
   // })
 })
 
@@ -1343,10 +1353,11 @@ function togglePlay() {
               <!-- <SvgIcon icon="fluent:brain-circuit-24-filled" class="mr-2 text-3xl" /> -->
               <span>{{ currentBusinessTypeName }}</span>
             </div>
-            <div>
+            <div v-if="config">
               <Message
                 v-for="(item, index) of dataSources"
                 :key="index"
+                :is-agent="isAgent"
                 :date-time="item.dateTime"
                 :text="item.text"
                 :inversion="item.inversion"
@@ -1354,6 +1365,7 @@ function togglePlay() {
                 :loading="item.loading"
                 @regenerate="onRegenerate(index)"
                 @delete="handleDelete(index)"
+                @scroll-to-bottom="scrollToBottom"
               />
               <div class="sticky bottom-0 left-0 flex justify-center">
                 <NButton v-if="loading" type="warning" @click="handleStop">
