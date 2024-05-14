@@ -118,6 +118,36 @@ function removeSteps(currentText) {
   return currentText
 }
 
+// 收起当前的Collapse
+function changeActiveCollapse() {
+  itemName.value = 'item2'
+}
+
+function isStepsFull() {
+  const length = steps.value.length
+  if (length === 4) {
+    const lastItem = steps.value[steps.value.length - 1] // 最后一个元素
+    if (lastItem.includes('\n')) { // 最后一个元素有\n
+      return true
+    }
+  }
+  // if (length === 3) {
+  //   const lastItem = steps.value[steps.value.length - 1]
+  //   if (lastItem.includes('\n')) { // 最后一个元素有\n
+  //     return true
+  //   }
+  // }
+  // else if (length < 4) {
+  //   return false
+  // }
+  // else if (length === 4) {
+  //   const lastItem = steps.value[steps.value.length - 1] // steps的最后一个元素
+  //   if (lastItem.includes('\n')) { // 最后一个元素有\n
+  //     return true
+  //   }
+  // }
+}
+
 // 监视 props.text 的变化并处理
 watchEffect(() => {
   let currentText = props.text ?? ''
@@ -141,30 +171,32 @@ watchEffect(() => {
   // 智能体
   // console.log(steps.value)
   currentText = removeSteps(currentText)
+  // const stepsLength = steps.value.length
+  // console.log(`steps: ${steps.value.length} | ${currentText}`)
   if (steps.value.length <= 4) {
   // 逐个处理 steps 中的每个子字符串
-    // console.log(`steps: ${steps.value.length} | ${currentText}`)
     // 剩下的部分用符号 '\n'分割成数组
     const segments = currentText.match(/.*?\n|.+/g) || []
     // console.log(segments)
 
     // Add each segment to the steps array
     segments.forEach((segment) => {
+      // console.log(steps.value.length)
       if (segment) { // This checks if the segment is not empty
         if (steps.value.length === 0) {
           steps.value.push(segment)
           // console.log(`push ${segment}`)
         }
         else {
-          if (steps.value.length <= 4) { // 不到4个
+          if (steps.value.length <= 4) { //
             const lastItem = steps.value[steps.value.length - 1] // steps的最后一个元素
-            if (lastItem.includes('\n')) {
-              if (steps.value.length !== 4) { // 如果是4个，就不处理了
+            if (lastItem.includes('\n')) { // 最后一个元素有\n
+              if (steps.value.length !== 4) { // 1、2、3个的话，直接加入
                 steps.value.push(segment)
                 // console.log(`push ${segment}`)
               }
-              else { // 4个
-                itemName.value = 'item2'
+              else { // 如果是4个，就不处理了
+                changeActiveCollapse()
               }
             }
             else {
@@ -173,28 +205,42 @@ watchEffect(() => {
             } // 替换最后一个元素
           }
           else {
-            itemName.value = 'item2'
+            changeActiveCollapse()
           } // 清空数组来收缩所有项
         }
       }
     }) // forEach
-    if (segments.length > 4) {
-      currentText = removeSteps(currentText)
-      loading.value = false
-    }
-    else {
-      // loading.value = false
-      currentText = '' // 不输出
-    }
+    // if (segments.length > 4) { //
+    //   currentText = removeSteps(currentText)
+    //   loading.value = false
+    // }
+    // // else {
+    // // loading.value = false
+    // if (steps.value.length === 4) {
+    //   const lastItem = steps.value[steps.value.length - 1] // steps的最后一个元素
+    //   if (!lastItem.includes('\n')) // 最后一个元素有\n
+    //     currentText = ''
+    // }
+    // else if (stepsLength < 4) {
+    //   currentText = ''
+    // } // 不输出
+    // }
   }
-  else { // steps[]已经填满了
+
+  // console.log(steps.value)
+  currentText = removeSteps(currentText)
+  if (isStepsFull())
     loading.value = false
-    itemName.value = 'item2'
-  }
+  else
+    currentText = ''
+  // else { // steps[]已经填满了
+  //   loading.value = false
+  //   changeActiveCollapse()
+  // }
+  // console.log(currentText)
   resultText.value = mdi.render(currentText)
   // console.log(steps.value)
-  // console.log(`steps: ${steps.value.length}`)
-  // console.log(resultText.value)
+  // console.log(`steps: ${stepsLength}`)
   // emit('scrollToBottom')
 })
 
