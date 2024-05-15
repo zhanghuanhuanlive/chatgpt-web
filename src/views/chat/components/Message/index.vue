@@ -18,9 +18,10 @@ const props = defineProps<Props>()
 library.add(faArrowRotateLeft, faCopy, faEllipsisVertical, faTrashAlt)
 
 interface Props {
+  messageIndex: number
   dateTime?: string
   text?: string
-  inversion?: boolean
+  inversion?: boolean // false为回答
   error?: boolean
   loading?: boolean
   isAgent?: boolean
@@ -42,6 +43,8 @@ const textRef = ref<HTMLElement>()
 const asRawText = ref(props.inversion)
 
 const isAgent = ref(props.isAgent)
+
+const messageIndex = ref(props.messageIndex)
 
 const messageRef = ref<HTMLElement>()
 
@@ -140,6 +143,7 @@ async function handleCopy() {
       >
         <TextComponent
           ref="textRef"
+          :message-index="messageIndex"
           :inversion="inversion"
           :error="error"
           :text="text"

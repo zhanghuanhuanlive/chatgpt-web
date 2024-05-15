@@ -71,25 +71,14 @@ const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 const showAudioInputComponent = ref(false) // 是否显示语音输入组件
 const isAudioInput = ref(false) // 是否已启用了语音输入
 const recordRef = ref<typeof RecorderComponent | null>(null)// 引用的录音子组件
-// const recordRef = ref(null)// 引用的录音子组件
-// interface AudioEnterMethods {
-//   destroyRecorder: () => void
-//   startRecorder: () => void
-//   hide: () => void
-// }
-// const audioEnterRef = ref<AudioEnterMethods | null>(null)
-// const audioEnterRef = ref(null)// 引用的录音子组件
-// const audioEnterRef = ref<typeof AudioEnter | null>(null)
 
 const isSpinning = ref(false)
 
-// const showArrowIcon = ref(false)
 const activeIndex = ref(-1)
 
 const isPlaying = ref(false)
 const audioElement = ref<HTMLAudioElement | null>(null) // 语音播报
 const audio = new Audio(typeSound)
-// const typingAudioElement = ref<HTMLAudioElement | null>(null) // 打字效果音效的元素
 
 interface ConfigState {
   timeoutMs?: number
@@ -119,7 +108,6 @@ interface Model {
   faqs?: string[]
 }
 const config = ref<ConfigState>()
-// let keyLabelMap: Map<string, string>
 let businessType = '0' // 对应配置文件中的key，9001是口语
 let currentBusinessTypeName = ''// 这里定义的名字会在页面初始化时显示
 // let systemMessage = '' // 每个模型对应的系统提示词
@@ -174,7 +162,7 @@ async function fetchConfig() {
             {
               dateTime: new Date().toLocaleString(),
               text: currentModel.sayHello.text,
-              inversion: false,
+              inversion: false, // false为回答
               error: false,
               conversationOptions: null,
               requestOptions: { prompt: '', options: null }, // 使用空字符串和null作为默认值
@@ -678,6 +666,7 @@ async function onConversation(filePath: string) {
 
   controller = new AbortController()
 
+  // 加u人问题
   addChat(
     +uuid,
     {
@@ -701,6 +690,7 @@ async function onConversation(filePath: string) {
   if (lastContext && usingContext.value)
     options = { ...lastContext }
 
+  // 加入回答
   addChat(
     +uuid, // +表示将其后的变量转换成一个数字
     {
@@ -791,6 +781,8 @@ async function onConversation(filePath: string) {
               }
             }
 
+            // 根据回答的流，实时更新回答的内容
+            // console.log(`isStop: ${isStop}`)
             updateChat(
               +uuid,
               dataSources.value.length - 1,
@@ -799,7 +791,7 @@ async function onConversation(filePath: string) {
                 text: lastText + (data.text ?? ''),
                 inversion: false,
                 error: false,
-                loading: true,
+                loading: true, // !isStop
                 conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
                 requestOptions: { prompt: message, options: { ...options } },
               },
@@ -817,9 +809,10 @@ async function onConversation(filePath: string) {
           catch (error) {
             //
           }
-        },
-      })
+        }, // end of onDownloadProgress
+      }) // end of fetchChatAPIProcess
       // markQueueAsFinished()
+      console.log(1111111111111111)
       updateChatSome(+uuid, dataSources.value.length - 1, { loading: false })
       if (!playAudio.value && isAudioInput.value) { // 开启语音对话的情况下播放完音频会自动开始录音
         setTimeout(() => {
@@ -882,170 +875,6 @@ async function onConversation(filePath: string) {
   finally {
     loading.value = false
     addClickOnRelatedQuestion() // 给你可能想问的问题增加点击事件
-  }
-}
-
-async function onRegenerate(index: number) {
-  if (loading.value)
-    return
-
-  controller = new AbortController()
-
-  const { requestOptions } = dataSources.value[index]
-
-  let message = requestOptions?.prompt ?? ''
-
-  let options: Chat.ConversationRequest = {}
-
-  if (requestOptions.options)
-    options = { ...requestOptions.options }
-
-  loading.value = true
-
-  updateChat(
-    +uuid,
-    index,
-    {
-      dateTime: new Date().toLocaleString(),
-      text: '',
-      inversion: false,
-      error: false,
-      loading: true,
-      conversationOptions: null,
-      requestOptions: { prompt: message, options: { ...options } },
-    },
-  )
-
-  try {
-    let lastText = ''
-    // const needTts = false
-    const fetchChatAPIOnce = async () => {
-      console.log(message)
-      // const currentHistory = chatStore.history.find(entry => entry.uuid === chatStore.active)
-      // let businessType = 0
-      // if (undefined !== currentHistory)
-      //   businessType = currentHistory.businessType
-      let previousText = ''
-      let queueIndex = 0
-      // currentIndex = 0
-      // queueFinished.value = false
-      queueLength.value = 100
-      audioBlobQueue = []
-      textQueue = []
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
-        prompt: message,
-        options,
-        signal: controller.signal,
-        businessType,
-        // needTts,
-        systemMessage: '',
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
-          try {
-            const data = JSON.parse(chunk)
-            // console.log(data)
-
-            // 实时语音播报
-            let input = data.text.substring(previousText.length)
-            const isStop = data.detail.choices[0].finish_reason === 'stop'
-            if ((playAudio.value && input && input !== '' && punctuationRegex.test(input) && !punctuationRegexOnly.test(input)) || isStop) { // 是否包含需要断句的标点符号
-              let isEnqueueAudio = false
-              if (!punctuationRegexOnly.test(input)) { // 如果不全是标点符号
-                if (isStop) { // 最后一行了 TODO 如果最后一句只有标点符号，需要再优化
-                  isEnqueueAudio = true
-                  updateQueueLength(queueIndex + 1)
-                }
-                else if (punctuationRegex.test(input)) { // 如果存在标点符号
-                  input = extractLastPunctuation(input)// 取到最后一个断句的标点符号
-                  isEnqueueAudio = true
-                }
-                if (isEnqueueAudio) {
-                  previousText = previousText + input
-                  // console.log(`${queueIndex} ${previousText} ${isPlaying.value}`)
-                  enqueueAudio(input.replace(/#/g, ''), queueIndex++)
-                }
-              }
-              else { // glm-4以及有的模型,stop的时候input为空,需要设置播放列表的长度
-                if (isStop) { // 最后一行了
-                  updateQueueLength(queueIndex)
-                }
-              }
-            }
-
-            updateChat(
-              +uuid,
-              index,
-              {
-                dateTime: new Date().toLocaleString(),
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-              },
-            )
-
-            // const input = data.text// tts的input
-            // if (playAudio && input && input !== '') {
-            //   if (audioElement.value !== null)
-            //     fetchAndPlayAudio(audioElement.value, input.replace(/#/g, ''))
-            // }
-
-            if (openLongReply && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
-          }
-          catch (error) {
-            //
-          }
-        },
-      })
-      // markQueueAsFinished()
-      updateChatSome(+uuid, index, { loading: false })
-    }
-    await fetchChatAPIOnce()
-  }
-  catch (error: any) {
-    if (error.message === 'canceled') {
-      updateChatSome(
-        +uuid,
-        index,
-        {
-          loading: false,
-        },
-      )
-      return
-    }
-
-    const errorMessage = error?.message ?? t('common.wrong')
-
-    updateChat(
-      +uuid,
-      index,
-      {
-        dateTime: new Date().toLocaleString(),
-        text: errorMessage,
-        inversion: false,
-        error: true,
-        loading: false,
-        conversationOptions: null,
-        requestOptions: { prompt: message, options: { ...options } },
-      },
-    )
-    stopAudioInput() // TODO 如果开启了语音对话，是不是也应该播放点什么
-  }
-  finally {
-    loading.value = false
   }
 }
 
@@ -1357,15 +1186,15 @@ function togglePlay() {
               <Message
                 v-for="(item, index) of dataSources"
                 :key="index"
+                :message-index="index"
                 :is-agent="isAgent"
                 :date-time="item.dateTime"
                 :text="item.text"
                 :inversion="item.inversion"
                 :error="item.error"
                 :loading="item.loading"
-                @regenerate="onRegenerate(index)"
                 @delete="handleDelete(index)"
-                @scroll-to-bottom="scrollToBottom"
+                @scroll-to-bottom="scrollToBottomIfAtBottom"
               />
               <div class="sticky bottom-0 left-0 flex justify-center">
                 <NButton v-if="loading" type="warning" @click="handleStop">

@@ -15,14 +15,18 @@ import { copyToClip } from '@/utils/copy'
 const props = defineProps<Props>()
 
 // const emit = defineEmits<Emit>()
+// interface Emit {
+//   (ev: 'scrollToBottom'): void
+// }
 
 library.add(faSpinner)
 
 interface Props {
-  inversion?: boolean
+  messageIndex: number
+  inversion?: boolean // false为回答
   error?: boolean
   text?: string
-  loading?: boolean
+  loading?: boolean // 要输出内容是否结束，true为未结束
   asRawText?: boolean
   isAgent?: boolean
 }
@@ -31,7 +35,7 @@ const { isMobile } = useBasicLayout()
 
 const textRef = ref<HTMLElement>()
 
-const itemName = ref('item1') // 哪个NCollapseItem被展开
+const itemName = ref('item1') // 哪个NCollapseItem被展开，默认为item1展开，换成别的名字后，item1收缩
 const collapseItem = ref<HTMLElement | null>(null)
 
 const steps = ref<string[]>([])
@@ -44,9 +48,7 @@ const steps = ref<string[]>([])
 const resultText = ref('') // 存储处理后的文本
 const loading = ref(props.loading)
 const isAgent = ref(props.isAgent)
-// interface Emit {
-//   (ev: 'scrollToBottom'): void
-// }
+const messageIndex = ref(props.messageIndex)
 
 const mdi = new MarkdownIt({
   html: false,
@@ -131,26 +133,13 @@ function isStepsFull() {
       return true
     }
   }
-  // if (length === 3) {
-  //   const lastItem = steps.value[steps.value.length - 1]
-  //   if (lastItem.includes('\n')) { // 最后一个元素有\n
-  //     return true
-  //   }
-  // }
-  // else if (length < 4) {
-  //   return false
-  // }
-  // else if (length === 4) {
-  //   const lastItem = steps.value[steps.value.length - 1] // steps的最后一个元素
-  //   if (lastItem.includes('\n')) { // 最后一个元素有\n
-  //     return true
-  //   }
-  // }
 }
 
 // 监视 props.text 的变化并处理
 watchEffect(() => {
-  loading.value = true
+  // loading.value = true
+  console.log(loading.value)
+  // console.log(messageIndex.value)
   let currentText = props.text ?? ''
   currentText = currentText.replace(/\*\*\#\#\*\*(.*?)\*\*\#\#\*\*/g, '') // 文件上传组件所需要
   // 从上次处理结束的地方开始新的内容处理
@@ -158,7 +147,7 @@ watchEffect(() => {
   // console.log(props.asRawText)
   // console.log(isAgent.value)
   // console.log(currentText)
-  if (props.asRawText) { // 问题
+  if (props.asRawText || messageIndex.value === 0) { // 问题
     // resultText.value = mdi.render(currentText)
     resultText.value = currentText
     return
@@ -211,38 +200,18 @@ watchEffect(() => {
         }
       }
     }) // forEach
-    // if (segments.length > 4) { //
-    //   currentText = removeSteps(currentText)
-    //   loading.value = false
-    // }
-    // // else {
-    // // loading.value = false
-    // if (steps.value.length === 4) {
-    //   const lastItem = steps.value[steps.value.length - 1] // steps的最后一个元素
-    //   if (!lastItem.includes('\n')) // 最后一个元素有\n
-    //     currentText = ''
-    // }
-    // else if (stepsLength < 4) {
-    //   currentText = ''
-    // } // 不输出
-    // }
   }
 
   // console.log(steps.value)
   currentText = removeSteps(currentText)
-  if (isStepsFull())
-    loading.value = false
-  else
+
+  if (!isStepsFull()) {
     currentText = ''
-  // else { // steps[]已经填满了
-  //   loading.value = false
-  //   changeActiveCollapse()
-  // }
-  // console.log(currentText)
-  resultText.value = mdi.render(currentText)
-  // console.log(steps.value)
-  // console.log(`steps: ${stepsLength}`)
-  // emit('scrollToBottom')
+  }
+  else {
+    loading.value = false // 理论上不需要这一行，父页面computed已计算但是没起效果
+    resultText.value = mdi.render(currentText)
+  }
 })
 
 function highlightBlock(str: string, lang?: string) {
@@ -295,7 +264,7 @@ onUnmounted(() => {
 
 <template>
   <div class="">
-    <div v-if="!inversion && isAgent" style="" class="">
+    <div v-if="!inversion && isAgent && messageIndex !== 0" style="" class="">
       <NCollapse default-expanded-names="item1" style="margin-bottom: 15px; border-radius: 10px;" class="">
         <NCollapseItem ref="collapseItem" title="玄武AI智能体" :name="itemName" style="padding-left: 2px; " class="">
           <NSteps vertical :current="steps.length" size="small" :status="steps.length === 4 ? 'finish' : 'process'" style="padding-left: 2px;">
@@ -331,23 +300,23 @@ onUnmounted(() => {
 
             <!-- && resultText !== '' -->
             <NStep
-              v-if="steps.length >= 3"
+              v-if="steps.length >= 3 && resultText !== ''"
               title="输出回答"
               status="finish"
             />
           </NSteps>
 
-          <template v-if="steps.length >= 2" #header-extra>
+          <template v-if="steps.length >= 3" #header-extra>
             <!-- v-if="steps.length === 4" -->
             <div>
-              【{{ steps[1]?.match(/【(.*?)】/)?.[1] ?? '未知应用' }}】
+              【{{ steps[1]?.match(/【(.*?)】/)?.[1] ?? '' }}】
             </div>
           </template>
         </NCollapseItem>
         <!-- <NCollapseItem v-show="false" title="" name="item2" /> -->
       </NCollapse>
     </div>
-    <div ref="textRef" :class="wrapClass" class="text-black leading-relaxed break-words">
+    <div v-if="resultText !== ''" ref="textRef" :class="wrapClass" class="text-black leading-relaxed break-words">
       <div v-if="!inversion">
         <!-- loading为true时使用样式markdown-body-generate -->
         <div v-if="!asRawText" class="markdown-body" :class="{ 'markdown-body-generate': loading }" v-html="resultText" />
