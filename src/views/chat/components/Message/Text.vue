@@ -150,6 +150,7 @@ function isStepsFull() {
 
 // 监视 props.text 的变化并处理
 watchEffect(() => {
+  loading.value = true
   let currentText = props.text ?? ''
   currentText = currentText.replace(/\*\*\#\#\*\*(.*?)\*\*\#\#\*\*/g, '') // 文件上传组件所需要
   // 从上次处理结束的地方开始新的内容处理
@@ -328,8 +329,9 @@ onUnmounted(() => {
               :status="(steps.length >= 4 && steps[3].startsWith('很抱歉')) ? 'error' : undefined"
             />
 
+            <!-- && resultText !== '' -->
             <NStep
-              v-if="steps.length >= 3 && resultText !== ''"
+              v-if="steps.length >= 3"
               title="输出回答"
               status="finish"
             />
@@ -347,6 +349,7 @@ onUnmounted(() => {
     </div>
     <div ref="textRef" :class="wrapClass" class="text-black leading-relaxed break-words">
       <div v-if="!inversion">
+        <!-- loading为true时使用样式markdown-body-generate -->
         <div v-if="!asRawText" class="markdown-body" :class="{ 'markdown-body-generate': loading }" v-html="resultText" />
         <div v-else class="whitespace-pre-wrap" name="222" v-text="resultText" />
       </div>
