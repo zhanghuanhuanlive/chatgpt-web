@@ -1,25 +1,34 @@
 <script setup lang='ts'>
 import { ref } from 'vue'
 import { NButton, useMessage } from 'naive-ui'
-import { faArrowRotateLeft, faCopy, faEllipsisVertical, faFileExport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRotateLeft, faCopy, faEllipsisVertical, faFileExport, faFilePdf, faFileWord } from '@fortawesome/free-solid-svg-icons'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 // import { useIconRender } from '@/hooks/useIconRender'
 // import { useBasicLayout } from '@/hooks/useBasicLayout'
 import MarkdownIt from 'markdown-it'
 // import html2canvas from 'html2canvas'
-import htmlToPdfmake from 'html-to-pdfmake'
-import pdfMake from 'pdfmake/build/pdfmake'
-import { vfs } from '../../../../assets/fonts/simhei/vfs_fonts'
-import AvatarComponent from './Avatar.vue'
+import htmlToPdfmake from 'html-to-pdfmake' // 不用了
+import pdfMake from 'pdfmake/build/pdfmake' // 不用了
+import DOMPurify from 'dompurify' // 不用了
+
+import PizZip from 'pizzip' // 不用了
+import Docxtemplater from 'docxtemplater' // 不用了
+import { saveAs } from 'file-saver' // 不用了
+import JSZipUtils from 'jszip-utils' // 不用了
+
+import ImageModule from 'docxtemplater-image-module-free' // 不用了
+import { vfs } from '../../../../assets/fonts/simhei/vfs_fonts' // 不用了
 import TextComponent from './Text.vue'
+import AvatarComponent from './Avatar.vue'
+import { fetchWordFromMarkdown } from '@/api'
 import { copyToClip } from '@/utils/copy'
 
 const props = defineProps<Props>()
 
 // const emit = defineEmits<Emit>()
 
-library.add(faArrowRotateLeft, faCopy, faEllipsisVertical, faFileExport, faTrashAlt)
+library.add(faArrowRotateLeft, faCopy, faEllipsisVertical, faFileExport, faFilePdf, faFileWord)
 
 interface Props {
   messageIndex: number
@@ -138,38 +147,42 @@ async function getImageDataUrl(url: string): Promise<string> {
   }
 }
 
-// '我您你可能还想问',
+function getPreProcessedHtmlContent() {
+// 获取文本并处理换行符
+  let textContent = props.text ? props.text : ''
+  // let textContent = props.text ? props.text.replace(/\n{2,}/g, '\n') : '';
+  // console.log(textContent)
+
+  if (isAgent.value) { // 是智能体
+    // 去掉前面第四个换行符前的所有内容
+    const lines = textContent.split('\n')
+    if (lines.length > 4)
+      textContent = lines.slice(4).join('\n')
+  }
+  // 去掉你可能还想问
+  // 去掉 "您可能还想问"、"或者你可能还想问"、"或者我猜你可能还想问" 开头及其后的所有内容
+  const removePatterns = [
+    '您可能还想问',
+    '你可能还想问',
+    '我猜你可能还想问',
+    '我猜您可能还想问',
+  ]
+  const pattern = new RegExp(`(${removePatterns.join('|')}).*$`, 's')
+  textContent = textContent.replace(pattern, '')
+
+  // 替换文本中的换行符为 <br> 标签
+  // textContent = textContent.replace(/\n/g, '  \n')
+  console.log(textContent)
+  return textContent
+  // let htmlContent = mdi.render(textContent)
+  // htmlContent = htmlContent || ''
+  // console.log(htmlContent)
+  // return htmlContent
+}
 
 const handleExportPdf = async () => {
   try {
-    // 获取文本并处理换行符
-    let textContent = props.text ? props.text : ''
-    // let textContent = props.text ? props.text.replace(/\n{2,}/g, '\n') : '';
-    console.log(textContent)
-
-    if (isAgent.value) { // 是智能体
-      // 去掉前面第四个换行符前的所有内容
-      const lines = textContent.split('\n')
-      if (lines.length > 4)
-        textContent = lines.slice(4).join('\n')
-    }
-    // 去掉你可能还想问
-    // 去掉 "您可能还想问"、"或者你可能还想问"、"或者我猜你可能还想问" 开头及其后的所有内容
-    const removePatterns = [
-      '您可能还想问',
-      '你可能还想问',
-      '我猜你可能还想问',
-      '我猜您可能还想问',
-    ]
-    const pattern = new RegExp(`(${removePatterns.join('|')}).*$`, 's')
-    textContent = textContent.replace(pattern, '')
-
-    // 替换文本中的换行符为 <br> 标签
-    // textContent = textContent.replace(/\n/g, '  \n')
-    console.log(textContent)
-    let htmlContent = mdi.render(textContent)
-    console.log(htmlContent)
-
+    let htmlContent = getPreProcessedHtmlContent()
     // 替换 Markdown 中的图片 URL 为 Data URL
     const imgTags = htmlContent.match(/<img [^>]*src="[^"]*"[^>]*>/gm)
     if (imgTags) {
@@ -291,6 +304,189 @@ const handleExportPdf = async () => {
     console.error('导出失败', error)
   }
 }
+
+const htmlToWord = async (htmlContent: string): Promise<string> => {
+  // Preserve line breaks
+  let wordContent = htmlContent.replace(/\n/g, '<w:br/>')
+
+  // Replace <h3> tags with Word heading style
+  wordContent = wordContent.replace(/<h3[^>]*>(.*?)<\/h3>/g, '<w:heading>Heading 3: $1</w:heading>')
+
+  // Replace <ol> tags with Word numbered list style
+  wordContent = wordContent.replace(/<ol[^>]*>(.*?)<\/ol>/g, (match) => {
+    const listItems = match.match(/<li[^>]*>(.*?)<\/li>/g)
+    if (listItems) {
+      const listContent = listItems.map((item) => {
+        const listItemContent = item.replace(/<li[^>]*>(.*?)<\/li>/, '<w:li>$1</w:li>')
+        return listItemContent
+      }).join('')
+      return `<w:ol>${listContent}</w:ol>`
+    }
+    return match
+  })
+
+  // Replace <ul> tags with Word bullet list style
+  wordContent = wordContent.replace(/<ul[^>]*>(.*?)<\/ul>/g, (match) => {
+    const listItems = match.match(/<li[^>]*>(.*?)<\/li>/g)
+    if (listItems) {
+      const listContent = listItems.map((item) => {
+        const listItemContent = item.replace(/<li[^>]*>(.*?)<\/li>/, '<w:li>$1</w:li>')
+        return listItemContent
+      }).join('')
+      return `<w:ul>${listContent}</w:ul>`
+    }
+    return match
+  })
+
+  // Replace <p> tags with Word paragraph style
+  wordContent = wordContent.replace(/<p[^>]*>(.*?)<\/p>/g, (match, pContent) => {
+    // Check if the content contains image
+    const hasImage = /<img[^>]*src="([^"]+)"[^>]*>/.test(pContent)
+    if (!hasImage)
+      return `<w:p><w:pPr><w:spacing w:line="360" w:lineRule="auto"/><w:rPr><w:b/><w:sz w:val="28"/></w:rPr></w:pPr><w:r><w:t>${pContent}</w:t></w:r></w:p>`
+
+    return match
+  })
+
+  // Replace <img> tags with Word image
+  // wordContent = wordContent.replace(/<img[^>]*src="([^"]+)"[^>]*>/g, '<w:p><w:r><w:drawing><wp:inline><wp:extent cx="5000" cy="4000"/><wp:docPr id="1" name="Picture 1"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="Picture 1"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="5000" cy="4000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>')
+  wordContent = await replaceImgTagsWithWordImages(wordContent)
+
+  // Remove other HTML tags
+  wordContent = wordContent.replace(/<[^>]+>/g, '')
+
+  return wordContent
+}
+
+async function getImageBase64DataUrl(url: string): Promise<string> {
+  try {
+    const response = await fetch(url)
+    const blob = await response.blob()
+    const reader = new FileReader()
+    return new Promise<string>((resolve, reject) => {
+      reader.onloadend = () => {
+        const base64Data = reader.result as string
+        const contentType = blob.type
+        const prefix = `data:${contentType};base64,`
+        const dataUrl = prefix + base64Data.split(',')[1]
+        resolve(dataUrl)
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  }
+  catch (error) {
+    console.error('Failed to fetch image:', url, error)
+    return '' // 返回空字符串以防止失败
+  }
+}
+
+async function replaceImgTagsWithWordImages(wordContent: string): Promise<string> {
+  const imgRegex = /<img[^>]*src="([^"]+)"[^>]*>/g
+  let match = imgRegex.exec(wordContent)
+  while (match !== null) {
+    const imageUrl = match[1]
+    const imageDataUrl = await getImageBase64DataUrl(imageUrl)
+    // Replace <img> tag with Word image
+    wordContent = wordContent.replace(match[0], imageDataUrl)
+    match = imgRegex.exec(wordContent) // Move the exec() call here
+  }
+
+  return wordContent
+}
+
+const handleExportWord = async () => {
+  // Convert Markdown to HTML
+  const markdown_content = getPreProcessedHtmlContent()
+
+  // Sanitize the HTML to prevent XSS attacks
+  const sanitizedHtml = DOMPurify.sanitize(markdown_content)
+
+  if (isAgent.value) {
+    try {
+      // 生成 WORD 并下载
+      message.success('开始导出，请稍后！')
+      await fetchWordFromMarkdown(markdown_content)
+    }
+    catch (error) {
+      console.error('Error downloading document:', error)
+    }
+    // const docx = htmlDocx.asBlob(htmlContent)
+    // const blobUrl = URL.createObjectURL(docx)
+    // window.open(blobUrl)
+    return
+  }
+
+  const wordContent = await htmlToWord(sanitizedHtml)
+
+  console.log(sanitizedHtml)
+  console.log(wordContent)
+
+  try {
+    // Log to debug
+    console.log('Fetching template.docx...')
+
+    // Construct the URL dynamically based on the current location
+    const baseUrl = `${window.location.protocol}//${window.location.host}`
+    const response = await fetch(`${baseUrl}/template.docx`)
+
+    if (!response.ok)
+      throw new Error(`Failed to fetch template: ${response.statusText}`)
+
+    const arrayBuffer = await response.arrayBuffer()
+    const zip = new PizZip(arrayBuffer)
+
+    // Configure the ImageModule
+    const imageOptions = {
+      centered: true,
+      getImage(tagValue) {
+        return new Promise((resolve, reject) => {
+          JSZipUtils.getBinaryContent(tagValue, (err, data) => {
+            if (err)
+              return reject(err)
+
+            resolve(data)
+          })
+        })
+      },
+      getSize() {
+        return [150, 150]
+      },
+    }
+
+    // Initialize Docxtemplater with ImageModule and specify custom delimiters
+    const doc = new Docxtemplater(zip, {
+      modules: [new ImageModule(imageOptions)],
+      delimiters: {
+        start: '<<',
+        end: '>>',
+      },
+    })
+
+    // Set the content
+    doc.setData({ content: wordContent })
+
+    try {
+      doc.render()
+    }
+    catch (error) {
+      console.error('Error rendering document:', error)
+      throw error
+    }
+
+    const out = doc.getZip().generate({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    })
+
+    // Save the Blob as a .docx file
+    saveAs(out, 'document.docx')
+  }
+  catch (error) {
+    console.error('Error converting to Word:', error)
+    alert(`Error converting to Word: ${error.message}`)
+  }
+}
 </script>
 
 <template>
@@ -319,8 +515,12 @@ const handleExportPdf = async () => {
             <FontAwesomeIcon icon="fas fa-copy" />
           </NButton>
 
-          <NButton v-show="showButtons && !inversion" quaternary size="tiny" @click="handleExportPdf">
-            <FontAwesomeIcon icon="fas fa-file-export" />
+          <NButton v-show="false" quaternary size="tiny" style="display: none;" @click="handleExportPdf">
+            <FontAwesomeIcon icon="fas fa-file-pdf" />
+          </NButton>
+
+          <NButton v-show="showButtons && !inversion && isAgent" quaternary size="tiny" @click="handleExportWord">
+            <FontAwesomeIcon icon="fas fa-file-word" />
           </NButton>
           <!-- <NButton v-show="showButtons" quaternary size="tiny" @click="emit('delete')">
             <FontAwesomeIcon icon="fas fa-trash-alt" />

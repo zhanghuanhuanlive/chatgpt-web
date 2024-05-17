@@ -138,7 +138,7 @@ function isStepsFull() {
 // 监视 props.text 的变化并处理
 watchEffect(() => {
   // loading.value = true
-  console.log(loading.value)
+  // console.log(loading.value)
   // console.log(messageIndex.value)
   let currentText = props.text ?? ''
   currentText = currentText.replace(/\*\*\#\#\*\*(.*?)\*\*\#\#\*\*/g, '') // 文件上传组件所需要

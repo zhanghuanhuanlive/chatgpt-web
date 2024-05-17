@@ -16,6 +16,7 @@ import { isNotEmptyString } from './utils/is'
 dotenv.config()
 const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+const API_REVERSE_PROXY = process.env.API_REVERSE_PROXY
 // const XUNFEI_API_ID = process.env.OPENAI_API_KEY
 // const XUNFEI_API_KEY = process.env.OPENAI_API_KEY
 const app = express()
@@ -127,7 +128,48 @@ router.post('/getXunfeiWebSocketUrl', auth, async (req, res) => {
 
   const wssUrl = `${config.hostUrl}?authorization=${authStr}` + `&date=${date}&host=${config.host}`
   // console.log(wssUrl)
-  res.json({ wssUrl, appId: config.appId, accent: config.accent })
+  res.json({ wssUrl, appId: config.appId })
+})
+
+function isIpAddress(value) {
+  // 简单的正则表达式来检查是否为 IP 地址
+  // 这个正则仅适用于 IPv4 地址
+  const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+  return ipRegex.test(value)
+}
+router.post('/markdown_to_word', async (req, res) => {
+  try {
+    const { markdown_content } = req.body
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify({ markdown_content }))
+
+    let whisperApiBaseUrl = ''
+    if (isIpAddress(API_REVERSE_PROXY)) {
+      // 如果是 IP 地址，则添加端口号
+      whisperApiBaseUrl = `${API_REVERSE_PROXY}:7001`
+    }
+    else {
+      // 如果是域名，则不添加端口号
+      whisperApiBaseUrl = `${API_REVERSE_PROXY}/transcribe`
+    }
+
+    const response = await fetch(`${whisperApiBaseUrl}/api/markdown_to_word`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ markdown_content }),
+    })
+
+    if (!response.ok)
+      throw new Error(`Failed to post to ${API_REVERSE_PROXY}: ${response.statusText}`)
+
+    const contentDisposition = response.headers.get('content-disposition')
+    res.setHeader('Content-Disposition', contentDisposition)
+    response.body.pipe(res)
+  }
+  catch (error) {
+    console.error('Error converting markdown:', error)
+    res.status(500).send('Error converting markdown')
+  }
 })
 
 router.post('/config', auth, async (req, res) => {

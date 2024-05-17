@@ -77,6 +77,27 @@ export function fetchChatAPIProcess<T = any>(
   })
 }
 
+export async function fetchWordFromMarkdown<T = any>(markdown_content: string) {
+  const response = await fetch('/api/markdown_to_word', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ markdown_content }),
+  })
+
+  if (!response.ok)
+    throw new Error(`Failed to convert markdown to word: ${response.statusText}`)
+
+  const blob = await response.blob()
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'output.docx')
+  document.body.appendChild(link)
+  link.click()
+}
+
 export async function fetchWebSocketUrl(): Promise<WebSocketUrlResponse> {
   const response = await fetch('/api/getXunfeiWebSocketUrl', {
     method: 'POST', // 如果不需要传递数据，通常使用 GET 方法
