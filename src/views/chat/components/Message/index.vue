@@ -6,7 +6,6 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 // import { useIconRender } from '@/hooks/useIconRender'
 // import { useBasicLayout } from '@/hooks/useBasicLayout'
-import MarkdownIt from 'markdown-it'
 // import html2canvas from 'html2canvas'
 import htmlToPdfmake from 'html-to-pdfmake' // 不用了
 import pdfMake from 'pdfmake/build/pdfmake' // 不用了
@@ -118,7 +117,7 @@ async function handleCopy() {
   }
 }
 
-const mdi = new MarkdownIt()
+// const mdi = new MarkdownIt()
 pdfMake.vfs = vfs
 
 pdfMake.fonts = {
