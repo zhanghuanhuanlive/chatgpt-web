@@ -8,20 +8,12 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 // import { useBasicLayout } from '@/hooks/useBasicLayout'
 import MarkdownIt from 'markdown-it'
 // import html2canvas from 'html2canvas'
-// import JsPDF from 'jspdf'
-// import 'jspdf-autotable'
 import htmlToPdfmake from 'html-to-pdfmake'
 import pdfMake from 'pdfmake/build/pdfmake'
-// import PDFDocument from 'pdfkit'
-// import { PDFDocument, rgb } from 'pdf-lib'
-// import simheiFont from '../../../../assets/fonts/simhei.ttf'
 import { vfs } from '../../../../assets/fonts/simhei/vfs_fonts'
 import AvatarComponent from './Avatar.vue'
 import TextComponent from './Text.vue'
 import { copyToClip } from '@/utils/copy'
-
-// import { t } from '@/locales'
-// 导入自定义字体文件
 
 const props = defineProps<Props>()
 
@@ -129,30 +121,21 @@ pdfMake.fonts = {
   },
 }
 
-// pdfMake.pageLayout = {
-//   height: 792,
-//   width: 612,
-//   margins: Array(4).fill(72),
-// }
-
-// pdfMake.fonts = {
-//   simsun: {
-//     normal: 'simsun.ttc',
-//     bold: 'simsun.ttc',
-//     italics: 'simsun.ttc',
-//     bolditalics: 'simsun.ttc',
-//   },
-// }
-
 async function getImageDataUrl(url: string): Promise<string> {
-  const response = await fetch(url)
-  const blob = await response.blob()
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
+  try {
+    const response = await fetch(url)
+    const blob = await response.blob()
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  }
+  catch (error) {
+    console.error('Failed to fetch image:', url, error)
+    return url // 返回原始 URL 以防止失败
+  }
 }
 
 // '我您你可能还想问',
@@ -162,6 +145,7 @@ const handleExportPdf = async () => {
     // 获取文本并处理换行符
     let textContent = props.text ? props.text : ''
     // let textContent = props.text ? props.text.replace(/\n{2,}/g, '\n') : '';
+    console.log(textContent)
 
     if (isAgent.value) { // 是智能体
       // 去掉前面第四个换行符前的所有内容
@@ -175,14 +159,16 @@ const handleExportPdf = async () => {
       '您可能还想问',
       '或者你可能还想问',
       '或者我猜你可能还想问',
-      '我您你可能还想问',
+      '我猜你可能还想问',
     ]
     const pattern = new RegExp(`(${removePatterns.join('|')}).*$`, 's')
     textContent = textContent.replace(pattern, '')
 
     // 替换文本中的换行符为 <br> 标签
-    textContent = textContent.replace(/\n/g, '  \n')
+    // textContent = textContent.replace(/\n/g, '  \n')
+    console.log(textContent)
     let htmlContent = mdi.render(textContent)
+    console.log(htmlContent)
 
     // 替换 Markdown 中的图片 URL 为 Data URL
     const imgTags = htmlContent.match(/<img [^>]*src="[^"]*"[^>]*>/gm)
@@ -273,13 +259,6 @@ const handleExportPdf = async () => {
             return { ...content, fontSize: 14, lineHeight: 1.0, margin: 0 }
             // break
         }
-        // if (content.stack) {
-        //   return {
-        //     ...content,
-        //     stack: applyStyles(content.stack),
-        //   }
-        // }
-        // return content
       }
       return content
     }
