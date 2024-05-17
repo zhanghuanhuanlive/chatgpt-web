@@ -157,9 +157,9 @@ const handleExportPdf = async () => {
     // 去掉 "您可能还想问"、"或者你可能还想问"、"或者我猜你可能还想问" 开头及其后的所有内容
     const removePatterns = [
       '您可能还想问',
-      '或者你可能还想问',
-      '或者我猜你可能还想问',
+      '你可能还想问',
       '我猜你可能还想问',
+      '我猜您可能还想问',
     ]
     const pattern = new RegExp(`(${removePatterns.join('|')}).*$`, 's')
     textContent = textContent.replace(pattern, '')
