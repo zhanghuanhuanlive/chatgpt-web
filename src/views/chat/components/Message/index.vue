@@ -1,21 +1,33 @@
 <script setup lang='ts'>
 import { ref } from 'vue'
 import { NButton, useMessage } from 'naive-ui'
-import { faArrowRotateLeft, faCopy, faEllipsisVertical, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRotateLeft, faCopy, faEllipsisVertical, faFileExport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import AvatarComponent from './Avatar.vue'
-import TextComponent from './Text.vue'
 // import { useIconRender } from '@/hooks/useIconRender'
 // import { useBasicLayout } from '@/hooks/useBasicLayout'
+import MarkdownIt from 'markdown-it'
+// import html2canvas from 'html2canvas'
+// import JsPDF from 'jspdf'
+// import 'jspdf-autotable'
+import htmlToPdfmake from 'html-to-pdfmake'
+import pdfMake from 'pdfmake/build/pdfmake'
+// import PDFDocument from 'pdfkit'
+// import { PDFDocument, rgb } from 'pdf-lib'
+// import simheiFont from '../../../../assets/fonts/simhei.ttf'
+import { vfs } from '../../../../assets/fonts/simhei/vfs_fonts'
+import AvatarComponent from './Avatar.vue'
+import TextComponent from './Text.vue'
 import { copyToClip } from '@/utils/copy'
+
 // import { t } from '@/locales'
+// 导入自定义字体文件
 
 const props = defineProps<Props>()
 
 // const emit = defineEmits<Emit>()
 
-library.add(faArrowRotateLeft, faCopy, faEllipsisVertical, faTrashAlt)
+library.add(faArrowRotateLeft, faCopy, faEllipsisVertical, faFileExport, faTrashAlt)
 
 interface Props {
   messageIndex: number
@@ -104,6 +116,202 @@ async function handleCopy() {
     message.error('复制失败')
   }
 }
+
+const mdi = new MarkdownIt()
+pdfMake.vfs = vfs
+
+pdfMake.fonts = {
+  simhei: {
+    normal: 'simhei.ttf',
+    bold: 'simhei.ttf',
+    italics: 'simhei.ttf',
+    bolditalics: 'simhei.ttf',
+  },
+}
+
+// pdfMake.pageLayout = {
+//   height: 792,
+//   width: 612,
+//   margins: Array(4).fill(72),
+// }
+
+// pdfMake.fonts = {
+//   simsun: {
+//     normal: 'simsun.ttc',
+//     bold: 'simsun.ttc',
+//     italics: 'simsun.ttc',
+//     bolditalics: 'simsun.ttc',
+//   },
+// }
+
+async function getImageDataUrl(url: string): Promise<string> {
+  const response = await fetch(url)
+  const blob = await response.blob()
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+// '我您你可能还想问',
+
+const handleExportPdf = async () => {
+  try {
+    // 获取文本并处理换行符
+    let textContent = props.text ? props.text : ''
+    // let textContent = props.text ? props.text.replace(/\n{2,}/g, '\n') : '';
+
+    if (isAgent.value) { // 是智能体
+      // 去掉前面第四个换行符前的所有内容
+      const lines = textContent.split('\n')
+      if (lines.length > 4)
+        textContent = lines.slice(4).join('\n')
+    }
+    // 去掉你可能还想问
+    // 去掉 "您可能还想问"、"或者你可能还想问"、"或者我猜你可能还想问" 开头及其后的所有内容
+    const removePatterns = [
+      '您可能还想问',
+      '或者你可能还想问',
+      '或者我猜你可能还想问',
+      '我您你可能还想问',
+    ]
+    const pattern = new RegExp(`(${removePatterns.join('|')}).*$`, 's')
+    textContent = textContent.replace(pattern, '')
+
+    // 替换文本中的换行符为 <br> 标签
+    textContent = textContent.replace(/\n/g, '  \n')
+    let htmlContent = mdi.render(textContent)
+
+    // 替换 Markdown 中的图片 URL 为 Data URL
+    const imgTags = htmlContent.match(/<img [^>]*src="[^"]*"[^>]*>/gm)
+    if (imgTags) {
+      for (let i = 0; i < imgTags.length; i++) {
+        const imgTag = imgTags[i]
+        const srcMatch = imgTag.match(/src="([^"]*)"/)
+        if (srcMatch && srcMatch[1]) {
+          const imgUrl: string = srcMatch[1]
+          try {
+            const dataUrl: string = await getImageDataUrl(imgUrl)
+            htmlContent = htmlContent.replace(imgUrl, dataUrl)
+          }
+          catch (error) {
+            console.error('Failed to load image:', imgUrl, error)
+          }
+        }
+      }
+    }
+
+    // 将 HTML 转换为 pdfmake 的内容
+    const pdfContent = htmlToPdfmake(htmlContent, {
+      images: true, // 启用图片处理
+    })
+
+    // 设置图片的适应页面大小的宽度和高度
+    const adjustImages = (content) => {
+      if (Array.isArray(content)) {
+        content.forEach(item => adjustImages(item))
+      }
+      else if (content && typeof content === 'object') {
+        if (content.image)
+          content.fit = [595.28 - 2 * 40, 841.89 - 2 * 60] // 适应页面宽度和高度，减去边距
+
+        if (content.stack)
+          adjustImages(content.stack)
+      }
+    }
+
+    adjustImages(pdfContent)
+
+    // 手动处理换行符并调整行间距
+    const handleNewlinesAndSpacing = (content) => {
+      if (Array.isArray(content)) {
+        return content.map(item => handleNewlinesAndSpacing(item))
+      }
+      else if (content && typeof content === 'object') {
+        if (content.text && typeof content.text === 'string') {
+          return {
+            ...content,
+            // text: content.text.split('<br>').join('\n'), // 将 <br> 替换为 \n
+            // preserveNewlines: true,
+            // lineHeight: 1.5, // 设置 1.5 倍行间距
+          }
+        }
+        if (content.stack) {
+          return {
+            ...content,
+            stack: handleNewlinesAndSpacing(content.stack),
+          }
+        }
+        return content
+      }
+      return content
+    }
+
+    const adjustedPdfContent = handleNewlinesAndSpacing(pdfContent)
+
+    // 应用样式
+    const applyStyles = (content) => {
+      if (Array.isArray(content)) {
+        return content.map(item => applyStyles(item))
+      }
+      else if (content && typeof content === 'object') {
+        console.log(content.nodeName)
+        switch (content.nodeName) {
+          case 'H1':
+            return { ...content, fontSize: 16, bold: true }
+          case 'H2':
+            return { ...content, fontSize: 16, bold: true }
+          case 'H3':
+            return { ...content, fontSize: 16, bold: true, lineHeight: 1.0, marginBottom: 5 }
+          case 'P':
+            return { ...content, fontSize: 14, lineHeight: 1.5, margin: 0 }
+          case 'OL':
+            return { ...content, fontSize: 14, lineHeight: 1.5 }
+          default:
+            return { ...content, fontSize: 14, lineHeight: 1.0, margin: 0 }
+            // break
+        }
+        // if (content.stack) {
+        //   return {
+        //     ...content,
+        //     stack: applyStyles(content.stack),
+        //   }
+        // }
+        // return content
+      }
+      return content
+    }
+
+    const styledPdfContent = applyStyles(adjustedPdfContent)
+
+    console.log(styledPdfContent)
+
+    const docDefinition = {
+      content: styledPdfContent,
+      pageSize: 'A4', // 设置 PDF 页面大小为 A4
+      pageMargins: [40, 60, 40, 60], // 设置页面边距
+      defaultStyle: {
+        font: 'simhei',
+      },
+      // styles: {
+      //   h1: { fontSize: 24, bold: true },
+      //   h2: { fontSize: 22, bold: true },
+      //   H3: { fontSize: 12, bold: true },
+      //   p: { fontSize: 12, lineHeight: 1.5 },
+      // },
+    }
+
+    // 生成 PDF 并下载
+    message.success('开始导出，请稍后！')
+    pdfMake.createPdf(docDefinition).download('output.pdf')
+  }
+  catch (error) {
+    message.error('导出失败')
+    console.error('导出失败', error)
+  }
+}
 </script>
 
 <template>
@@ -130,6 +338,10 @@ async function handleCopy() {
           </text>
           <NButton v-show="showButtons && !inversion" quaternary size="tiny" @click="handleCopy">
             <FontAwesomeIcon icon="fas fa-copy" />
+          </NButton>
+
+          <NButton v-show="showButtons && !inversion" quaternary size="tiny" @click="handleExportPdf">
+            <FontAwesomeIcon icon="fas fa-file-export" />
           </NButton>
           <!-- <NButton v-show="showButtons" quaternary size="tiny" @click="emit('delete')">
             <FontAwesomeIcon icon="fas fa-trash-alt" />

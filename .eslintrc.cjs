@@ -6,4 +6,5 @@ module.exports = {
     'strict': 'off',
     'no-console': 'off',
   },
+  ignorePatterns: ['src/assets/fonts/simhei/vfs_fonts.js'],
 }
