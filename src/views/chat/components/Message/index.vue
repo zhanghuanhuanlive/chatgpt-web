@@ -39,6 +39,8 @@ interface Props {
   isAgent?: boolean
 }
 
+// console.log(props.loading)
+
 // interface Emit {
 //   (ev: 'regenerate'): void
 //   (ev: 'delete'): void

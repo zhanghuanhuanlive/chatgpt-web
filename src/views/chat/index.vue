@@ -978,6 +978,8 @@ function handleStop() {
 // 给所有您可能还想问的链接增加事件
 function addClickOnRelatedQuestion() {
   document.querySelectorAll('.markdown-body a[href="#"]').forEach((link) => { // 有时候LLM不会将title设置为******，此时选择href=#
+    link.setAttribute('target', '_self')
+    link.removeAttribute('target') // 删除可能出现的target=blank
     // 移除之前可能添加的监听器，以防它已经被添加
     link.removeEventListener('click', handleClickRelatedQuestionEvent)
     // 添加新的事件监听器
@@ -1067,7 +1069,6 @@ onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange)// 增加页面可见和不可见的事件，不可见的场景：浏览器被切换到后台，不在当前显示桌面
   window.addEventListener('keydown', handleKeyDown)
   // document.addEventListener('DOMContentLoaded', (event) => {
-  addClickOnRelatedQuestion() // 给你可能想问的问题增加点击事件
   window.addEventListener('scroll', handleScroll)
 
   const hash = window.location.hash
@@ -1078,6 +1079,11 @@ onMounted(() => {
   console.log(uuid)
   console.log(route.params)
   scrollToBottom()
+  const interval = setInterval(() => {
+    addClickOnRelatedQuestion() // 给你可能想问的问题增加点击事件
+    clearInterval(interval)
+  }, 1000)
+
   // })
 })
 

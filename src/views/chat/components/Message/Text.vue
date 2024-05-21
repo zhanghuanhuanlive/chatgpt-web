@@ -46,7 +46,7 @@ const steps = ref<string[]>([])
 // const lastProcessedIndex = ref(0)
 // const lastProcessedText = ref('') // 用来保存上次处理的文本副本
 const resultText = ref('') // 存储处理后的文本
-const loading = ref(props.loading)
+// const loading = ref(props.loading)
 const isAgent = ref(props.isAgent)
 const messageIndex = ref(props.messageIndex)
 
@@ -137,6 +137,8 @@ function isStepsFull() {
 
 // 监视 props.text 的变化并处理
 watchEffect(() => {
+  // console.log(props.loading)
+  // console.log(loading.value)
   // loading.value = true
   // console.log(loading.value)
   // console.log(messageIndex.value)
@@ -209,7 +211,7 @@ watchEffect(() => {
     currentText = ''
   }
   else {
-    loading.value = false // 理论上不需要这一行，父页面computed已计算但是没起效果
+    // loading.value = false // 理论上不需要这一行，父页面computed已计算但是没起效果
     resultText.value = mdi.render(currentText)
   }
 })
