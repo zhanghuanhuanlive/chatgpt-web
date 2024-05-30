@@ -310,9 +310,13 @@ onUnmounted(() => {
 
           <template v-if="steps.length >= 3" #header-extra>
             <!-- v-if="steps.length === 4" -->
-            <div>
+            <!-- <div>
               【{{ steps[1]?.match(/【(.*?)】/)?.[1] ?? '' }}】
-            </div>
+            </div> -->
+            ${(() => {
+            const matches = steps[1].match(/【(.*?)】/g);
+            return matches ? matches.join('') : '';
+            })()}
           </template>
         </NCollapseItem>
         <!-- <NCollapseItem v-show="false" title="" name="item2" /> -->
