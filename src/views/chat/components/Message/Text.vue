@@ -216,18 +216,18 @@ watchEffect(() => {
   }
 })
 
-const pluginNames = computed(() => {
-  if (!steps.value || steps.value.length < 2)
-    return ''
+// const pluginNames = computed(() => {
+//   if (!steps.value || steps.value.length < 2)
+//     return ''
 
-  const regexp = /【([^】]+)】/g
-  const matches = Array.from(steps.value[1].matchAll(regexp), match => match[1])
+//   const regexp = /【([^】]+)】/g
+//   const matches = Array.from(steps.value[1].matchAll(regexp), match => match[1])
 
-  return `【${matches.join('】【')}】`
+//   return `【${matches.join('】【')}】`
 
-  // const matches = steps.value[1].match(/【(.*?)】/g)
-  // return matches ? `${matches.join('【')}】` : ''
-})
+//   // const matches = steps.value[1].match(/【(.*?)】/g)
+//   // return matches ? `${matches.join('【')}】` : ''
+// })
 
 function highlightBlock(str: string, lang?: string) {
   return `<pre class="code-block-wrapper"><div class="code-block-header"><span class="code-block-header__lang">${lang}</span><span class="code-block-header__copy">${t('chat.copyCode')}</span></div><code class="hljs code-block-body ${lang}">${str}</code></pre>`
@@ -323,10 +323,10 @@ onUnmounted(() => {
 
           <template v-if="steps.length >= 3" #header-extra>
             <!-- v-if="steps.length === 4" -->
-            <!-- <div>
+            <div>
               【{{ steps[1]?.match(/【(.*?)】/)?.[1] ?? '' }}】
-            </div> -->
-            {{ pluginNames }}
+            </div>
+            <!-- {{ pluginNames }} -->
           </template>
         </NCollapseItem>
         <!-- <NCollapseItem v-show="false" title="" name="item2" /> -->
