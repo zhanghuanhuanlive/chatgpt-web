@@ -220,8 +220,13 @@ const pluginNames = computed(() => {
   if (!steps.value || steps.value.length < 2)
     return ''
 
-  const matches = steps.value[1].match(/【(.*?)】/g)
-  return matches ? `${matches.join('【')}】` : ''
+  const regexp = /【([^】]+)】/g
+  const matches = Array.from(steps.value[1].matchAll(regexp), match => match[1])
+
+  return `【${matches.join('】【')}】`
+
+  // const matches = steps.value[1].match(/【(.*?)】/g)
+  // return matches ? `${matches.join('【')}】` : ''
 })
 
 function highlightBlock(str: string, lang?: string) {
