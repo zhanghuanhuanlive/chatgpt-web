@@ -37,7 +37,8 @@ let menu: string
 // let api_semantic: ChatGPTAPI, api_document: ChatGPTAPI, api_whisper: ChatGPTAPI
 
 const OPENAI_API_BASE_URL = process.env.OPENAI_API_BASE_URL
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+const OPENAI_API_MODEL = process.env.OPENAI_API_MODEL;
 (async () => {
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
 
@@ -94,6 +95,7 @@ function findItemsWithModel(data) {
         label: item.label,
         key: item.key,
         model: item.model,
+        systemMessage: item.systemMessage,
       })
     }
     if (item.children && item.children.length > 0) {
@@ -130,10 +132,14 @@ async function chatReplyProcess(options: RequestOptions) {
 
     console.log(item.model)
     if (item && item.model) {
-      options.completionParams.model = item.model || 'chatglm3-6b'
+      options.completionParams.model = item.model || OPENAI_API_MODEL
       const top_p = options.completionParams.top_p
       options.completionParams.top_p = (top_p === 1 && (item.model.startsWith('chatglm_') || item.model.startsWith('glm-4'))) ? 0.9 : top_p
+      // 传递配置文件中systemMessage
+      if (item.systemMessage)
+        options.systemMessage = item.systemMessage
     }
+    console.log(item.systemMessage)
 
     // options.completionParams.max_tokens = 2000
 
@@ -227,7 +233,14 @@ async function fetchUsage() {
 
 async function chatConfig() {
   const usage = await fetchUsage()
-  const menu = process.env.MENU ?? '[]'
+  const menu_temp = JSON.parse(process.env.MENU ?? '[]')
+
+  // Iterate through the array and delete the systemMessage property
+  menu_temp.forEach((menu) => {
+    if ('systemMessage' in menu)
+      delete menu.systemMessage
+  })
+  const menu = JSON.stringify(menu_temp)
   const openai_api_model = process.env.OPENAI_API_MODEL ?? 'chatglm3-6b'
   const affixes = process.env.AFFIXES ?? '-'
   const reverseProxy = process.env.API_REVERSE_PROXY ?? '-'
