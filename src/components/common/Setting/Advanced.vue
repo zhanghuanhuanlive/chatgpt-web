@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { computed, watch } from 'vue'
-import { NInput, NSlider, NSwitch } from 'naive-ui'
-import { useSettingStore } from '@/store'
+import { NButton, NInput, NSlider, NSwitch } from 'naive-ui'
+import type { Theme } from '@/store/modules/app/helper'
+import { useAppStore, useSettingStore } from '@/store'
+import { SvgIcon } from '@/components/common'
 
 const settingStore = useSettingStore()
+const appStore = useAppStore()
 
 // const ms = useMessage()
 
@@ -68,6 +71,29 @@ watch(typingSound, (newVal, oldVal) => {
 //   ms.success(t('common.success'))
 //   window.location.reload()
 // }
+
+const theme = computed(() => appStore.theme)
+
+const themeOptions: { label: string; key: Theme; icon: string; text: string }[] = [
+  // {
+  //   label: 'Auto',
+  //   key: 'auto',
+  //   icon: 'ri:contrast-line',
+  //   text: '自动',
+  // },
+  {
+    label: 'Light',
+    key: 'light',
+    icon: 'ri:sun-foggy-line',
+    text: '浅色',
+  },
+  {
+    label: 'Dark',
+    key: 'dark',
+    icon: 'ri:moon-foggy-line',
+    text: '深色',
+  },
+]
 </script>
 
 <template>
@@ -81,6 +107,24 @@ watch(typingSound, (newVal, oldVal) => {
         <!-- <NButton size="tiny" text type="primary" @click="updateSettings({ systemMessage })">
           {{ $t('common.save') }}
         </NButton> -->
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.theme') }}</span>
+        <div class="flex flex-wrap items-center gap-4">
+          <template v-for="item of themeOptions" :key="item.key">
+            <NButton
+              size="small"
+              :type="item.key === theme ? 'primary' : undefined"
+              @click="appStore.setTheme(item.key)"
+            >
+              <template #icon>
+                <SvgIcon :icon="item.icon" />
+              </template>
+              {{ item.text }}
+            </NButton>
+          </template>
+        </div>
       </div>
 
       <div class="flex items-center space-x-4">
