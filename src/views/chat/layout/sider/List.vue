@@ -49,7 +49,12 @@ const dataSources = computed(() => {
       model = models.value[0]
       businessType = model.key
     }
-    else { model = models.value.find(item => item.key === businessType) }
+    else {
+      if (undefined === businessType && models.value.length >= 1)
+        model = models.value[0]
+      else
+        model = models.value.find(item => item.key === businessType)
+    }
     // const bType = typeof businessType === 'string' ? businessType : '0'
     // const bTypeStr = String(bType)
     // const item = models.value.find(item => item.key === businessType)
