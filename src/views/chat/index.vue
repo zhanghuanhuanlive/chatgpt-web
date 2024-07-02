@@ -139,8 +139,8 @@ async function fetchConfig() {
       businessType = currentModel.key
     }
     else { currentModel = models.find(item => item.key === String(businessType)) }
-    // console.log(businessType)
-    // console.log(currentModel)
+    console.log(businessType)
+    console.log(currentModel)
     if (currentModel) {
       currentBusinessTypeName = currentModel.label || 'ChatGLM3'
       whisperModel.value = currentModel.whisperModel ? currentModel.whisperModel : ''

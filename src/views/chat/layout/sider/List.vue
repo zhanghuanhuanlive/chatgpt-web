@@ -54,6 +54,7 @@ const dataSources = computed(() => {
         model = models.value[0]
       else
         model = models.value.find(item => item.key === businessType)
+      console.log(model)
     }
     // const bType = typeof businessType === 'string' ? businessType : '0'
     // const bTypeStr = String(bType)
