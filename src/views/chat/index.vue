@@ -141,6 +141,8 @@ async function fetchConfig() {
     else { currentModel = models.find(item => item.key === String(businessType)) }
     console.log(businessType)
     console.log(currentModel)
+    if (currentModel === undefined) // 第一次打开，使用第一个
+      currentModel = models[0]
     if (currentModel) {
       currentBusinessTypeName = currentModel.label || 'ChatGLM3'
       whisperModel.value = currentModel.whisperModel ? currentModel.whisperModel : ''
